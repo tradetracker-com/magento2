@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © TradeTracker. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<include xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
+    <group id="pixel" translate="label comment" type="text" sortOrder="3" showInDefault="1" showInWebsite="1"
+           showInStore="1">
+        <label>Conversion Pixel</label>
+        <comment>
+            <![CDATA[With the conversion pixel the extension is able to record the placed orders your shop. This makes it possible to position popular products better, this greatly enhances your conversion. In addition, you get better insights in the orders and the assigned commission.]]></comment>
+        <field id="enable" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1"
+               showInStore="1">
+            <label>Enable</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>tradetracker/pixel/enable</config_path>
+        </field>
+        <field id="heading_credentials" translate="label comment" type="text" sortOrder="10" showInDefault="1"
+               showInWebsite="1" showInStore="1">
+            <label>Pixel Settings</label>
+            <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
+            <depends>
+                <field id="enable">1</field>
+            </depends>
+        </field>
+        <field id="campaign_id" translate="label comment" type="text" sortOrder="11" showInDefault="1"
+               showInWebsite="1" showInStore="1">
+            <label>Campaign ID</label>
+            <config_path>tradetracker/pixel/campaign_id</config_path>
+            <comment>Fill in "Campaign ID" fields with corresponding values from your TradeTracker account.</comment>
+            <depends>
+                <field id="enable">1</field>
+            </depends>
+        </field>
+        <field id="product_id" translate="label comment" type="text" sortOrder="12" showInDefault="1"
+               showInWebsite="1" showInStore="1">
+            <label>Product ID</label>
+            <config_path>tradetracker/pixel/product_id</config_path>
+            <comment><![CDATA[Fill in "Product ID" fields with corresponding values from your TradeTracker account. You can overwrite this value to specify the Product ID.<br><br><strong>On Category Level<br></strong>Catalog » Manage Categories » Select Category » TradeTracker » Product ID<br><br><strong>On Product Level<br></strong>Catalog » Manage Products » Select Product » TradeTracker » TradeTracker Product ID]]></comment>
+            <depends>
+                <field id="enable">1</field>
+            </depends>
+        </field>
+        <field id="heading_currency" translate="label comment" type="text" sortOrder="20" showInDefault="1"
+               showInWebsite="1" showInStore="1">
+            <label>Advanced Settings</label>
+            <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
+            <depends>
+                <field id="enable">1</field>
+            </depends>
+        </field>
+        <field id="overwrite_currency" translate="label comment" type="select" sortOrder="21" showInDefault="1"
+               showInWebsite="1" showInStore="1">
+            <label>Overwrite Currency Code</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>tradetracker/pixel/overwrite_currency</config_path>
+            <depends>
+                <field id="enable">1</field>
+            </depends>
+        </field>
+        <field id="non_default_currency" translate="label comment" type="text" sortOrder="22" showInDefault="1"
+               showInWebsite="1" showInStore="1">
+            <label>Currency Code</label>
+            <config_path>tradetracker/pixel/overwrite_currency</config_path>
+            <comment><![CDATA[Fill in the ISO code of the currency that needs to be used within the tracking pixel. Only change this in consultation with your Tradetracker account manager. Please note that the currency code needs to be in <a href="https://en.wikipedia.org/wiki/ISO_4217" target="_blank">ISO_4217</a> format.]]></comment>
+            <depends>
+                <field id="overwrite_currency">1</field>
+                <field id="enable">1</field>
+            </depends>
+        </field>
+    </group>
+</include>

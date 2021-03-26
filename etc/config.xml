@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © TradeTracker. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <tradetracker>
+            <general>
+                <enable>1</enable>
+                <version>v1.0.0</version>
+                <debug>1</debug>
+            </general>
+            <direct_linking>
+                <enable>0</enable>
+                <url_key>tradetracker-redirect</url_key>
+            </direct_linking>
+            <feed>
+                <enable>0</enable>
+                <cron_frequency>0 0 * * *</cron_frequency>
+                <filename>tradetracker.xml</filename>
+                <name_attribute>name</name_attribute>
+                <description_attribute>short_description</description_attribute>
+                <description_long_attribute>description</description_long_attribute>
+                <image>image</image>
+                <gtin_attribute>sku</gtin_attribute>
+                <brand_attribute>manufacturer</brand_attribute>
+                <condition_type>static</condition_type>
+                <condition_default>new</condition_default>
+                <color_attribute>color</color_attribute>
+                <size_attribute>size</size_attribute>
+                <gender_attribute>gender</gender_attribute>
+                <configurable>simple</configurable>
+                <configurable_link>1</configurable_link>
+                <configurable_image>2</configurable_image>
+                <configurable_parent_atts>description</configurable_parent_atts>
+                <configurable_nonvisible>1</configurable_nonvisible>
+                <bundle>parent</bundle>
+                <grouped>parent</grouped>
+            </feed>
+        </tradetracker>
+    </default>
+</config>

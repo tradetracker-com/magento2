@@ -1,0 +1,67 @@
+<?php
+/**
+ * Copyright ©Magmodules. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+?>
+<?php
+/* @var Magento\Framework\View\Element\Template $block */
+/* @var TradeTracker\Connect\ViewModel\Checkout\Pixel $viewModel */
+$viewModel = $block->getViewModel();
+?>
+<!-- START TRADETRACKER PIXEL -->
+<?php if ($pixelData = $viewModel->getPixelData()): ?>
+    <?php if (!empty($pixelData['transactions'])): ?>
+        <?php foreach ($pixelData['transactions'] as $productID => $transaction): ?>
+            <!--suppress JSUnusedAssignment -->
+            <script type="text/javascript">
+                var ttConversionOptions = ttConversionOptions || [];
+                ttConversionOptions.push({
+                    type: 'sales',
+                    campaignID: '<?= $block->escapeHtml($pixelData['campaign_id']); ?>',
+                    productID: '<?= $block->escapeHtml($productID); ?>',
+                    transactionID: '<?= $block->escapeHtml($pixelData['transaction_id']); ?>',
+                    transactionAmount: '<?= $block->escapeHtml(number_format($transaction['amount'], 2, '.', '')); ?>',
+                    quantity: '1',
+                    descrMerchant: '',
+                    descrAffiliate: '',
+                    currency: '<?= $block->escapeHtml($pixelData['currency']); ?>',
+                    vc: '<?= $block->escapeHtml($pixelData['vc']); ?>',
+                });
+            </script>
+            <noscript>
+                <?php
+                $img = '//ts.tradetracker.net/?' . http_build_query([
+                        'cid' => $pixelData['campaign_id'],
+                        'pid' => $productID,
+                        'tid' => $pixelData['transaction_id'],
+                        'tam' => number_format($block->escapeHtml($transaction['amount']), 2, '.', ''),
+                        'data' => '',
+                        'qty' => 1,
+                        'descrMerchant' => '',
+                        'descrAffiliate' => '',
+                        'event' => 'sale',
+                        'currency' => $pixelData['currency'],
+                        'vc' => $pixelData['vc']
+                    ]);
+                ?>
+                <img src="<?= $block->escapeUrl($img); ?> " alt=""/>
+            </noscript>
+        <?php endforeach; ?>
+        <script type="text/javascript">
+            (function (ttConversionOptions) {
+                var campaignID = 'campaignID' in ttConversionOptions ?
+                    ttConversionOptions.campaignID : ('length' in ttConversionOptions && ttConversionOptions.length
+                        ? ttConversionOptions[0].campaignID : null);
+                var tt = document.createElement('script');
+                tt.type = 'text/javascript';
+                tt.async = true;
+                tt.src = '//tm.tradetracker.net/conversion?s=' + encodeURIComponent(campaignID) + '&t=m';
+                var s = document.getElementsByTagName('script');
+                s = s[s.length - 1];
+                s.parentNode.insertBefore(tt, s);
+            })(ttConversionOptions);
+        </script>
+    <?php endif; ?>
+<?php endif; ?>
+<!-- END TRADETRACKER PIXEL -->

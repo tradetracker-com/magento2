@@ -1,0 +1,570 @@
+/**
+  * Copyright © TradeTracker. All rights reserved.
+  * See COPYING.txt for license details.
+  */
+
+@import '_icons.less';
+@import '_mm-buttons';
+@import './variables/_mm-colors.less';
+
+.admin__menu .item-menu.parent.level-0 > a:before {
+  content: @mm-tradetracker-icon__magmodules;
+  font-family: @icons-magmodules__font-name;
+  font-size: 2rem;
+  padding-top: .2rem;
+}
+
+.magmodules-extensions .title:before {
+  content: @mm-tradetracker-icon__magmodules;
+  font-family: @icons-magmodules__font-name;
+  font-size: 1.3rem;
+  padding-top: .2rem;
+}
+
+[data-ui-id="menu-magmodules-core-menu"] strong:before {
+  display: none;
+}
+
+ul[role="menu"] [data-ui-id^="menu-magmodules"] strong:before {
+  content: @mm-tradetracker-icon__magmodules;
+  font-family: @icons-magmodules__font-name;
+  font-size: 1.5rem;
+  margin-right: .8rem;
+}
+
+.mm-tradetracker-header,
+.mm-tradetracker-heading-block {
+  border: 0.1rem solid @color-gray90;
+  border-left: 3px solid @bordercolor;
+  font-size: 1.3rem;
+  display: flow-root;
+  text-align: left;
+}
+
+.mm-tradetracker-heading-block {
+  background: @color-white-fog;
+  padding: 1rem;
+  text-align: left;
+  color: @mm-tradetracker-color__1;
+}
+
+.mm-tradetracker-heading-comment {
+  padding: 1rem 0rem 0rem 1rem;
+  font-size: 1.2rem;
+  line-height: 2.5rem;
+  border-left: 4px solid @color-white-fog;
+}
+
+.mm-tradetracker-recommend {
+  color: @bordercolor;
+  font-weight: 600;
+  display: block;
+  padding: 3px 0px 3px 0px;
+}
+
+.mm-tradetracker-header {
+  background: #f8f8f8;
+  padding: 2rem;
+  color: #121212;
+
+  &-text {
+    line-height: 3rem;
+    font-size: 14px;
+    width:65%;
+    display:block;
+    float:left;
+  }
+
+  &-links {
+    i,
+    a {
+      color: @mm-tradetracker-color__3;
+      display: inline-block;
+    }
+
+    a {
+      margin-right: 2rem;
+    }
+
+    i {
+      font-size: 1.75rem;
+      vertical-align: middle;
+      line-height: 1.5rem;
+    }
+  }
+
+  &-actions {
+    float:right;
+
+    i {
+      font-size: 1.5rem;
+      vertical-align: middle;
+      line-height: 1.5rem;
+    }
+  }
+}
+
+#row_magmodules_kiyoh_sr_debug {
+
+  &_debug_button {
+
+    .value {
+      padding-top: 1rem;
+    }
+  }
+
+  &_error_button {
+
+    .value {
+      padding-top: 0.5rem;
+    }
+  }
+}
+
+#row_magmodules_kiyoh_sr_debug_selftest_heading {
+
+  .mm-tradetracker-heading-block {
+    display: none;
+  }
+}
+
+.mm-tradetracker-result_version-wrapper {
+  align-items: center;
+  display: flex;
+  position: relative;
+  margin-top: -0.3rem;
+  margin-bottom: -0.3rem;
+
+  .loading-mask,
+  .popup-loading {
+    position: absolute;
+    padding: 0;
+    height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    margin: 0;
+  }
+
+  .loading-mask {
+    height: 200%;
+    top: -50%;
+  }
+
+  .popup-loading:after {
+    margin: 0;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+  }
+}
+
+.mm-tradetracker-version {
+  border: 0 solid @color-gray68;
+  margin-left: 1rem;
+  padding: .6rem 1em .6rem 0.4rem;
+  white-space: nowrap;
+  font-weight: 600;
+
+  a {
+    color: inherit;
+    text-decoration: underline;
+  }
+
+  span {
+    font-weight: 500;
+  }
+
+  &:before {
+    border-radius: 50%;
+    color: @color-white;
+    width: 2.4rem;
+    height: 2.4rem;
+    line-height: 2.6rem;
+    font-size: 1.2rem;
+    margin-right: .5rem;
+  }
+
+  &.mm-tradetracker-icon__thumbs-up:before {
+    background-color: @mm-tradetracker-color__green-dark;
+    line-height: 2.5rem;
+  }
+
+  &.mm-tradetracker-icon__thumbs-down:before {
+    background-color: @mm-tradetracker-color__yellow;
+  }
+}
+
+.mm-tradetracker-result {
+
+  &_error-item,
+  &_debug-item {
+    flex-wrap: wrap;
+    display: flex;
+    padding: 1.5rem 1rem;
+    background: @color-white;
+
+    &:nth-child(odd) {
+      background: @mm-tradetracker-bg__odd;
+    }
+
+    strong {
+      margin-bottom: 0.7rem;
+      margin-right: 20px;
+    }
+  }
+
+  &_test-item {
+    display: flex;
+    border-bottom: 0.1rem solid @color-white;
+    padding: 1.5rem 0 1.5rem 1rem;
+    min-height: 75px;
+
+    &:nth-child(odd) {
+      background: @mm-tradetracker-bg__odd;
+    }
+
+    &:before {
+      margin-right: 2rem;
+      font-size: 2.5rem;
+      font-family: @icons-magmodules__font-name;
+    }
+
+    &.success:before {
+      content: @mm-tradetracker-icon__notification-rounded;
+      color: @mm-tradetracker-color__green-light;
+    }
+
+    &.success {
+      color: @mm-tradetracker-color__green-light;
+    }
+
+    &.failed {
+
+      &:before {
+        content: @mm-tradetracker-icon__info-rounded0;
+        color: @mm-tradetracker-color__red;
+      }
+
+      em {
+        color: @mm-tradetracker-color__orange;
+      }
+    }
+
+    strong {
+      flex-basis: 10%;
+      font-weight: 600;
+    }
+
+    span {
+      flex-basis: 60%;
+    }
+
+    .mm-tradetracker-icon__help-rounded {
+      color: @mm-tradetracker-color__red;
+      font-size: 2rem;
+      margin-left: auto;
+
+      &:hover {
+        text-decoration: none;
+      }
+    }
+  }
+}
+
+#mm-tradetracker-result_changelog .result {
+  list-style-type: none;
+  padding: 0;
+  margin: 1rem 0 0;
+}
+
+.mm-tradetracker-result_changelog-item {
+  padding: 0.8rem 1.6rem 1.6rem;
+
+
+  &:nth-child(odd) {
+    background: #F6F8FA;
+  }
+
+  &:nth-child(even) {
+    background: #EDEFF1;
+  }
+
+  & > div {
+    margin-top: 1rem;
+  }
+
+  h1 {
+    font-size: 1.8rem;
+  }
+
+  .mm-tradetracker-divider {
+    display: inline-block;
+    padding: 0 0.4rem;
+    font-size: 1.8rem;
+    opacity: 0.5;
+  }
+}
+
+.modal-content .popup-loading {
+  padding: 50px 0 10px;
+}
+
+.modal-slide .modal-header .action-close {
+  padding: 2.1rem 2.6rem;
+}
+
+.mm-tradetracker-show-more-active {
+
+  .mm-tradetracker-show-more-block {
+    opacity: 1;
+    font-size: inherit;
+    max-height: 999em;
+
+    br {
+      display: initial;
+    }
+  }
+
+  .mm-tradetracker-show-more-actions {
+
+    .mm-tradetracker-show-btn-more {
+      display: none;
+    }
+
+    .mm-tradetracker-show-btn-less {
+      display: initial;
+    }
+  }
+}
+
+.mm-tradetracker-show-more-block {
+  opacity: 0;
+  max-height: 0;
+  font-size: 0;
+  transition: 0.3s ease;
+
+  br {
+    display: none;
+  }
+}
+
+/*buttons*/
+.mm-tradetracker-show-more-actions {
+
+  a {
+    text-decoration: underline;
+    color: @mm-tradetracker-color__orange;
+  }
+
+  .mm-tradetracker-show-btn-less {
+    display: none;
+  }
+}
+
+/*ratings*/
+.rating-summary {
+  display: flex;
+
+  .rating-result {
+    width: 68px;
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+  }
+
+  .rating-result:before,
+  .rating-result .active-rating:before {
+    font-family: 'magmodules-icons';
+    font-size: 13px;
+    height: 13px;
+    letter-spacing: 2px;
+    line-height: 13px;
+    content: '\e812' '\e812' '\e812' '\e812' '\e812';
+  }
+
+  .rating-result {
+
+    &:before {
+      left: 0;
+      position: absolute;
+      top: 0;
+      width: 100%;
+      z-index: 1;
+      color: @color-gray78;
+    }
+
+    .active-rating {
+      display: block;
+      overflow: hidden;
+
+      &:before {
+        position: relative;
+        color: @mm-tradetracker-color__orange;
+        display: block;
+        z-index: 2;
+      }
+    }
+  }
+}
+
+.rating-table {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  opacity: 0;
+  visibility: hidden;
+  transition: 0.3s opacity, 0.3s visibility;
+  z-index: 3;
+
+  table {
+    border-top: .1rem solid @color-gray84;
+  }
+}
+
+.mm-block-tradetracker-feeds .title {
+  clear: both;
+  color: #0A0A0A;
+  cursor: pointer;
+  display: block;
+  font-size: 1.7rem;
+  font-weight: 600;
+  letter-spacing: .025em;
+  padding: 1.9rem 2.8rem 1.9rem 0;
+  position: relative;
+  text-decoration: none;
+  transition: color .15s linear;
+}
+
+.mm-block-tradetracker-feed-table {
+  border-top: 1px solid rgba(81, 73, 67, 0.15);
+  width: 99%;
+  color: #666;
+  text-align: left;
+  border-right: 1px solid rgb(223, 222, 221);
+  border-left: 2px solid #EA4C00;
+  font-size: 14px;
+  margin: 20px 0 0;
+  padding: 20px;
+  background: #F8F8F8;
+}
+
+.mm-block-tradetracker-feed-table tr {
+  border-bottom: 1px solid #DFDEDD;
+}
+
+.mm-block-tradetracker-feed-table tr td {
+  padding: 10px;
+}
+
+.mm-block-tradetracker-feed-table a.generate {
+  color: #EB5202;
+  line-height: 2em;
+}
+
+.mm-block-tradetracker-feed-table a.generate:before {
+  content: '\e610';
+  font-family: 'Admin Icons';
+  margin-right: 9px;
+  font-size: 16px;
+  float: left;
+}
+
+.mm-block-tradetracker-feed-table a.preview {
+  color: #185B00;
+  line-height: 2em;
+}
+
+.mm-block-tradetracker-feed-table a.preview:before {
+  content: '\e60f';
+  font-family: 'Admin Icons';
+  margin-right: 9px;
+  font-size: 9px;
+  float: left;
+}
+
+.mm-block-tradetracker-feed-table a.download:before {
+  content: '\e616';
+  font-family: 'Admin Icons';
+  font-size: 15px;
+  margin-right: 10px;
+  float: left;
+}
+
+.mm-block-tradetracker-feed-table a.download {
+  color: #666666;
+  line-height: 2em;
+}
+
+.mm-block-tradetracker-feed-table .enable {
+  color: #eb5203;
+  line-height: 2em;
+}
+
+.mm-block-tradetracker-feed-table .enable small {
+  color: grey;
+}
+
+.mm-block-tradetracker-feed-table .enable:before {
+  content: '\e623';
+  font-family: 'Admin Icons';
+  margin-right: 9px;
+  font-size: 12px;
+  float: left;
+}
+
+.mm-tradetracker-header-text img {
+  height: 100px;
+  width: 300px;
+  display: block;
+  margin-top:-25px;
+}
+
+.admin__page-nav._collapsed.tradetracker-tab .title,
+.admin__page-nav._collapsed._show.tradetracker-tab .title {
+  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEgAAABICAYAAABV7bNHAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMDY3IDc5LjE1Nzc0NywgMjAxNS8wMy8zMC0yMzo0MDo0MiAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUgKFdpbmRvd3MpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOkZENUU5QjNDMzFGQzExRTU4NTFEOEI4QUZDMzRDMDVEIiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOkZENUU5QjNEMzFGQzExRTU4NTFEOEI4QUZDMzRDMDVEIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6RkQ1RTlCM0EzMUZDMTFFNTg1MUQ4QjhBRkMzNEMwNUQiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6RkQ1RTlCM0IzMUZDMTFFNTg1MUQ4QjhBRkMzNEMwNUQiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz5yHEc/AAAK6UlEQVR42txc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');
+  background-position: 10px center;
+  background-position: 15px center;
+  background-repeat: no-repeat;
+  background-size: auto 70%;
+  text-indent: 40px;
+  background-size: auto 50%;
+  text-indent: 35px;
+}
+
+.mm-tradetracker-header-developed {
+
+  text-align: right;
+  padding: 5px 10px 0px 5px;
+  font-size: 12px;
+  float: right;
+  margin-top: -40px;
+  color: #96928e;
+
+}
+
+
+.mm-tradetracker-header-developed p {
+  margin-top: auto;
+  display: inline-block;
+  background-position: 5px center;
+  background-repeat: no-repeat;
+  background-size: auto 100%;
+  min-width: 20px;
+  min-height: 10px;
+  padding: 5px;
+  vertical-align: middle;
+}
+
+.mm-tradetracker-header-developed p strong {
+  margin-right: 10px;
+}
+
+.mm-tradetracker-header-developed p a {
+  color: #96928e;
+  text-decoration: none;
+}

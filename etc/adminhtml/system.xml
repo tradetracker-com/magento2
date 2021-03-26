@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © TradeTracker. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="tradetracker" translate="label" sortOrder="500" class="tradetracker-tab">
+            <label>TradeTracker</label>
+        </tab>
+        <section id="tradetracker_general" translate="label comment" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>General</label>
+            <tab>tradetracker</tab>
+            <resource>TradeTracker_Connect::general</resource>
+            <include path="TradeTracker_Connect::system/branding.xml"/>
+            <include path="TradeTracker_Connect::system/general.xml"/>
+            <include path="TradeTracker_Connect::system/pixel.xml"/>
+            <include path="TradeTracker_Connect::system/redirect_linking.xml"/>
+            <include path="TradeTracker_Connect::system/debug.xml"/>
+        </section>
+        <section id="tradetracker_feed" translate="label comment" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Product Feed</label>
+            <tab>tradetracker</tab>
+            <resource>TradeTracker_Connect::feed</resource>
+            <include path="TradeTracker_Connect::system/branding.xml"/>
+            <include path="TradeTracker_Connect::system/feed.xml"/>
+        </section>
+    </system>
+</config>

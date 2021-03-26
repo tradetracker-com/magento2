@@ -1,0 +1,81 @@
+<?php
+/**
+ * Copyright © TradeTracker. All rights reserved.
+ * See COPYING.txt for license details.
+ *
+ * @var $block TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Table\Feeds
+ */
+?>
+<?php if ($feedData = $block->getStoreData()): ?>
+    <div class="mm-block-tradetracker-feeds">
+        <span class="title"><?= $block->escapeHtml(__('Feeds')) ?></span>
+        <?= /* @noEscape */ (string)__('All active feeds are shown in the overview below.<br>The .XML URL is the URL
+which needs to be copied and pasted into you TradeTracker Account. In relation to cache settings in the browser, it is
+advised that you download the Feed to make sure that you are viewing the latest version. There is a small note at
+the end of the XML file where you can find the time of generation and the number of products.<br><br>
+<strong>Note:</strong> Make sure that you save the configuration after the settings have been changed and before you
+generate the feed.'); ?>
+        <table class="mm-block-tradetracker-feed-table">
+            <tbody>
+            <?php foreach ($feedData as $data): ?>
+                <tr>
+                    <td>
+                        <p><?= $block->escapeHtml($data['name']); ?></p>
+                        <p>
+                            <small><?= $block->escapeHtml($data['code']); ?></small>
+                        </p>
+                    </td>
+                    <td>
+                        <?php if (!empty($data['url']) && $data['available']): ?>
+                            <p>
+                                <a href="<?= $block->escapeUrl($data['url']); ?>" target="_blank">
+                                    <?= $block->escapeUrl($data['url']); ?>
+                                </a>
+                            </p>
+                            <p>
+                                <small><?= $block->escapeHtml($data['result']); ?></small>
+                            </p>
+                        <?php else: ?>
+                            <p>
+                                <?= $block->escapeUrl($data['url']); ?>
+                            </p>
+                            <p>
+                                <small>
+                                    <?= $block->escapeHtml(__('Feed not available, please generate the Feed first.')) ?>
+                                </small>
+                            </p>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?php if (!empty($data['status'])): ?>
+                            <p>
+                                <a class="generate"
+                                   href="<?= $block->escapeUrl($data['generate_url']); ?>">Generate</a>
+                            </p>
+                            <p>
+                                <a class="preview"
+                                   href="<?= $block->escapeUrl($data['preview_url']); ?>"
+                                   target="_blank">Preview</a>
+                            </p>
+                            <p>
+                                <?php if (!empty($data['path']) && $data['available']): ?>
+                                    <a class="download"
+                                       href="<?= $block->escapeUrl($data['download_url']); ?>">Download</a>
+                                <?php endif; ?>
+                            </p>
+                        <?php else: ?>
+                            <p class="enable">
+                                <?= $block->escapeHtml(__('Module Disabled.')) ?>
+                                <small>
+                                    <br
+                                    <?= $block->escapeHtml(__('Enabled Feed and General Module.')) ?>
+                                </small>
+                            </p>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+<?php endif; ?>

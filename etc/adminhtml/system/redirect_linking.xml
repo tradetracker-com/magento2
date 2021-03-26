@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © TradeTracker. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<include xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
+    <group id="redirect_linking" translate="label comment" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1">
+        <label>DirectLinking</label>
+        <comment><![CDATA[You have received instructions from your Account Manager at TradeTracker to create a DirectLinking redirect location, enable it below and use the key/path as received from your Account Manager. E.g., if they suggested to use “https://your-url.com/offers”, you should enter “offers” as Url Key. It is possible to use another keyword for DirectLinking, but please be sure to relay this new keyword and/or resulting URL to your Account Manager. Note that once your campaign is active within TradeTracker, it’s not recommended to change this keyword.]]></comment>
+        <field id="enable" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Enable</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>tradetracker/direct_linking/enable</config_path>
+        </field>
+        <field id="url_key" translate="label comment" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Url Key</label>
+            <depends>
+                <field id="enable">1</field>
+            </depends>
+            <comment model="TradeTracker\Connect\Model\Config\System\Config\Comment" />
+            <config_path>tradetracker/direct_linking/url_key</config_path>
+            <validate>validate-identifier</validate>
+        </field>
+    </group>
+</include>

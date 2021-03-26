@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © TradeTracker. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <!-- Repositories Block Start -->
+    <preference for="TradeTracker\Connect\Api\Log\RepositoryInterface"
+                type="TradeTracker\Connect\Model\Log\Repository"/>
+    <preference for="TradeTracker\Connect\Api\Feed\RepositoryInterface"
+                type="TradeTracker\Connect\Model\Feed\Repository"/>
+    <preference for="TradeTracker\Connect\Api\Config\RepositoryInterface"
+                type="TradeTracker\Connect\Model\Config\Repository"/>
+    <preference for="TradeTracker\Connect\Api\Config\System\DirectLinkingInterface"
+                type="TradeTracker\Connect\Model\Config\System\DirectLinkingRepository"/>
+    <preference for="TradeTracker\Connect\Api\Config\System\FeedInterface"
+                type="TradeTracker\Connect\Model\Config\System\FeedRepository"/>
+    <preference for="TradeTracker\Connect\Api\Config\System\PixelInterface"
+                type="TradeTracker\Connect\Model\Config\System\PixelRepository"/>
+    <preference for="TradeTracker\Connect\Api\ProductData\RepositoryInterface"
+                type="TradeTracker\Connect\Model\ProductData\Repository"/>
+    <!-- Repositories Block End -->
+
+    <!-- Log Block Start -->
+    <type name="TradeTracker\Connect\Logger\Handler">
+        <arguments>
+            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+        </arguments>
+    </type>
+    <type name="TradeTracker\Connect\Logger\ErrorLogger">
+        <arguments>
+            <argument name="name" xsi:type="string">TradeTrackerError</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">TradeTracker\Connect\Logger\Handler\Error</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="TradeTracker\Connect\Logger\DebugLogger">
+        <arguments>
+            <argument name="name" xsi:type="string">TradeTrackerDebug</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">TradeTracker\Connect\Logger\Handler\Debug</item>
+            </argument>
+        </arguments>
+    </type>
+    <!-- Log Block End -->
+
+    <!-- CLI Block Start -->
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="tradetrackerGenerateFeed" xsi:type="object">TradeTracker\Connect\Console\Command\GenerateFeed</item>
+            </argument>
+        </arguments>
+    </type>
+    <!-- CLI Block End -->
+
+</config>

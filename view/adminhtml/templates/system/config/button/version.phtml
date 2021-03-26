@@ -1,0 +1,25 @@
+<?php
+/**
+ * Copyright © TradeTracker. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+use TradeTracker\Connect\Block\Adminhtml\System\Config\Button\VersionCheck;
+
+/**
+ * @see \TradeTracker\Connect\Block\Adminhtml\System\Config\Button\VersionCheck
+ * @var VersionCheck $block
+ */
+?>
+<div class="mm-tradetracker-result_version-wrapper"
+     data-mm-tradetracker-endpoind-url="<?= $block->escapeUrl($block->getVersionCheckUrl()) ?>">
+    <span><?= $block->escapeHtml($block->getVersion()); ?></span>
+    <?= $block->getButtonHtml() ?>
+    <div id="mm-tradetracker-result_version"></div>
+    <div id="mm-tradetracker-result_changelog-modal"
+         data-mm-tradetracker-endpoind-url="<?= $block->escapeUrl($block->getChangeLogUrl()) ?>">
+        <div id="mm-tradetracker-result_changelog">
+            <ul class="result"></ul>
+        </div>
+    </div>
+</div>
