@@ -45,3 +45,6 @@ php bin/magento setup:static-content:deploy
 ----
 ### Installation using the Magento® Marketplace ###
 Available Soon
+
+## Compatibility
+The module has a minimum requirement of Magento 2.3 and PHP 7.1 and is tested on Magento version 2.3.x & 2.4.x.
