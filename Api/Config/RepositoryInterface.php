@@ -22,6 +22,10 @@ interface RepositoryInterface
     const XML_PATH_EXTENSION_ENABLE = 'tradetracker/general/enable';
     const XML_PATH_EXTENSION_VERSION = 'tradetracker/general/version';
     const XML_PATH_DEBUG = 'tradetracker/general/debug';
+    const XML_PATH_CUSTOMER_ID = 'tradetracker/general/customer_id';
+    const XML_PATH_PASSPHRASE = 'tradetracker/general/passphrase';
+    const XML_PATH_SANDBOX = 'tradetracker/general/sandbox';
+    const XML_PATH_DEMO = 'tradetracker/general/demo';
 
     /**
      * Get extension version
@@ -45,6 +49,15 @@ interface RepositoryInterface
      * @return bool
      */
     public function isEnabled(int $storeId = null): bool;
+
+    /**
+     * Get API Credentials
+     *
+     * @param int|null $storeId
+     *
+     * @return array
+     */
+    public function getApiCredentials(int $storeId = null): array;
 
     /**
      * Get current or specified store
