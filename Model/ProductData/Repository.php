@@ -166,7 +166,8 @@ class Repository implements ProductData
     private function collectIds(int $storeId, array $entityIds = []): void
     {
         $this->entityIds = $this->filter->execute(
-            $this->feedConfigRepository->getFilters($storeId)
+            $this->feedConfigRepository->getFilters($storeId),
+            $storeId
         );
         if ($entityIds) {
             $this->entityIds = array_intersect($entityIds, $this->entityIds);
