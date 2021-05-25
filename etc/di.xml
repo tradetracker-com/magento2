@@ -58,4 +58,10 @@
     </type>
     <!-- CLI Block End -->
 
+    <type name="TradeTracker\Connect\Console\Command\GenerateFeed">
+        <arguments>
+            <argument name="feedRepository" xsi:type="object">TradeTracker\Connect\Api\Feed\RepositoryInterface\Proxy</argument>
+        </arguments>
+    </type>
+
 </config>

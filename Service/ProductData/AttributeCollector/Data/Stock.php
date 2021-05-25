@@ -7,7 +7,9 @@ declare(strict_types=1);
 
 namespace TradeTracker\Connect\Service\ProductData\AttributeCollector\Data;
 
+use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\EntityManager\MetadataPool;
 use Magento\Framework\Module\Manager as ModuleManager;
 
 /**
@@ -31,19 +33,27 @@ class Stock
      * @var ModuleManager
      */
     private $moduleManager;
+    /**
+     * @var string
+     */
+    private $linkField;
 
     /**
      * Price constructor.
      *
      * @param ResourceConnection $resource
      * @param ModuleManager $moduleManager
+     * @param MetadataPool $metadataPool
+     * @throws \Exception
      */
     public function __construct(
         ResourceConnection $resource,
-        ModuleManager $moduleManager
+        ModuleManager $moduleManager,
+        MetadataPool $metadataPool
     ) {
         $this->resource = $resource;
         $this->moduleManager = $moduleManager;
+        $this->linkField = $metadataPool->getMetadata(ProductInterface::class)->getLinkField();
     }
 
     /**
@@ -161,6 +171,9 @@ class Stock
     {
         $channel = array_pop($channels);
         $stockTablePrimary = $this->resource->getTableName(sprintf('inventory_stock_%s', $channel));
+        if (!$this->resource->getConnection()->isTableExists($stockTablePrimary)) {
+            return [];
+        }
         $selectStock = $this->resource->getConnection()
             ->select()
             ->from(
@@ -220,7 +233,7 @@ class Stock
                 ]
             )->joinLeft(
                 ['catalog_product_entity' => $this->resource->getTableName('catalog_product_entity')],
-                'catalog_product_entity.entity_id = cataloginventory_stock_item.product_id',
+                "catalog_product_entity.{$this->linkField} = cataloginventory_stock_item.product_id",
                 ['sku']
             );
         if ($addMsi) {

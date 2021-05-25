@@ -22,5 +22,32 @@
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <config_path>tradetracker/general/enable</config_path>
         </field>
+        <field id="customer_id" translate="label comment" type="text" sortOrder="10" showInDefault="1"
+               showInWebsite="1" showInStore="1">
+            <label>Customer ID</label>
+            <config_path>tradetracker/general/customer_id</config_path>
+        </field>
+        <field id="passphrase" translate="label comment" type="text" sortOrder="20" showInDefault="1"
+               showInWebsite="1" showInStore="1">
+            <label>Passphrase</label>
+            <config_path>tradetracker/general/passphrase</config_path>
+        </field>
+        <field id="sandbox" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1"
+               showInStore="1">
+            <label>Sandbox</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>tradetracker/general/sandbox</config_path>
+        </field>
+        <field id="demo" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1"
+               showInStore="1">
+            <label>Demo Mode</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>tradetracker/general/demo</config_path>
+        </field>
+        <field id="button" translate="label" type="button" sortOrder="100" showInDefault="1"
+               showInWebsite="1" showInStore="1">
+            <label/>
+            <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Button\Credentials</frontend_model>
+        </field>
     </group>
 </include>

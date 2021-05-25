@@ -107,7 +107,7 @@ class VersionCheck extends Field
      */
     public function getButtonHtml()
     {
-        $buttonData = ['id' => 'mm-tradetracker-button_version', 'label' => __('Check for latest versions')];
+        $buttonData = ['id' => 'tradetracker-button_version', 'label' => __('Check for latest versions')];
         try {
             $button = $this->getLayout()->createBlock(
                 Button::class

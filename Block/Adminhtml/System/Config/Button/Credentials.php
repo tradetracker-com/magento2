@@ -9,24 +9,23 @@ namespace TradeTracker\Connect\Block\Adminhtml\System\Config\Button;
 
 use Exception;
 use Magento\Backend\Block\Template\Context;
-use Magento\Backend\Block\Widget\Button;
 use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Data\Form\Element\AbstractElement;
 use TradeTracker\Connect\Api\Log\RepositoryInterface as LogRepository;
 
 /**
- * Debug log check button class
+ * Class Credentials
+ *
+ * Credentials validation
  */
-class DebugCheck extends Field
+class Credentials extends Field
 {
 
     /**
-     * Template file name
-     *
      * @var string
      */
-    protected $_template = 'TradeTracker_Connect::system/config/button/debug.phtml';
+    protected $_template = 'TradeTracker_Connect::system/config/button/credentials.phtml';
 
     /**
      * @var RequestInterface
@@ -41,7 +40,6 @@ class DebugCheck extends Field
      * Credentials constructor.
      *
      * @param Context $context
-     * @param LogRepository $logger
      * @param array $data
      */
     public function __construct(
@@ -55,7 +53,9 @@ class DebugCheck extends Field
     }
 
     /**
-     * @inheritDoc
+     * @param AbstractElement $element
+     *
+     * @return string
      */
     public function render(AbstractElement $element)
     {
@@ -64,7 +64,9 @@ class DebugCheck extends Field
     }
 
     /**
-     * @inheritDoc
+     * @param AbstractElement $element
+     *
+     * @return string
      */
     public function _getElementHtml(AbstractElement $element)
     {
@@ -74,9 +76,9 @@ class DebugCheck extends Field
     /**
      * @return string
      */
-    public function getDebugCheckUrl()
+    public function getApiCheckUrl()
     {
-        return $this->getUrl('tradetracker/log/debug');
+        return $this->getUrl('tradetracker/credentials/check');
     }
 
     /**
@@ -84,10 +86,10 @@ class DebugCheck extends Field
      */
     public function getButtonHtml()
     {
-        $buttonData = ['id' => 'tradetracker-button_debug', 'label' => __('Check last 100 debug log records')];
+        $buttonData = ['id' => 'tt-button_credentials', 'label' => __('Check Credentials')];
         try {
             $button = $this->getLayout()->createBlock(
-                Button::class
+                \Magento\Backend\Block\Widget\Button::class
             )->setData($buttonData);
             return $button->toHtml();
         } catch (Exception $e) {

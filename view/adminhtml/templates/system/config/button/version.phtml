@@ -11,14 +11,14 @@ use TradeTracker\Connect\Block\Adminhtml\System\Config\Button\VersionCheck;
  * @var VersionCheck $block
  */
 ?>
-<div class="mm-tradetracker-result_version-wrapper"
-     data-mm-tradetracker-endpoind-url="<?= $block->escapeUrl($block->getVersionCheckUrl()) ?>">
+<div class="tradetracker-result_version-wrapper"
+     data-tradetracker-endpoind-url="<?= $block->escapeUrl($block->getVersionCheckUrl()) ?>">
     <span><?= $block->escapeHtml($block->getVersion()); ?></span>
     <?= $block->getButtonHtml() ?>
-    <div id="mm-tradetracker-result_version"></div>
-    <div id="mm-tradetracker-result_changelog-modal"
-         data-mm-tradetracker-endpoind-url="<?= $block->escapeUrl($block->getChangeLogUrl()) ?>">
-        <div id="mm-tradetracker-result_changelog">
+    <div id="tradetracker-result_version"></div>
+    <div id="tradetracker-result_changelog-modal"
+         data-tradetracker-endpoind-url="<?= $block->escapeUrl($block->getChangeLogUrl()) ?>">
+        <div id="tradetracker-result_changelog">
             <ul class="result"></ul>
         </div>
     </div>

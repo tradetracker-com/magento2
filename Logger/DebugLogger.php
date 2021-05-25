@@ -40,7 +40,7 @@ class DebugLogger extends Logger
     }
 
     /**
-     * Add debug data to kiyoh Log
+     * Write debug data to log
      *
      * @param string $type
      * @param mixed $data

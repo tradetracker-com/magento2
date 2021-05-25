@@ -170,11 +170,74 @@ class Repository implements ConfigRepositoryInterface
     }
 
     /**
+     * @inheritDoc
+     */
+    public function getApiCredentials(int $storeId = null): array
+    {
+        return [
+            'customer_id' => $this->getCustomerId($storeId),
+            'passphrase' => $this->getPassphrase($storeId),
+            'sandbox' => $this->isSandbox($storeId),
+            'locale' => 'en_GB',
+            'demo' => $this->isDemo($storeId)
+        ];
+    }
+
+    /**
+     * Get customer ID
+     *
+     * @param int|null $storeId
+     *
+     * @return int
+     */
+    private function getCustomerId(int $storeId = null): int
+    {
+        return (int)$this->getStoreValue(self::XML_PATH_CUSTOMER_ID, $storeId);
+    }
+
+    /**
+     * Get passphrase
+     *
+     * @param int|null $storeId
+     *
+     * @return string
+     */
+    private function getPassphrase(int $storeId = null): string
+    {
+        return $this->getStoreValue(self::XML_PATH_PASSPHRASE, $storeId);
+    }
+
+    /**
+     * Is currently enabled sandbox mode
+     *
+     * @param int|null $storeId
+     *
+     * @return bool
+     */
+    private function isSandbox(int $storeId = null): bool
+    {
+        return $this->isSetFlag(self::XML_PATH_SANDBOX, $storeId);
+    }
+
+    /**
+     * Is currently enabled demo mode
+     *
+     * @param int|null $storeId
+     *
+     * @return bool
+     */
+    private function isDemo(int $storeId = null): bool
+    {
+        return $this->isSetFlag(self::XML_PATH_DEMO, $storeId);
+    }
+
+    /**
      * Retrieve config value array by path, storeId and scope
      *
      * @param string $path
      * @param int|null $storeId
      * @param string|null $scope
+     *
      * @return array
      */
     protected function getStoreValueArray(string $path, int $storeId = null, string $scope = null): array
@@ -197,6 +260,7 @@ class Repository implements ConfigRepositoryInterface
      *
      * @param string $path
      * @param int|null $storeId
+     *
      * @return string
      */
     protected function getUncachedStoreValue(string $path, int $storeId = null): string

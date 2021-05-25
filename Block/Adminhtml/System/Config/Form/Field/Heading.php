@@ -27,8 +27,8 @@ class Heading extends Field
         $html = '<tr id="row_' . $element->getHtmlId() . '">';
         $html .= '  <td class="label"></td>';
         $html .= '  <td class="value">';
-        $html .= '     <div class="mm-tradetracker-heading-block">' . $element->getData('label') . '</div>';
-        $html .= '     <div class="mm-tradetracker-heading-comment">' . $element->getData('comment') . '</div>';
+        $html .= '     <div class="tradetracker-heading-block">' . $element->getData('label') . '</div>';
+        $html .= '     <div class="tradetracker-heading-comment">' . $element->getData('comment') . '</div>';
         $html .= '  </td>';
         $html .= '  <td></td>';
         $html .= '</tr>';
