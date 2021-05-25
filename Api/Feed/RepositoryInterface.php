@@ -7,6 +7,8 @@ declare(strict_types=1);
 
 namespace TradeTracker\Connect\Api\Feed;
 
+use Symfony\Component\Console\Output\OutputInterface;
+
 /**
  * Feed repository interface
  */
@@ -44,4 +46,11 @@ interface RepositoryInterface
      * @return array
      */
     public function generateAndSaveFeed(int $storeId, string $type = 'manual'): array;
+
+    /**
+     * @param OutputInterface $output
+     * @param array $storeIds
+     * @return void
+     */
+    public function cliProcess(OutputInterface $output, array $storeIds = []): void;
 }

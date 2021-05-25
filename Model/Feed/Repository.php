@@ -19,6 +19,7 @@ use TradeTracker\Connect\Api\Feed\RepositoryInterface as FeedRepository;
 use TradeTracker\Connect\Api\Log\RepositoryInterface as LogRepository;
 use TradeTracker\Connect\Api\ProductData\RepositoryInterface as ProductDataRepository;
 use TradeTracker\Connect\Service\Feed\Create as FeedService;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Feed Repository class
@@ -251,5 +252,28 @@ class Repository implements FeedRepository
         }
 
         return (string)$time;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function cliProcess(OutputInterface $output, array $storeIds = []): void
+    {
+
+        if (empty($storeIds)) {
+            try {
+                $storeIds = $this->feedConfigRepository->getAllEnabledStoreIds();
+            } catch (\DomainException $exception) {
+                return;
+            }
+        }
+        foreach ($storeIds as $storeId) {
+            $result = $this->generateAndSaveFeed($storeId, 'CLI');
+            if ($result['success']) {
+                $output->writeln(sprintf('<info>%s</info>', $result['message']));
+            } else {
+                $output->writeln(sprintf('<error>%s</error>', $result['message']));
+            }
+        }
     }
 }
