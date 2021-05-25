@@ -41,7 +41,7 @@ class ErrorLogger extends Logger
     }
 
     /**
-     * Add error data to kiyoh Log
+     * Write error data to log
      *
      * @param string $type
      * @param mixed $data

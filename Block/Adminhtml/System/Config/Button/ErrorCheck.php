@@ -85,7 +85,7 @@ class ErrorCheck extends Field
      */
     public function getButtonHtml()
     {
-        $buttonData = ['id' => 'mm-tradetracker-button_error', 'label' => __('Check last 100 error log records')];
+        $buttonData = ['id' => 'tradetracker-button_error', 'label' => __('Check last 100 error log records')];
         try {
             $button = $this->getLayout()->createBlock(
                 Button::class

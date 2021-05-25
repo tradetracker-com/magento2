@@ -84,7 +84,7 @@ class DebugCheck extends Field
      */
     public function getButtonHtml()
     {
-        $buttonData = ['id' => 'mm-tradetracker-button_debug', 'label' => __('Check last 100 debug log records')];
+        $buttonData = ['id' => 'tradetracker-button_debug', 'label' => __('Check last 100 debug log records')];
         try {
             $button = $this->getLayout()->createBlock(
                 Button::class

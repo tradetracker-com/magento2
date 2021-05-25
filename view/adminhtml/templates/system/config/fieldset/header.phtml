@@ -6,8 +6,8 @@
  * @var $block TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Header
  */
 ?>
-<div class="mm-tradetracker-header">
-    <p class="mm-tradetracker-header-text">
+<div class="tradetracker-header">
+    <p class="tradetracker-header-text">
         <?php $img = $block->getViewFileUrl('TradeTracker_Connect::images/tradetracker-logo-xs.svg'); ?>
         <img src="<?= $block->escapeUrl($img); ?>"/>
         <strong>TradeTracker extension for Magento 2.</strong><br>
@@ -15,22 +15,22 @@
         performance marketing programme. Provide the product feed URL so publishers can promote your products with up to
         date stock information.
     </p>
-    <div class="mm-tradetracker-header-actions">
-        <a id="mm-tradetracker-button_help" class="helpbutton"
+    <div class="tradetracker-header-actions">
+        <a id="tradetracker-button_help" class="helpbutton"
            href="mailto:info.nl@tradetracker.com?subject=Magento 2 Extension Support Issue: "
            target="_blank">
-            <i class="mm-tradetracker-icon__question-circled"></i>
+            <i class="tradetracker-icon__question-circled"></i>
             <span><?= $block->escapeHtml(__('Support')); ?></span>
         </a>
-        <a id="mm-tradetracker-button_support" class="support"
+        <a id="tradetracker-button_support" class="support"
            href="https://www.magmodules.eu/help/magento2-tradetracker-feed-and-pixel.html"
            target="_blank">
-            <i class="mm-tradetracker-icon__envelop"></i>
+            <i class="tradetracker-icon__envelop"></i>
             <span><?= $block->escapeHtml(__('Documentation')); ?></span>
         </a>
     </div>
 </div>
-<div class="mm-tradetracker-header-developed">
+<div class="tradetracker-header-developed">
     <p style="background-image: url(<?= $block->escapeUrl($block->getImage()); ?>)"></p>
     <p>Developed in partnership with <a href="https://www.magmodules.eu/" target="_blank">Magmodules</a></p>
 </div>

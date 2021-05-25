@@ -2,15 +2,15 @@ require([
     'jquery'
 ], function ($) {
 
-    var $mmHeadingComment = $('.mm-tradetracker-heading-comment');
+    var $mmHeadingComment = $('.tradetracker-heading-comment');
 
     if($mmHeadingComment.length) {
 
         $(window).load(function() {
 
-            var showMoreLessBtnHtml = '<div class="mm-tradetracker-show-more-actions"><a href="javascript:void(0)" class="mm-tradetracker-show-btn-more">'
+            var showMoreLessBtnHtml = '<div class="tradetracker-show-more-actions"><a href="javascript:void(0)" class="tradetracker-show-btn-more">'
                 + $.mage.__('Show more.') + '</a>'
-                + '<a href="javascript:void(0)" class="mm-tradetracker-show-btn-less">' + $.mage.__('Show less.') + '</a></div>';
+                + '<a href="javascript:void(0)" class="tradetracker-show-btn-less">' + $.mage.__('Show less.') + '</a></div>';
 
             $mmHeadingComment.each(function (i, el) {
                 var elStyles = getComputedStyle(el);
@@ -32,7 +32,7 @@ require([
                     var visibleStr = oldHtml.substr(0, ellipsesIndex);
                     var hiddenStr = oldHtml.substr(ellipsesIndex);
 
-                    $el.html('<span>' + visibleStr + '</span><span class="mm-tradetracker-show-more-block">'
+                    $el.html('<span>' + visibleStr + '</span><span class="tradetracker-show-more-block">'
                         + hiddenStr.replace('<br/>', '<div></div>')
                         + '</span>' + showMoreLessBtnHtml);
 
@@ -43,8 +43,8 @@ require([
         /**
          * Toggle show more btn event.
          */
-        $(document).on('click', '.mm-tradetracker-show-more-actions a', function() {
-            $(this).closest('.mm-tradetracker-heading-comment').toggleClass('mm-tradetracker-show-more-active');
+        $(document).on('click', '.tradetracker-show-more-actions a', function() {
+            $(this).closest('.tradetracker-heading-comment').toggleClass('tradetracker-show-more-active');
         });
     }
 });
