@@ -12,7 +12,7 @@ use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Event\Observer as EventObserver;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Store\Api\StoreRepositoryInterface as StoreRepository;
-use TradeTracker\Connect\Api\Config\RepositoryInterface as ConfigRepository;
+use TradeTracker\Connect\Api\Config\System\DirectLinkingInterface as ConfigRepository;
 use TradeTracker\Connect\Service\DirectLinking\UrlRewrite;
 
 /**
@@ -73,12 +73,11 @@ class SaveRewrite implements ObserverInterface
     {
         $meetParams = $this->request->getParam('groups');
         $storeId = $this->request->getParam('store');
-
-        if (!isset($meetParams['redirect']['fields']['url_key'])) {
+        if (!isset($meetParams['redirect_linking']['fields']['url_key'])) {
             return $this;
         }
 
-        if (!array_key_exists('value', $meetParams['redirect']['fields']['url_key'])) {
+        if (!array_key_exists('value', $meetParams['redirect_linking']['fields']['url_key'])) {
             $data = [
                 'entity_type' => 'trade_tracker',
                 'entity_id' => 0,
@@ -90,7 +89,7 @@ class SaveRewrite implements ObserverInterface
             $this->urlRewrite->execute($data);
             return $this;
         }
-        $requestPath = $meetParams['redirect']['fields']['url_key']['value'];
+        $requestPath = $meetParams['redirect_linking']['fields']['url_key']['value'];
         if ($storeId && $requestPath) {
             $data = [
                 'entity_type' => 'trade_tracker',
