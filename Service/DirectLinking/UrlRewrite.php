@@ -71,6 +71,6 @@ class UrlRewrite
                 ['url_rewrite_id']
             )->where('request_path = ?', $requestPath)
             ->where('store_id = ?', $storeId);
-        return $this->resource->getConnection()->fetchOne($selectRewrite);
+        return (string)$this->resource->getConnection()->fetchOne($selectRewrite);
     }
 }

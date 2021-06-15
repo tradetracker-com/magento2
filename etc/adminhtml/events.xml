@@ -5,7 +5,7 @@
   -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
-    <event name="admin_system_config_changed_section_magmodules_tradetracker">
+    <event name="admin_system_config_changed_section_tradetracker_general">
         <observer name="saveRewrite" instance="TradeTracker\Connect\Observer\Config\SaveRewrite"/>
     </event>
 </config>

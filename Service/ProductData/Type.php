@@ -133,6 +133,9 @@ class Type
             } elseif ($extraParameters['behaviour'][$parentType]['use'] == 'parent') {
                 $toUnset[] = $entityId;
             }
+            if (!isset($extraParameters['behaviour'][$parentType])) {
+                continue;
+            }
             if (!$extraParameters['behaviour'][$parentType]['use_parent_attributes']
                 && !$extraParameters['behaviour'][$parentType]['use_parent_url']
                 && !$extraParameters['behaviour'][$parentType]['use_parent_images']
