@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © Sooqr. All rights reserved.
+ * Copyright © TradeTracker. All rights reserved.
  * See COPYING.txt for license details.
  */
 declare(strict_types=1);
@@ -11,8 +11,8 @@ use Magento\Backend\App\Action;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
-use TradeTracker\Connect\Api\Feed\RepositoryInterface as FeedRepository;
 use TradeTracker\Connect\Api\Config\RepositoryInterface as ConfigRepository;
+use TradeTracker\Connect\Api\Feed\RepositoryInterface as FeedRepository;
 use TradeTracker\Connect\Service\Api\Adapter;
 
 /**

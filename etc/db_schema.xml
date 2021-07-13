@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<!--
+  ~ Copyright © TradeTracker. All rights reserved.
+  ~ See COPYING.txt for license details.
+  -->
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="sales_order" engine="innodb" resource="default">
+        <column name="tt_status"
+                xsi:type="varchar"
+                length="50"
+                nullable="true"
+                comment="TradeTracker Status"/>
+    </table>
+    <table name="sales_order_grid" engine="innodb" resource="default">
+        <column name="tt_status"
+                xsi:type="varchar"
+                length="50"
+                nullable="true"
+                comment="TradeTracker Status"/>
+    </table>
+</schema>

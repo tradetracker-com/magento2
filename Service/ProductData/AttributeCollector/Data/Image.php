@@ -7,9 +7,13 @@ declare(strict_types=1);
 
 namespace TradeTracker\Connect\Service\ProductData\AttributeCollector\Data;
 
+use Exception;
 use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\EntityManager\MetadataPool;
+use Magento\Framework\Exception\FileSystemException;
+use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Api\StoreRepositoryInterface;
 
@@ -52,6 +56,14 @@ class Image
      * @var string
      */
     private $linkField;
+    /**
+     * @var File
+     */
+    private $file;
+    /**
+     * @var DirectoryList
+     */
+    private $directoryList;
 
     /**
      * Image constructor.
@@ -59,15 +71,21 @@ class Image
      * @param ResourceConnection $resource
      * @param StoreRepositoryInterface $storeRepository
      * @param MetadataPool $metadataPool
-     * @throws \Exception
+     * @param DirectoryList $directoryList
+     * @param File $file
+     * @throws Exception
      */
     public function __construct(
         ResourceConnection $resource,
         StoreRepositoryInterface $storeRepository,
-        MetadataPool $metadataPool
+        MetadataPool $metadataPool,
+        DirectoryList $directoryList,
+        File $file
     ) {
         $this->resource = $resource;
         $this->storeRepository = $storeRepository;
+        $this->directoryList = $directoryList;
+        $this->file = $file;
         $this->linkField = $metadataPool->getMetadata(ProductInterface::class)->getLinkField();
     }
 
@@ -194,8 +212,19 @@ class Image
                 $this->mediaUrl = $this->storeRepository
                     ->getById((int)$this->storeId)
                     ->getBaseUrl(UrlInterface::URL_TYPE_MEDIA);
-            } catch (\Exception $exception) {
+            } catch (Exception $exception) {
                 $this->mediaUrl = '';
+            }
+
+            try {
+                $mediaDir = $this->directoryList->getPath(\Magento\Framework\App\Filesystem\DirectoryList::MEDIA);
+                if (strpos($mediaDir, '/pub/') !== false
+                    && !$this->file->isDirectory($mediaDir)
+                ) {
+                    $this->mediaUrl = str_replace('/pub/', '/', $this->mediaUrl);
+                }
+            } catch (FileSystemException $exception) {
+                $this->mediaUrl = str_replace('/pub/', '/', $this->mediaUrl);
             }
         }
 

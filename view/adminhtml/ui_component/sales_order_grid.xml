@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © TradeTracker. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Ui:etc/ui_configuration.xsd">
+    <columns name="sales_order_columns">
+        <column name="tt_status">
+            <settings>
+                <filter>select</filter>
+                <dataType>select</dataType>
+                <options class="TradeTracker\Connect\Model\Config\System\Source\Status"/>
+                <visible>true</visible>
+                <label translate="true">TradeTracker Status</label>
+            </settings>
+        </column>
+    </columns>
+</listing>

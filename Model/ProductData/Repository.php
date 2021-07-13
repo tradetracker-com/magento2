@@ -217,7 +217,8 @@ class Repository implements ProductData
             ],
             'category' => [
                 'exclude_attribute' => ['code' => 'tradetracker_disable_export', 'value' => 1],
-                'replace_attribute' => 'tradetracker_category'
+                'replace_attribute' => 'tradetracker_category',
+                'include_anchor' => true
             ],
             'behaviour' => [
                 'configurable' => $this->feedConfigRepository->getConfigProductsBehaviour($storeId),

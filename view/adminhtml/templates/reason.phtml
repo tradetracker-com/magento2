@@ -1,0 +1,81 @@
+<?php
+/**
+ * Copyright © TradeTracker. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+/** @var $block TradeTracker\Connect\Block\Adminhtml\Status\Edit */
+?>
+<div id="mp_edit_transaction_reason" style="display: none">
+    <form class="form change-transaction-reason"
+          novalidate
+          action="<?= $block->escapeUrl($block->getAdminPostUrl()) ?>"
+          method="post"
+          data-mage-init='{"validation": {"errorClass": "mage-error"}}'>
+        <div class="wrapper">
+            <p><?= $block->escapeHtml(__('Please select the reason for rejecting this transaction:')) ?></p>
+            <input type="hidden" name="order_id" value="<?= $block->escapeHtml($block->getOrderId()) ?>"/>
+            <select name="reason" class="admin__control-text reason-select data-grid-search-control">
+                <option value="returned_goods">
+                    <?= $block->escapeHtml('Returned goods'); ?>
+                </option>
+                <option value="out_of_stock">
+                    <?= $block->escapeHtml('Out of stock'); ?>
+                </option>
+                <option value="payment_not_received">
+                    <?= $block->escapeHtml('Payment not received'); ?>
+                </option>
+                <option value="invalid_transaction">
+                    <?= $block->escapeHtml('Invalid transaction'); ?>
+                </option>
+                <option value="order_canceled">
+                    <?= $block->escapeHtml('Order canceled'); ?>
+                </option>
+                <option value="duplicate_order">
+                    <?= $block->escapeHtml('Duplicate order'); ?>
+                </option>
+                <option value="test_transaction">
+                    <?= $block->escapeHtml('Test transaction'); ?>
+                </option>
+                <option value="attributed_to_other_channel">
+                    <?= $block->escapeHtml('Attributed to other channel'); ?>
+                </option>
+                <option value="violates_campaign_terms">
+                    <?= $block->escapeHtml('Violates campaign terms'); ?>
+                </option>
+                <option value="invalid_customer_details">
+                    <?= $block->escapeHtml('Invalid customer details'); ?>
+                </option>
+                <option value="customer_unreachable">
+                    <?= $block->escapeHtml('Customer unreachable'); ?>
+                </option>
+            </select>
+            <div class="msg">
+                <span class="mage-error"></span>
+            </div>
+            <br><br>
+            <div class="actions">
+                <button class="action change-reason primary"
+                        title="<?= $block->escapeHtmlAttr(__('Change Status')) ?>" type="button">
+                    <span><?= $block->escapeHtml(__('Change Status')) ?></span>
+                </button>
+                <br><br>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/x-magento-init">
+    {
+        "*": {
+            "tradeTrackerEditTransactionStatus": {
+                "postUrl":"<?= $block->escapeHtml($block->getAdminPostUrl()) ?>",
+                "buttonLabel":"<?= $block->escapeHtml('edit') ?>"
+            }
+        }
+    }
+
+
+
+
+</script>
