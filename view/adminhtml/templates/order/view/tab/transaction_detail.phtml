@@ -1,0 +1,77 @@
+<?php
+/**
+ * Copyright © TradeTracker. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+use TradeTracker\Connect\Block\Adminhtml\Order\View\Tab\TransactionDetail;
+
+/** @var TransactionDetail $block */
+
+$transaction = $block->getTransaction();
+?>
+<div class="fieldset-wrapper customer-information">
+    <div class="admin__page-section-title">
+        <span class="title">TradeTracker Conversion</span>
+    </div>
+    <div>
+        <?php if ($transaction['success']): ?>
+            <table style="width: 500px;" cellpadding="15">
+                <tbody>
+                    <tr>
+                        <td style="width: 200px;padding: 10px;font-weight: bold;">
+                            <?= $block->escapeHtml('Conversion Date'); ?>
+                        </td>
+                        <td>
+                            <?= $block->escapeHtml($transaction['data']->registrationDate) ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 200px;padding: 10px;font-weight: bold;">
+                            <?= $block->escapeHtml('Campaign ID'); ?>
+                        </td>
+                        <td>
+                            <?= $block->escapeHtml($transaction['data']->campaign->ID) ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 200px;padding: 10px;font-weight: bold;">
+                            <?= $block->escapeHtml('Transaction ID'); ?>
+                        </td>
+                        <td>
+                            <?= $block->escapeHtml($transaction['data']->ID) ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 200px;padding: 10px;font-weight: bold;">
+                            <?= $block->escapeHtml('Transaction Amount'); ?>
+                        </td>
+                        <td>
+                            <?= $block->escapeHtml($transaction['data']->orderAmount) ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 200px;padding: 10px;font-weight: bold;">
+                            <?= $block->escapeHtml('Currency'); ?>
+                        </td>
+                        <td>
+                            <?= $block->escapeHtml($transaction['data']->currency) ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 200px;padding: 10px;font-weight: bold;">
+                            <?= $block->escapeHtml('Status'); ?>
+                        </td>
+                        <td>
+                            <?= $block->escapeHtml($transaction['data']->transactionStatus) ?>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <p><?= $block->escapeHtml($transaction['error']) ?></p>
+        <?php endif; ?>
+    </div>
+</div>
+
+

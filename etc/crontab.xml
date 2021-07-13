@@ -12,5 +12,9 @@
              method="execute" name="tradetracker_generate_feeds">
             <config_path>crontab/default/jobs/tradetracker/schedule/cron_expr</config_path>
         </job>
+        <job instance="TradeTracker\Connect\Model\Cron\SyncTransactions"
+             method="execute" name="tradetracker_sync_transactions">
+            <schedule>0 0 * * *</schedule>
+        </job>
     </group>
 </config>

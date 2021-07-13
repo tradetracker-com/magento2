@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © TradeTracker. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+  -->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="sales_order_tabs">
+            <block class="TradeTracker\Connect\Block\Adminhtml\Order\View\Tab\TransactionDetail"
+                   name="tradetracker_order_log.container"/>
+            <action method="addTab">
+                <argument name="name" xsi:type="string">tradetracker_order_log</argument>
+                <argument name="block" xsi:type="string">tradetracker_order_log.container</argument>
+            </action>
+        </referenceBlock>
+        <block class="Magento\Sales\Block\Adminhtml\Order\View"
+               name="tradetracker_details"
+        />
+        <move element="tradetracker_details" destination="order_additional_info" before="-"/>
+        <referenceContainer name="content">
+            <block class="TradeTracker\Connect\Block\Adminhtml\Status\Edit" name="tradetracker_reason_edit"
+                   template="TradeTracker_Connect::reason.phtml"/>
+        </referenceContainer>
+    </body>
+</page>
