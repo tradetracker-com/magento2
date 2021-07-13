@@ -86,6 +86,9 @@ class Type
         int $limit = 10000,
         int $page = 1
     ): array {
+        if (empty($entityIds)) {
+            return [];
+        }
         $entityIds = array_chunk($entityIds, (int)$limit);
         if (isset($entityIds[$page - 1])) {
             $entityIds = $entityIds[$page - 1];
@@ -128,13 +131,15 @@ class Type
             $keys = array_keys($parents[$entityId]);
             $parentId = reset($keys);
             $parentType = reset($parents[$entityId]);
+
+            if (!isset($extraParameters['behaviour'][$parentType])) {
+                continue;
+            }
+
             if ($extraParameters['behaviour'][$parentType]['use'] == 'simple') {
                 $toUnset[] = $parentId;
             } elseif ($extraParameters['behaviour'][$parentType]['use'] == 'parent') {
                 $toUnset[] = $entityId;
-            }
-            if (!isset($extraParameters['behaviour'][$parentType])) {
-                continue;
             }
             if (!$extraParameters['behaviour'][$parentType]['use_parent_attributes']
                 && !$extraParameters['behaviour'][$parentType]['use_parent_url']
@@ -190,10 +195,8 @@ class Type
                 }
             }
             if (isset($data[$entityId]['parent_id']) && isset($data[$data[$entityId]['parent_id']])) {
-                $data[$entityId]['image_logic'] = $extraParameters['behaviour'][
-                $data[
-                $data[$entityId]['parent_id']
-                ]['type_id']]['use_parent_images'];
+                $typeId = $data[$data[$entityId]['parent_id']]['type_id'];
+                $data[$entityId]['image_logic'] = $extraParameters['behaviour'][$typeId]['use_parent_images'] ?? 0;
             } else {
                 $data[$entityId]['image_logic'] = 0;
             }

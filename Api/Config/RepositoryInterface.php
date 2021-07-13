@@ -51,15 +51,6 @@ interface RepositoryInterface
     public function isEnabled(int $storeId = null): bool;
 
     /**
-     * Get API Credentials
-     *
-     * @param int|null $storeId
-     *
-     * @return array
-     */
-    public function getApiCredentials(int $storeId = null): array;
-
-    /**
      * Get current or specified store
      *
      * @param int|null $storeId
@@ -74,4 +65,12 @@ interface RepositoryInterface
      * @return bool
      */
     public function logDebug(): bool;
+
+    /**
+     * Return API credentials
+     *
+     * @param int|null $storeId
+     * @return array
+     */
+    public function getApiCredentials(int $storeId = null): array;
 }
