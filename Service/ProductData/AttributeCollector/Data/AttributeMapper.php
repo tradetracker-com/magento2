@@ -270,13 +270,28 @@ class AttributeMapper
             $result = $this->resource->getConnection()->fetchAll($select);
             foreach ($result as $item) {
                 if (array_key_exists($item['attribute_id'], $this->attrOptions)) {
-                    $attrValues = explode(',', $item['value']);
+                    $attrValues = explode(',', (string)$item['value']);
                     $item['value'] = [];
                     foreach ($attrValues as $attrValue) {
                         $attributeId = (string)$item['attribute_id'];
-                        $item['value'][] = $this->attrOptions[$attributeId]
+                        if (!isset($this->attrOptions
+                            [$attributeId]
+                            [$attrValue]
+                            [0])) {
+                            continue;
+                        }
+                        $defaultValue = $this->attrOptions
+                        [$attributeId]
                         [$attrValue]
-                        [$item['store_id']];
+                        [0];
+                        try {
+                            $value = $this->attrOptions[$attributeId]
+                            [$attrValue]
+                            [$item['store_id']];
+                            $item['value'][] = $value;
+                        } catch (\Exception $e) {
+                            $item['value'][] = $defaultValue;
+                        }
                     }
                     $item['value'] = implode(',', $item['value']);
                 }

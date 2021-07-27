@@ -392,6 +392,9 @@ class Repository implements ProductData
             case 'manage_stock':
                 return ($value) ? 'true' : 'false';
             case 'url':
+                if (!isset($productData['url'])) {
+                    return '';
+                }
                 if (!empty($productData['utm_string'])) {
                     $prefix = strpos($productData['url'], '?') !== false ? '&' : '?';
                     return $productData['url'] . $prefix . $productData['utm_string'];
