@@ -50,8 +50,9 @@ class Price
      * @var TimezoneInterface
      */
     private $localeDate;
+
     /**
-     * @var Collection
+     * @var CollectionFactory
      */
     private $collectionFactory;
 
@@ -91,7 +92,7 @@ class Price
         $this->catalogHelper = $catalogHelper;
         $this->storeManager = $storeManager;
         $this->localeDate = $localeDate;
-        $this->collectionFactory = $collectionFactory->create();
+        $this->collectionFactory = $collectionFactory;
     }
 
     /**
@@ -183,7 +184,7 @@ class Price
      */
     private function getProductData(array $productIds = [])
     {
-        $products = $this->collectionFactory
+        $products = $this->collectionFactory->create()
             ->addFieldToSelect(['price', 'special_price'])
             ->addFieldToFilter('entity_id', ['in' => $productIds]);
 
