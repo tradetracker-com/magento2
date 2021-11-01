@@ -259,6 +259,7 @@ class Category
         $rootCategoryId = $this->getRootCategoryId();
         foreach ($data as $entityId => $categoryPathes) {
             $usedPath = [];
+            $categoryPathes = array_filter($categoryPathes);
             foreach ($categoryPathes as $categoryPath) {
                 $categoryIds = explode('/', $categoryPath);
                 $key = array_search($rootCategoryId, $categoryIds);
