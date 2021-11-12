@@ -394,7 +394,7 @@ class FeedRepository extends ConfigRepository implements FeedInterface
      */
     private function productFeedVisibilityRestrictions(int $storeId): array
     {
-        return $this->getStoreValueArray(self::XML_PATH_VISIBILITY_OPTIONS, $storeId);
+        return explode(',', $this->getStoreValue(self::XML_PATH_VISIBILITY_OPTIONS, $storeId));
     }
 
     /**
