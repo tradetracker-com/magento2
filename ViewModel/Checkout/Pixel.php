@@ -99,7 +99,7 @@ class Pixel implements ArgumentInterface
                 $categoryIds = $item->getProduct()->getCategoryIds();
                 foreach ($categoryIds as $categoryId) {
                     $category = $this->categoryRepository->get($categoryId, $this->storeManager->getStore()->getId());
-                    $ttProductId = $category->getData('tt_product_id');
+                    $ttProductId = $category->getData('tradetracker_product_id');
                     if (!empty($ttProductId) && ($ttProductId != $defaultId)) {
                         $pixelData['transactions'][$defaultId]['amount'] -= $item['base_row_total'];
                         if (!empty($pixelData['transactions'][$ttProductId]['amount'])) {
