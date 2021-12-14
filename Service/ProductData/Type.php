@@ -221,7 +221,13 @@ class Type
             if (!isset($productData[$filter['attribute']])) {
                 return true;
             }
-            if ($productData['type_id'] != $filter['product_type']) {
+            if ($filter['product_type'] == 'simple'
+                && !in_array($productData['type_id'], ['simple', 'virtual', 'downloadable'])
+            ) {
+                return true;
+            } elseif ($filter['product_type'] == 'parent'
+                && in_array($productData['type_id'], ['simple', 'virtual', 'downloadable'])
+            ) {
                 return true;
             }
             switch ($filter['condition']) {
