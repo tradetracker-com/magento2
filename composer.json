@@ -2,7 +2,7 @@
   "name": "tradetracker-com/magento2",
   "description": "TradeTracker integration for Magento 2",
   "type": "magento2-module",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "require": {
       "magento/framework": ">=100.1.0"
   },
