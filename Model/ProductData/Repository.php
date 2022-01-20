@@ -48,7 +48,7 @@ class Repository implements ProductData
         'productURL' => 'url',
         'imageURL' => 'image',
         'additionalImages' => 'additional_images',
-        'fromPrice' => 'price',
+        'fromPrice' => 'min_price',
         'price' => 'final_price',
         'discount' => 'discount_perc',
         'EAN' => 'ean',
