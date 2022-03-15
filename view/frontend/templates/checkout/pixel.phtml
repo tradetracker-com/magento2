@@ -14,7 +14,7 @@ $viewModel = $block->getViewModel();
     <?php if (!empty($pixelData['transactions'])): ?>
         <?php foreach ($pixelData['transactions'] as $productID => $transaction): ?>
             <!--suppress JSUnusedAssignment -->
-            <script type="text/javascript">
+            <script>
                 var ttConversionOptions = ttConversionOptions || [];
                 ttConversionOptions.push({
                     type: 'sales',
@@ -48,7 +48,7 @@ $viewModel = $block->getViewModel();
                 <img src="<?= $block->escapeUrl($img); ?> " alt=""/>
             </noscript>
         <?php endforeach; ?>
-        <script type="text/javascript">
+        <script>
             (function (ttConversionOptions) {
                 var campaignID = 'campaignID' in ttConversionOptions ?
                     ttConversionOptions.campaignID : ('length' in ttConversionOptions && ttConversionOptions.length

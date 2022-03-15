@@ -30,7 +30,7 @@ class Debug extends Action
     /**
      * Debug log file path pattern
      */
-    const DEBUG_LOG_FILE = '%s/log/tradetracker/debug.log';
+    public const DEBUG_LOG_FILE = '%s/log/tradetracker/debug.log';
 
     /**
      * @var JsonFactory

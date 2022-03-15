@@ -22,9 +22,9 @@ use Zend_Validate_Exception;
  */
 class ProductAttributes implements DataPatchInterface, PatchRevertableInterface
 {
-    const ATTRIBUTE_GROUP = 'TradeTracker';
-    const PRODUCT_EXCLUDE = 'tradetracker_exclude';
-    const PRODUCT_PRODUCT_ID = 'tradetracker_product_id';
+    public const ATTRIBUTE_GROUP = 'TradeTracker';
+    public const PRODUCT_EXCLUDE = 'tradetracker_exclude';
+    public const PRODUCT_PRODUCT_ID = 'tradetracker_product_id';
 
     /**
      * @var ModuleDataSetupInterface

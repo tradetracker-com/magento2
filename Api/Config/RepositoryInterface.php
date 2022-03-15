@@ -16,16 +16,16 @@ interface RepositoryInterface
 {
 
     /** Module's extension code */
-    const EXTENSION_CODE = 'TradeTracker_Connect';
+    public const EXTENSION_CODE = 'TradeTracker_Connect';
 
     /** General Group */
-    const XML_PATH_EXTENSION_ENABLE = 'tradetracker/general/enable';
-    const XML_PATH_EXTENSION_VERSION = 'tradetracker/general/version';
-    const XML_PATH_DEBUG = 'tradetracker/general/debug';
-    const XML_PATH_CUSTOMER_ID = 'tradetracker/general/customer_id';
-    const XML_PATH_PASSPHRASE = 'tradetracker/general/passphrase';
-    const XML_PATH_SANDBOX = 'tradetracker/general/sandbox';
-    const XML_PATH_DEMO = 'tradetracker/general/demo';
+    public const XML_PATH_EXTENSION_ENABLE = 'tradetracker/general/enable';
+    public const XML_PATH_EXTENSION_VERSION = 'tradetracker/general/version';
+    public const XML_PATH_DEBUG = 'tradetracker/general/debug';
+    public const XML_PATH_CUSTOMER_ID = 'tradetracker/general/customer_id';
+    public const XML_PATH_PASSPHRASE = 'tradetracker/general/passphrase';
+    public const XML_PATH_SANDBOX = 'tradetracker/general/sandbox';
+    public const XML_PATH_DEMO = 'tradetracker/general/demo';
 
     /**
      * Get extension version

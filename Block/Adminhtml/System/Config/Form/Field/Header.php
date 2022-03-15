@@ -18,7 +18,7 @@ use TradeTracker\Connect\Api\Config\RepositoryInterface as ConfigRepository;
 class Header extends Field
 {
 
-    const MODULE_CODE = 'magento2-tradetracker';
+    public const MODULE_CODE = 'magento2-tradetracker';
 
     /**
      * Template file name

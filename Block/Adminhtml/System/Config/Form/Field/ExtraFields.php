@@ -19,9 +19,9 @@ use TradeTracker\Connect\Api\Log\RepositoryInterface as LogRepository;
 class ExtraFields extends AbstractFieldArray
 {
 
-    const OPTION_PATTERN = 'option_%s';
-    const SELECTED = 'selected="selected"';
-    const RENDERERS = [
+    public const OPTION_PATTERN = 'option_%s';
+    public const SELECTED = 'selected="selected"';
+    public const RENDERERS = [
         'attribute' => Renderer\Attributes::class,
     ];
 

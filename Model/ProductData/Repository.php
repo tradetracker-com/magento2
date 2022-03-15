@@ -19,7 +19,7 @@ use TradeTracker\Connect\Service\ProductData\Type;
  */
 class Repository implements ProductData
 {
-    const PREVIEW_QTY = 250;
+    public const PREVIEW_QTY = 250;
 
     /**
      * Base attributes map to pull from product
@@ -258,8 +258,10 @@ class Repository implements ProductData
                     break;
                 case 3:
                 case 4:
-                    foreach ($parentImageData as $storeId => $parentImageDataStore) {
-                        $imageData[$storeId] += $parentImageDataStore;
+                    if ($parentImageData) {
+                        foreach ($parentImageData as $storeId => $parentImageDataStore) {
+                            $imageData[$storeId] += $parentImageDataStore;
+                        }
                     }
                     break;
             }

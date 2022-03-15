@@ -18,7 +18,7 @@ use Magento\Framework\EntityManager\MetadataPool;
 class ConfigurableKey
 {
 
-    const REQUIRE = [
+    public const REQUIRE = [
         'entity_ids'
     ];
 
