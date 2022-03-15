@@ -166,7 +166,7 @@ class Repository implements ConfigRepositoryInterface
      */
     public function logDebug(): bool
     {
-        return false;
+        return $this->isSetFlag(self::XML_PATH_DEBUG);
     }
 
     /**
