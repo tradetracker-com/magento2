@@ -31,6 +31,10 @@ class Error extends Action
      * Error log file path pattern
      */
     public const ERROR_LOG_FILE = '%s/log/tradetracker/error.log';
+    /**
+     * @see _isAllowed()
+     */
+    public const ADMIN_RESOURCE = 'TradeTracker_Connect::config';
 
     /**
      * @var JsonFactory

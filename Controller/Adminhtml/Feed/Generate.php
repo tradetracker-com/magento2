@@ -23,11 +23,9 @@ class Generate extends Action
 {
 
     /**
-     * Authorization level of a basic admin session
-     *
      * @see _isAllowed()
      */
-    public const ADMIN_RESOURCE = 'TradeTracker_Connect::feed_generate';
+    public const ADMIN_RESOURCE = 'TradeTracker_Connect::config';
 
     /**
      * @var FeedRepository

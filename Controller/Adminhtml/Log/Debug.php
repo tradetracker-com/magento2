@@ -31,6 +31,10 @@ class Debug extends Action
      * Debug log file path pattern
      */
     public const DEBUG_LOG_FILE = '%s/log/tradetracker/debug.log';
+    /**
+     * @see _isAllowed()
+     */
+    public const ADMIN_RESOURCE = 'TradeTracker_Connect::config';
 
     /**
      * @var JsonFactory
