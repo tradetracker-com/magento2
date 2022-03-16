@@ -20,5 +20,5 @@ class OptionKeys
     /**
      * Key for --store-id option
      */
-    const STORE_ID = 'store-id';
+    public const STORE_ID = 'store-id';
 }

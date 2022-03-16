@@ -11,6 +11,7 @@ use Exception;
 use Magento\Backend\App\Action;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\App\Response\Http\FileFactory;
+use Magento\Framework\App\Response\RedirectInterface;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\Result\RawFactory;
 use Magento\Framework\Controller\ResultFactory;
@@ -26,16 +27,14 @@ class Download extends Action
 {
 
     /**
-     * Authorization level of a basic admin session
-     *
      * @see _isAllowed()
      */
-    const ADMIN_RESOURCE = 'TradeTracker_Connect::feed_generate';
+    public const ADMIN_RESOURCE = 'TradeTracker_Connect::config';
 
     /**
      * Error message
      */
-    const ERROR = 'File not found, please generate new feed.';
+    public const ERROR = 'File not found, please generate new feed.';
 
     /**
      * @var FeedRepository
@@ -53,6 +52,10 @@ class Download extends Action
      * @var File
      */
     private $ioFilesystem;
+    /**
+     * @var RedirectInterface
+     */
+    private $redirect;
 
     /**
      * Download constructor.
@@ -67,12 +70,14 @@ class Download extends Action
         FeedRepository $feedRepository,
         RawFactory $resultRawFactory,
         FileFactory $fileFactory,
-        File $ioFilesystem
+        File $ioFilesystem,
+        RedirectInterface $redirect
     ) {
         $this->feedRepository = $feedRepository;
         $this->fileFactory = $fileFactory;
         $this->resultRawFactory = $resultRawFactory;
         $this->ioFilesystem = $ioFilesystem;
+        $this->redirect = $redirect;
         parent::__construct($context);
     }
 
@@ -110,7 +115,7 @@ class Download extends Action
             $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
             $this->messageManager->addErrorMessage(__($exception->getMessage()));
             return $resultRedirect->setPath(
-                $this->_redirect->getRefererUrl()
+                $this->redirect->getRefererUrl()
             );
         }
     }

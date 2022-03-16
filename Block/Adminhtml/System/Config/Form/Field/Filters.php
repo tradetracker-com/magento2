@@ -20,9 +20,9 @@ use TradeTracker\Connect\Api\Log\RepositoryInterface as LogRepository;
 class Filters extends AbstractFieldArray
 {
 
-    const OPTION_PATTERN = 'option_%s';
-    const SELECTED = 'selected="selected"';
-    const RENDERERS = [
+    public const OPTION_PATTERN = 'option_%s';
+    public const SELECTED = 'selected="selected"';
+    public const RENDERERS = [
         'attribute' => Renderer\Attributes::class,
         'condition' => Renderer\Conditions::class,
         'product_type' => Renderer\ProductTypes::class,

@@ -24,7 +24,7 @@ class GenerateFeed extends Command
     /**
      * Create feed command
      */
-    const COMMAND_NAME = 'tradetracker:feed:create';
+    public const COMMAND_NAME = 'tradetracker:feed:create';
 
     /**
      * @var RepositoryInterface

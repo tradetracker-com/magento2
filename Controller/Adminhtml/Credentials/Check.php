@@ -21,6 +21,11 @@ class Check extends Action
 {
 
     /**
+     * @see _isAllowed()
+     */
+    public const ADMIN_RESOURCE = 'TradeTracker_Connect::config';
+
+    /**
      * @var Adapter
      */
     private $adapter;

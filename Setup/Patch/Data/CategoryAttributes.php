@@ -23,10 +23,10 @@ use Zend_Validate_Exception;
 class CategoryAttributes implements DataPatchInterface, PatchRevertableInterface
 {
 
-    const ATTRIBUTE_GROUP = 'TradeTracker';
-    const CATEGORY_DISABLE_ATT = 'tradetracker_disable_export';
-    const CATEGORY_PRODUCT_ID = 'tradetracker_product_id';
-    const CATEGORY_CATERGORY = 'tradetracker_category';
+    public const ATTRIBUTE_GROUP = 'TradeTracker';
+    public const CATEGORY_DISABLE_ATT = 'tradetracker_disable_export';
+    public const CATEGORY_PRODUCT_ID = 'tradetracker_product_id';
+    public const CATEGORY_CATERGORY = 'tradetracker_category';
 
     /**
      * @var ModuleDataSetupInterface

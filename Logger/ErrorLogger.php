@@ -12,7 +12,6 @@ use Monolog\Logger;
 
 /**
  * ErrorLogger logger class
- *
  */
 class ErrorLogger extends Logger
 {
@@ -41,18 +40,17 @@ class ErrorLogger extends Logger
     }
 
     /**
-     * Write error data to log
+     * Add error data to logger
      *
      * @param string $type
-     * @param mixed $data
-     *
+     * @param mixed  $data
      */
-    public function addLog($type, $data): void
+    public function addLog(string $type, $data)
     {
         if (is_array($data) || is_object($data)) {
-            $this->addError($type . ': ' . $this->json->serialize($data));
+            $this->addRecord(static::ERROR, $type . ': ' . $this->json->serialize($data));
         } else {
-            $this->addEmergency($type . ': ' . $data);
+            $this->addRecord(static::ERROR, $type . ': ' . $data);
         }
     }
 }

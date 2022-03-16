@@ -15,8 +15,8 @@ use TradeTracker\Connect\Api\Config\RepositoryInterface;
 interface DirectLinkingInterface extends RepositoryInterface
 {
 
-    const XML_PATH_REDIRECT_ENABLE = 'tradetracker/direct_linking/enable';
-    const XML_PATH_REDIRECT_URL = 'tradetracker/direct_linking/url_key';
+    public const XML_PATH_REDIRECT_ENABLE = 'tradetracker/direct_linking/enable';
+    public const XML_PATH_REDIRECT_URL = 'tradetracker/direct_linking/url_key';
 
     /**
      * Check if direct linking is enabled

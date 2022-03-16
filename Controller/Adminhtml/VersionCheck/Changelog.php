@@ -26,6 +26,11 @@ class Changelog extends Action
 {
 
     /**
+     * @see _isAllowed()
+     */
+    public const ADMIN_RESOURCE = 'TradeTracker_Connect::config';
+
+    /**
      * @var JsonFactory
      */
     private $resultJsonFactory;

@@ -23,7 +23,7 @@ use TradeTracker\Connect\Api\Config\System\DirectLinkingInterface as DirectLinki
 class Index extends Action
 {
 
-    const TRACKBACK_URL = 'https://tc.tradetracker.net/?c=%s&m=%s&a=%s&r=%s&u=%s';
+    public const TRACKBACK_URL = 'https://tc.tradetracker.net/?c=%s&m=%s&a=%s&r=%s&u=%s';
 
     /**
      * @var Http

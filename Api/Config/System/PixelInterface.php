@@ -16,11 +16,11 @@ interface PixelInterface extends RepositoryInterface
 {
 
     /** Pixerl Group */
-    const XML_PATH_PIXEL_ENABLE = 'tradetracker/pixel/enable';
-    const XML_PATH_CAMPAIGN_ID = 'tradetracker/pixel/campaign_id';
-    const XML_PATH_PRODUCT_ID = 'tradetracker/pixel/product_id';
-    const XML_PATH_OVERWRITE_CURRENCY = 'tradetracker/pixel/overwrite_currency';
-    const XML_PATH_NON_DEFAULT_CURRENCY = 'tradetracker/pixel/non_default_currency';
+    public const XML_PATH_PIXEL_ENABLE = 'tradetracker/pixel/enable';
+    public const XML_PATH_CAMPAIGN_ID = 'tradetracker/pixel/campaign_id';
+    public const XML_PATH_PRODUCT_ID = 'tradetracker/pixel/product_id';
+    public const XML_PATH_OVERWRITE_CURRENCY = 'tradetracker/pixel/overwrite_currency';
+    public const XML_PATH_NON_DEFAULT_CURRENCY = 'tradetracker/pixel/non_default_currency';
 
     /**
      * Check if pixel is enabled

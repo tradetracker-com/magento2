@@ -17,9 +17,9 @@ use SoapClient;
 class Adapter
 {
 
-    const WSDL = 'http://ws.tradetracker.com/soap/merchant?wsdl';
+    public const WSDL = 'http://ws.tradetracker.com/soap/merchant?wsdl';
 
-    const COMPRESSION = ['compression' => SOAP_COMPRESSION_ACCEPT | SOAP_COMPRESSION_GZIP];
+    public const COMPRESSION = ['compression' => SOAP_COMPRESSION_ACCEPT | SOAP_COMPRESSION_GZIP];
 
     /**
      * @var ClientFactory

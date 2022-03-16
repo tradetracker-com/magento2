@@ -25,7 +25,7 @@ class Cron extends Value
     /**
      * Config path of TradeTracker Cron Schedule
      */
-    const CRON_STRING_PATH = 'crontab/default/jobs/tradetracker/schedule/cron_expr';
+    public const CRON_STRING_PATH = 'crontab/default/jobs/tradetracker/schedule/cron_expr';
 
     /**
      * @var WriterInterface

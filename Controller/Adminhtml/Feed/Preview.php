@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace TradeTracker\Connect\Controller\Adminhtml\Feed;
 
 use Magento\Backend\App\Action;
+use Magento\Framework\App\Response\RedirectInterface;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
@@ -22,11 +23,9 @@ class Preview extends Action
 {
 
     /**
-     * Authorization level of a basic admin session
-     *
      * @see _isAllowed()
      */
-    const ADMIN_RESOURCE = 'TradeTracker_Connect::feed_generate';
+    public const ADMIN_RESOURCE = 'TradeTracker_Connect::config';
 
     /**
      * @var FeedRepository
@@ -36,6 +35,10 @@ class Preview extends Action
      * @var DriverInterface
      */
     private $fileDriver;
+    /**
+     * @var RedirectInterface
+     */
+    private $redirect;
 
     /**
      * Generate constructor.
@@ -44,12 +47,14 @@ class Preview extends Action
      * @param Action\Context $context
      */
     public function __construct(
+        Action\Context $context,
         FeedRepository $feedRepository,
         DriverInterface $fileDriver,
-        Action\Context $context
+        RedirectInterface $redirect
     ) {
         $this->feedRepository = $feedRepository;
         $this->fileDriver = $fileDriver;
+        $this->redirect = $redirect;
         parent::__construct($context);
     }
 
@@ -66,7 +71,7 @@ class Preview extends Action
             $this->messageManager->addErrorMessage($result['message']);
             $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
             return $resultRedirect->setPath(
-                $this->_redirect->getRefererUrl()
+                $this->redirect->getRefererUrl()
             );
         }
 
@@ -78,7 +83,7 @@ class Preview extends Action
             $this->messageManager->addErrorMessage($exception->getMessage());
             $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
             return $resultRedirect->setPath(
-                $this->_redirect->getRefererUrl()
+                $this->redirect->getRefererUrl()
             );
         }
     }
