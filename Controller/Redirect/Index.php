@@ -77,7 +77,6 @@ class Index extends Action
      */
     public function execute()
     {
-        $trackingGroupID = '';
         $response = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
         if (!$this->request->getParam('tt') || !$this->directLinkingConfig->isEnabled()) {
             return $response->setPath('/');
@@ -111,12 +110,6 @@ class Index extends Action
         // Set session tracking cookie.
         // phpcs:ignore Magento2.Functions.DiscouragedFunction
         setcookie('TTS_' . $campaignID, $trackingData, 0, '/', $domainName);
-
-        // Set tracking group cookie.
-        if (!empty($trackingGroupID)) {
-            // phpcs:ignore Magento2.Functions.DiscouragedFunction
-            setcookie('__tgdat' . $trackingGroupID, $trackingData . '_' . $campaignID, $expireTime, '/', $domainName);
-        }
 
         // Set track-back URL.
         $trackBackURL = sprintf(

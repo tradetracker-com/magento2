@@ -177,9 +177,9 @@ class Repository implements ConfigRepositoryInterface
         return [
             'customer_id' => $this->getCustomerId($storeId),
             'passphrase' => $this->getPassphrase($storeId),
-            'sandbox' => $this->isSandbox($storeId),
+            'sandbox' => false,
             'locale' => 'en_GB',
-            'demo' => $this->isDemo($storeId)
+            'demo' => false
         ];
     }
 
@@ -205,30 +205,6 @@ class Repository implements ConfigRepositoryInterface
     private function getPassphrase(int $storeId = null): string
     {
         return $this->getStoreValue(self::XML_PATH_PASSPHRASE, $storeId);
-    }
-
-    /**
-     * Is currently enabled sandbox mode
-     *
-     * @param int|null $storeId
-     *
-     * @return bool
-     */
-    private function isSandbox(int $storeId = null): bool
-    {
-        return $this->isSetFlag(self::XML_PATH_SANDBOX, $storeId);
-    }
-
-    /**
-     * Is currently enabled demo mode
-     *
-     * @param int|null $storeId
-     *
-     * @return bool
-     */
-    private function isDemo(int $storeId = null): bool
-    {
-        return $this->isSetFlag(self::XML_PATH_DEMO, $storeId);
     }
 
     /**

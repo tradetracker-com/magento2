@@ -19,18 +19,6 @@ class DirectLinkingRepository extends ConfigRepository implements DirectLinkingI
     /**
      * @inheritDoc
      */
-    public function isEnabled(int $storeId = null): bool
-    {
-        if (!parent::isEnabled($storeId)) {
-            return false;
-        }
-
-        return $this->isSetFlag(self::XML_PATH_REDIRECT_ENABLE, $storeId);
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function getRedirectUrl(int $storeId = null): string
     {
         if (!$storeId) {

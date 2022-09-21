@@ -138,7 +138,7 @@ class TransactionDetail extends Template implements TabInterface
     {
         $order = $this->getOrder();
         $storeId = (int)$order->getStoreId();
-        $campaignID = $this->configRepository->getCampaingId($storeId);
+        $campaignID = $this->configRepository->getCampaignId($storeId);
         $data = $this->configRepository->getApiCredentials($storeId);
         $result = $this->adapter->execute($data);
         if ($result['success']) {

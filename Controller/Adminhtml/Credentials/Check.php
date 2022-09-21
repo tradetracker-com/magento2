@@ -60,9 +60,9 @@ class Check extends Action
         $data = [
             'customer_id' => (int)$this->getRequest()->getParam('customer_id'),
             'passphrase' => $this->getRequest()->getParam('passphrase'),
-            'sandbox' => (bool)$this->getRequest()->getParam('sandbox'),
+            'sandbox' => false,
             'locale' => 'en_GB',
-            'demo' => (bool)$this->getRequest()->getParam('demo')
+            'demo' => false
         ];
         $result = $this->adapter->execute($data);
         if ($result['success']) {

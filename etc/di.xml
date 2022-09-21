@@ -22,6 +22,8 @@
                 type="TradeTracker\Connect\Model\Config\System\PixelRepository"/>
     <preference for="TradeTracker\Connect\Api\ProductData\RepositoryInterface"
                 type="TradeTracker\Connect\Model\ProductData\Repository"/>
+    <preference for="TradeTracker\Connect\Api\Webapi\ManagementInterface"
+                type="TradeTracker\Connect\Model\Webapi\Repository"/>
     <!-- Repositories Block End -->
 
     <!-- Log Block Start -->
