@@ -24,8 +24,6 @@ interface RepositoryInterface
     public const XML_PATH_DEBUG = 'tradetracker/general/debug';
     public const XML_PATH_CUSTOMER_ID = 'tradetracker/general/customer_id';
     public const XML_PATH_PASSPHRASE = 'tradetracker/general/passphrase';
-    public const XML_PATH_SANDBOX = 'tradetracker/general/sandbox';
-    public const XML_PATH_DEMO = 'tradetracker/general/demo';
 
     /**
      * Get extension version

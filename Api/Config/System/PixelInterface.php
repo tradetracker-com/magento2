@@ -15,8 +15,7 @@ use TradeTracker\Connect\Api\Config\RepositoryInterface;
 interface PixelInterface extends RepositoryInterface
 {
 
-    /** Pixerl Group */
-    public const XML_PATH_PIXEL_ENABLE = 'tradetracker/pixel/enable';
+    /** Pixel Group */
     public const XML_PATH_CAMPAIGN_ID = 'tradetracker/pixel/campaign_id';
     public const XML_PATH_PRODUCT_ID = 'tradetracker/pixel/product_id';
     public const XML_PATH_OVERWRITE_CURRENCY = 'tradetracker/pixel/overwrite_currency';
@@ -38,7 +37,7 @@ interface PixelInterface extends RepositoryInterface
      *
      * @return string
      */
-    public function getCampaingId(int $storeId = null): string;
+    public function getCampaignId(int $storeId = null): string;
 
     /**
      * Get product ID from config

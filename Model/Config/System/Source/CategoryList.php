@@ -111,12 +111,10 @@ class CategoryList implements OptionSourceInterface
         $rootCats = [1, 2];
         $path = explode('/', $path);
 
-        if (!empty($path)) {
-            foreach ($path as $catId) {
-                if (!in_array($catId, $rootCats)) {
-                    if (!empty($categoryList[$catId]['name'])) {
-                        $categoryPath[] = $categoryList[$catId]['name'];
-                    }
+        foreach ($path as $catId) {
+            if ($catId && !in_array($catId, $rootCats)) {
+                if (!empty($categoryList[$catId]['name'])) {
+                    $categoryPath[] = $categoryList[$catId]['name'];
                 }
             }
         }

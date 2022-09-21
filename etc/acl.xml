@@ -14,6 +14,7 @@
                     <resource id="Magento_Backend::stores_settings">
                         <resource id="Magento_Config::config">
                             <resource id="TradeTracker_Connect::config" title="TradeTracker" sortOrder="80"/>
+                            <resource id="TradeTracker_Connect::webapi" title="TradeTracker Webapi" sortOrder="80"/>
                         </resource>
                     </resource>
                 </resource>

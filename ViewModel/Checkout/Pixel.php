@@ -11,7 +11,6 @@ use Magento\Catalog\Model\CategoryRepository;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use TradeTracker\Connect\Api\Config\RepositoryInterface as ConfigRepository;
 use TradeTracker\Connect\Api\Config\System\PixelInterface as PixelConfig;
 use TradeTracker\Connect\Api\Log\RepositoryInterface as LogRepository;
 
@@ -38,10 +37,6 @@ class Pixel implements ArgumentInterface
      */
     private $categoryRepository;
     /**
-     * @var ConfigRepository
-     */
-    private $configRepository;
-    /**
      * @var PixelConfig
      */
     private $pixelConfig;
@@ -52,7 +47,6 @@ class Pixel implements ArgumentInterface
      * @param Session $checkoutSession
      * @param LogRepository $logger
      * @param CategoryRepository $categoryRepository
-     * @param ConfigRepository $configRepository
      * @param StoreManagerInterface $storeManager
      * @param PixelConfig $pixelConfig
      */
@@ -60,7 +54,6 @@ class Pixel implements ArgumentInterface
         Session $checkoutSession,
         LogRepository $logger,
         CategoryRepository $categoryRepository,
-        ConfigRepository $configRepository,
         StoreManagerInterface $storeManager,
         PixelConfig $pixelConfig
     ) {
@@ -68,7 +61,6 @@ class Pixel implements ArgumentInterface
         $this->logger = $logger;
         $this->storeManager = $storeManager;
         $this->categoryRepository = $categoryRepository;
-        $this->configRepository = $configRepository;
         $this->pixelConfig = $pixelConfig;
     }
 
@@ -83,7 +75,7 @@ class Pixel implements ArgumentInterface
             $order = $this->checkoutSession->getLastRealOrder();
             $subtotal = ($order->getGrandTotal() - $order->getTaxAmount() - $order->getShippingAmount());
             $defaultId = $this->pixelConfig->getProductId();
-            $campaignId = $this->pixelConfig->getCampaingId();
+            $campaignId = $this->pixelConfig->getCampaignId();
 
             $pixelData['campaign_id'] = $campaignId;
             $pixelData['transaction_id'] = $order->getIncrementId();

@@ -64,7 +64,7 @@ class SyncTransactions
      */
     private function updateTransactions()
     {
-        $campaignID = $this->configRepository->getCampaingId();
+        $campaignID = $this->configRepository->getCampaignId();
         $data = $this->configRepository->getApiCredentials();
         $result = $this->adapter->execute($data);
         if ($result['success']) {

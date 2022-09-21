@@ -54,7 +54,7 @@ class Reject implements ObserverInterface
         }
         $incrementId = $order->getIncrementId();
         $storeId = (int)$order->getStoreId();
-        $campaignID = $this->configRepository->getCampaingId($storeId);
+        $campaignID = $this->configRepository->getCampaignId($storeId);
         $data = $this->configRepository->getApiCredentials($storeId);
         $result = $this->adapter->execute($data);
         $id = 0;

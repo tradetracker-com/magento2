@@ -54,7 +54,7 @@ class FeedRepository extends ConfigRepository implements FeedInterface
     /**
      * @inheritDoc
      */
-    public function getAttributes($storeId): array
+    public function getAttributes(int $storeId = null): array
     {
         $attributes = [
             'name' => $this->getNameAttribute($storeId),
