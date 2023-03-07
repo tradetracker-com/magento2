@@ -15,7 +15,6 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
 use Magento\Framework\Setup\Patch\PatchRevertableInterface;
-use Zend_Validate_Exception;
 
 /**
  * Class ProductAttributes
@@ -49,20 +48,19 @@ class ProductAttributes implements DataPatchInterface, PatchRevertableInterface
     }
 
     /**
-     * @return DataPatchInterface|void
-     * @throws LocalizedException
-     * @throws Zend_Validate_Exception
+     * @inheritDoc
      */
     public function apply()
     {
         $this->moduleDataSetup->getConnection()->startSetup();
         $this->addProductAttribute();
         $this->moduleDataSetup->getConnection()->endSetup();
+
+        return $this;
     }
 
     /**
      * @throws LocalizedException
-     * @throws Zend_Validate_Exception
      */
     public function addProductAttribute()
     {

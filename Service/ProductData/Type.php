@@ -7,9 +7,6 @@ declare(strict_types=1);
 
 namespace TradeTracker\Connect\Service\ProductData;
 
-use Magento\Framework\App\ResourceConnection;
-use Magento\Framework\Serialize\Serializer\Json as JsonSerializer;
-use TradeTracker\Connect\Service\ProductData\AttributeCollector\Data\AttributeMapper;
 use TradeTracker\Connect\Service\ProductData\AttributeCollector\Data\ConfigurableKey;
 use TradeTracker\Connect\Service\ProductData\AttributeCollector\Data\Parents;
 
@@ -19,18 +16,6 @@ use TradeTracker\Connect\Service\ProductData\AttributeCollector\Data\Parents;
 class Type
 {
 
-    /**
-     * @var JsonSerializer
-     */
-    private $json;
-    /**
-     * @var AttributeMapper
-     */
-    private $attributeMapper;
-    /**
-     * @var ResourceConnection
-     */
-    private $resourceConnection;
     /**
      * @var ConfigurableKey
      */
@@ -46,24 +31,15 @@ class Type
 
     /**
      * Data constructor.
-     * @param JsonSerializer $json
-     * @param AttributeMapper $attributeMapper
-     * @param ResourceConnection $resourceConnection
      * @param Data $data
      * @param ConfigurableKey $configurableKey
      * @param Parents $parents
      */
     public function __construct(
-        JsonSerializer $json,
-        AttributeMapper $attributeMapper,
-        ResourceConnection $resourceConnection,
         Data $data,
         ConfigurableKey $configurableKey,
         Parents $parents
     ) {
-        $this->json = $json;
-        $this->attributeMapper = $attributeMapper;
-        $this->resourceConnection = $resourceConnection;
         $this->data = $data;
         $this->configurableKey = $configurableKey;
         $this->parents = $parents;
