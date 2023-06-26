@@ -15,6 +15,7 @@ interface ManagementInterface
     /**
      * GET module settings
      *
+     * @param int $storeId
      * @return mixed[]
      */
     public function getModuleSettings(int $storeId): array;
