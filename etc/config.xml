@@ -11,7 +11,7 @@
         <tradetracker>
             <general>
                 <enable>1</enable>
-                <version>v1.4.3</version>
+                <version>v1.4.4</version>
                 <debug>1</debug>
             </general>
             <direct_linking>
