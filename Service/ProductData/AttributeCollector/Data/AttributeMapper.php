@@ -223,8 +223,14 @@ class AttributeMapper
                 ['eav_entity_type' => $this->resource->getTableName('eav_entity_type')],
                 'eav_attribute.entity_type_id = eav_entity_type.entity_type_id',
                 ['entity_table']
-            )->where('eav_entity_type.entity_type_code = ?', $this->entityTypeCode)
-            ->where('eav_attribute.attribute_code IN (?)', $this->map);
+            )->where(
+                'eav_entity_type.entity_type_code = ?',
+                $this->entityTypeCode
+            )->where(
+                'eav_attribute.attribute_code IN (?)',
+                $this->map
+            );
+
         return $this->resource->getConnection()->fetchAll($select);
     }
 
@@ -238,7 +244,7 @@ class AttributeMapper
     {
         $tablesNonStatic = [];
         $attributeIdsNonStatic = [];
-        $attributeStaticCode = ['entity_id', 'type_id'];
+        $attributeStaticCode = array_unique(['entity_id', 'type_id', $this->linkField]);
         $relations = [];
         $withUrl = [];
 
@@ -259,14 +265,21 @@ class AttributeMapper
 
         foreach ($tablesNonStatic as $table) {
             $fields = ['attribute_id', 'store_id', 'value', 'entity_id' => $this->linkField];
-            $select = $this->resource->getConnection()->select()
+            $select = $this->resource->getConnection()
+                ->select()
                 ->from(
                     [$table => $this->resource->getTableName($table)],
                     $fields
+                )->where(
+                    "{$this->linkField} IN (?)",
+                    $this->entityIds
+                )->where(
+                    'attribute_id in (?)',
+                    $attributeIdsNonStatic
+                )->where(
+                    'store_id in (?)',
+                    $this->storeId
                 );
-            $select->where("{$this->linkField} IN (?)", $this->entityIds);
-            $select->where('attribute_id in (?)', $attributeIdsNonStatic);
-            $select->where('store_id in (?)', $this->storeId);
             $result = $this->resource->getConnection()->fetchAll($select);
             foreach ($result as $item) {
                 if (array_key_exists($item['attribute_id'], $this->attrOptions)) {
@@ -274,23 +287,12 @@ class AttributeMapper
                     $item['value'] = [];
                     foreach ($attrValues as $attrValue) {
                         $attributeId = (string)$item['attribute_id'];
-                        if (!isset($this->attrOptions
-                            [$attributeId]
-                            [$attrValue]
-                            [0])) {
-                            continue;
-                        }
-                        $defaultValue = $this->attrOptions
-                        [$attributeId]
-                        [$attrValue]
-                        [0];
                         try {
-                            $value = $this->attrOptions[$attributeId]
+                            $item['value'][] = $this->attrOptions[$attributeId]
                             [$attrValue]
                             [$item['store_id']];
-                            $item['value'][] = $value;
-                        } catch (\Exception $e) {
-                            $item['value'][] = $defaultValue;
+                        } catch (Exception $exception) {
+                            continue;
                         }
                     }
                     $item['value'] = implode(',', $item['value']);
@@ -306,6 +308,8 @@ class AttributeMapper
                     str_replace(["\r", "\n"], '', (string)$item['value']);
             }
         }
+
+        $this->adjustTaxClassLabels();
         $select = $this->resource->getConnection()
             ->select()
             ->from(
@@ -319,7 +323,7 @@ class AttributeMapper
                 if ($static == 'entity_id') {
                     continue;
                 }
-                $this->result[$static][$item['entity_id']] = $item[$static];
+                $this->result[$static][$item[$this->linkField]] = $item[$static];
             }
         }
     }
@@ -341,21 +345,40 @@ class AttributeMapper
         return $this->mediaUrl . $path;
     }
 
+    private function adjustTaxClassLabels()
+    {
+        if (!array_key_exists('tax_class_id', $this->result)) {
+            return;
+        }
+        $connection = $this->resource->getConnection();
+        $selectClasses = $connection->select()->from(
+            $this->resource->getTableName('tax_class'),
+            ['class_id', 'class_name']
+        );
+        $taxClassLabels = $connection->fetchPairs($selectClasses);
+        foreach ($this->result['tax_class_id'] as &$taxClassId) {
+            $taxClassId = $taxClassLabels[$taxClassId];
+        }
+    }
+
     /**
      * Collect data not related to attributes
      */
     private function collectExtraData()
     {
-        $fields = ['entity_id', 'type_id', 'created_at', 'updated_at'];
+        $fields = array_unique([$this->linkField, 'type_id', 'created_at', 'updated_at', 'entity_id']);
         $select = $this->resource->getConnection()->select()
             ->from(
                 ['catalog_product_entity' => $this->resource->getTableName('catalog_product_entity')],
                 $fields
-            )->where('entity_id IN (?)', $this->entityIds);
+            )->where(
+                $this->linkField . ' IN (?)',
+                $this->entityIds
+            );
         $items = $this->resource->getConnection()->fetchAll($select);
         foreach ($items as $item) {
             foreach ($fields as $field) {
-                $this->result[$field][$item['entity_id']] = $item[$field];
+                $this->result[$field][$item[$this->linkField]] = $item[$field];
             }
         }
     }

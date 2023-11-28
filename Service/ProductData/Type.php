@@ -50,27 +50,19 @@ class Type
      * @param array $attributeMap
      * @param array $extraParameters
      * @param int $storeId
-     * @param int $limit
-     * @param int $page
      * @return array
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     public function execute(
         array $entityIds,
         array $attributeMap,
         array $extraParameters,
-        int $storeId = 0,
-        int $limit = 10000,
-        int $page = 1
+        int $storeId = 0
     ): array {
         if (empty($entityIds)) {
             return [];
         }
-        $entityIds = array_chunk($entityIds, (int)$limit);
-        if (isset($entityIds[$page - 1])) {
-            $entityIds = $entityIds[$page - 1];
-        } else {
-            $entityIds = $entityIds[0];
-        }
+
         $parents = $this->parents->execute();
         $toUnset = [];
         $parentAttributeToUse = [];
@@ -197,13 +189,7 @@ class Type
             if (!isset($productData[$filter['attribute']])) {
                 return true;
             }
-            if ($filter['product_type'] == 'simple'
-                && !in_array($productData['type_id'], ['simple', 'virtual', 'downloadable'])
-            ) {
-                return true;
-            } elseif ($filter['product_type'] == 'parent'
-                && in_array($productData['type_id'], ['simple', 'virtual', 'downloadable'])
-            ) {
+            if ($productData['type_id'] != $filter['product_type']) {
                 return true;
             }
             switch ($filter['condition']) {

@@ -7,16 +7,19 @@ declare(strict_types=1);
 
 namespace TradeTracker\Connect\Service\ProductData\AttributeCollector\Data;
 
+use Exception;
 use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\EntityManager\MetadataPool;
 use Magento\Framework\Module\Manager as ModuleManager;
+use Magento\Store\Api\StoreRepositoryInterface;
 
 /**
  * Service class for stock data
  */
 class Stock
 {
+
     public const REQUIRE = [
         'entity_ids'
     ];
@@ -37,34 +40,41 @@ class Stock
      * @var string
      */
     private $linkField;
+    /**
+     * @var StoreRepositoryInterface
+     */
+    private $storeRepository;
 
     /**
      * Price constructor.
      *
      * @param ResourceConnection $resource
      * @param ModuleManager $moduleManager
+     * @param StoreRepositoryInterface $storeRepository
      * @param MetadataPool $metadataPool
-     * @throws \Exception
+     * @throws Exception
      */
     public function __construct(
         ResourceConnection $resource,
         ModuleManager $moduleManager,
+        StoreRepositoryInterface $storeRepository,
         MetadataPool $metadataPool
     ) {
         $this->resource = $resource;
         $this->moduleManager = $moduleManager;
+        $this->storeRepository = $storeRepository;
         $this->linkField = $metadataPool->getMetadata(ProductInterface::class)->getLinkField();
     }
 
     /**
      * Get stock data
      *
-     * @param array[] $entityIds
+     * @param array $productIds
      * @return array[]
      */
-    public function execute(array $entityIds = []): array
+    public function execute(array $productIds = []): array
     {
-        $this->setData('entity_ids', $entityIds);
+        $this->setData('entity_ids', $productIds);
         return ($this->isMsiEnabled())
             ? $this->getMsiStock()
             : $this->getNoMsiStock();
@@ -74,15 +84,13 @@ class Stock
      * @param string $type
      * @param mixed $data
      */
-    public function setData($type, $data)
+    public function setData(string $type, $data)
     {
         if (!$data) {
             return;
         }
-        switch ($type) {
-            case 'entity_ids':
-                $this->entityIds = $data;
-                break;
+        if ($type == 'entity_ids') {
+            $this->entityIds = $data;
         }
     }
 
@@ -106,8 +114,10 @@ class Stock
      *      reserved
      *      salable_qty
      *      ["msi"]=> [
-     *          website_id => [
+     *          channel => [
      *              qty
+     *              availability
+     *              is_salable
      *              salable_qty
      *          ]
      *      ]
@@ -120,22 +130,26 @@ class Stock
         $channels = $this->getChannels();
         $stockData = $this->collectMsi($channels);
         $result = $this->getNoMsiStock(true);
+
         foreach ($stockData as $value) {
             foreach ($channels as $channel) {
                 if (!array_key_exists($value['product_id'], $result)) {
                     continue;
                 }
-                $qty = $result[$value['product_id']]['qty'];
-                $reserved = $result[$value['product_id']]['reserved'] * -1;
-                $salableQty = max($qty, $qty - $reserved);
-                $result[$value['product_id']]
-                ['msi']
-                [$value['website_id']] = [
-                    'qty' => $value[sprintf('quantity_%s', $channel)],
-                    'salable_qty' => $salableQty
+
+                $qty = $value[sprintf('quantity_%s', (int)$channel)];
+                $reserved = max($result[$value['product_id']]['reserved'], 0);
+                $salableQty = $qty - $reserved;
+
+                $result[$value['product_id']]['msi'][$channel] = [
+                    'qty' => (int)($value[sprintf('quantity_%s', (int)$channel)] ?? 0),
+                    'is_salable' => $value[sprintf('is_salable_%s', (int)$channel)] ?? 0,
+                    'availability' => $value[sprintf('is_salable_%s', (int)$channel)] ?? 0,
+                    'salable_qty' => $salableQty ?: 0
                 ];
             }
         }
+
         return $result;
     }
 
@@ -146,19 +160,10 @@ class Stock
      */
     private function getChannels(): array
     {
-        $selectChannels = $this->resource->getConnection()
-            ->select()
-            ->from(
-                $this->resource->getTableName('inventory_stock_sales_channel'),
-                [
-                    'stock_id'
-                ]
-            )->where('type = ?', 'website');
-        $channels = array_unique($this->resource->getConnection()->fetchCol($selectChannels));
-        if (count($channels) == 1 && reset($channels) != 1) {
-            $channels = [1];
-        }
-        return $channels;
+        $select = $this->resource->getConnection()->select()
+            ->from($this->resource->getTableName('inventory_stock_sales_channel'), ['stock_id'])
+            ->where('type = ?', 'website');
+        return array_unique($this->resource->getConnection()->fetchCol($select));
     }
 
     /**
@@ -169,47 +174,28 @@ class Stock
      */
     private function collectMsi(array $channels): array
     {
-        $channel = min($channels);
-        $channels = array_flip($channels);
-        unset($channels[$channel]);
-        $channels = array_flip($channels);
-        $stockTablePrimary = $this->resource->getTableName(sprintf('inventory_stock_%s', $channel));
-        if (!$this->resource->getConnection()->isTableExists($stockTablePrimary)) {
-            return [];
-        }
-        $selectStock = $this->resource->getConnection()
-            ->select()
+        $select = $this->resource->getConnection()->select()
             ->from(
-                $stockTablePrimary,
+                ['cpe' => $this->resource->getTableName('catalog_product_entity')],
+                ['product_id' => 'entity_id', $this->linkField]
+            )->where(
+                'cpe.entity_id IN (?)',
+                $this->entityIds
+            );
+
+        foreach ($channels as $channel) {
+            $table = sprintf('inventory_stock_%s', (int)$channel);
+            $select->joinLeft(
+                [$table => $this->resource->getTableName($table)],
+                "cpe.sku = {$table}.sku",
                 [
-                    'product_id',
-                    'website_id',
-                    sprintf('quantity_%s', $channel) => 'quantity'
+                    sprintf('quantity_%s', (int)$channel) => "{$table}.quantity",
+                    sprintf('is_salable_%s', (int)$channel) => "{$table}.is_salable"
                 ]
             );
-        foreach ($channels as $channel) {
-            $stockTable = sprintf('inventory_stock_%s', $channel);
-            if (!$this->resource->getConnection()->tableColumnExists($stockTable, 'website_id')) {
-                $selectStock->joinLeft(
-                    $stockTable,
-                    "{$stockTable}.sku = {$stockTablePrimary}.sku",
-                    [
-                        sprintf('quantity_%s', $channel) => 'quantity'
-                    ]
-                );
-            } else {
-                $selectStock->joinLeft(
-                    $stockTable,
-                    "{$stockTable}.website_id = {$stockTablePrimary}.website_id and
-                 {$stockTable}.product_id = {$stockTablePrimary}.product_id",
-                    [
-                        sprintf('quantity_%s', $channel) => 'quantity'
-                    ]
-                );
-            }
         }
-        $selectStock->where("{$stockTablePrimary}.product_id IN (?)", $this->entityIds);
-        return $this->resource->getConnection()->fetchAll($selectStock);
+
+        return $this->resource->getConnection()->fetchAll($select);
     }
 
     /**
@@ -229,7 +215,7 @@ class Stock
      * @param bool $addMsi
      * @return array[]
      */
-    private function getNoMsiStock($addMsi = false): array
+    private function getNoMsiStock(bool $addMsi = false): array
     {
         $result = [];
         $select = $this->resource->getConnection()
@@ -246,17 +232,18 @@ class Stock
                 ]
             )->joinLeft(
                 ['catalog_product_entity' => $this->resource->getTableName('catalog_product_entity')],
-                "catalog_product_entity.{$this->linkField} = cataloginventory_stock_item.product_id",
+                "catalog_product_entity.entity_id = cataloginventory_stock_item.product_id",
                 ['sku']
             );
         if ($addMsi) {
             $select->joinLeft(
                 ['inventory_reservation' => $this->resource->getTableName('inventory_reservation')],
                 'inventory_reservation.sku = catalog_product_entity.sku',
-                ['reserved' => 'COALESCE(inventory_reservation.quantity, 0)']
+                ['reserved' => 'SUM(COALESCE(inventory_reservation.quantity, 0))']
             );
         }
         $select->where('cataloginventory_stock_item.product_id IN (?)', $this->entityIds);
+        $select->group('product_id');
         $values = $this->resource->getConnection()->fetchAll($select);
 
         foreach ($values as $value) {
@@ -264,18 +251,48 @@ class Stock
                 [
                     'qty' => (int)$value['qty'],
                     'is_in_stock' => (int)$value['is_in_stock'],
+                    'availability' => (int)$value['is_in_stock'],
                     'manage_stock' => (int)$value['manage_stock'],
                     'qty_increments' => (int)$value['qty_increments'],
                     'min_sale_qty' => (int)$value['min_sale_qty']
                 ];
             if ($addMsi) {
+                $reserved = (int)$value['reserved'] * -1;
                 $result[$value['product_id']] += [
-                    'reserved' => (int)$value['reserved'],
-                    'salable_qty' => (int)max($value['qty'], ($value['qty'] - ($value['reserved']) * -1)),
+                    'reserved' => $reserved,
+                    'salable_qty' => (int)($value['qty'] - $reserved)
                 ];
             }
         }
+
         return $result;
+    }
+
+    /**
+     * @param int $storeId
+     * @return string|null
+     */
+    public function getChannelByStoreId(int $storeId): ?string
+    {
+        if (!$this->isMsiEnabled()) {
+            return null;
+        }
+
+        $salesChannelsTable = $this->resource->getTableName('inventory_stock_sales_channel');
+        if (!$this->resource->getConnection()->isTableExists($salesChannelsTable)) {
+            return null;
+        }
+
+        try {
+            $code = $this->storeRepository->getById($storeId)->getWebsite()->getCode();
+            $select = $this->resource->getConnection()->select()
+                ->from($salesChannelsTable, ['stock_id'])
+                ->where('code = ?', $code);
+
+            return $this->resource->getConnection()->fetchOne($select);
+        } catch (Exception $exception) {
+            return null;
+        }
     }
 
     /**
@@ -289,15 +306,13 @@ class Stock
     /**
      * @param string $type
      */
-    public function resetData($type = 'all')
+    public function resetData(string $type = 'all')
     {
         if ($type == 'all') {
             unset($this->entityIds);
         }
-        switch ($type) {
-            case 'entity_ids':
-                unset($this->entityIds);
-                break;
+        if ($type == 'entity_ids') {
+            unset($this->entityIds);
         }
     }
 }

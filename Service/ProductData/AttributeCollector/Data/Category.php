@@ -8,10 +8,9 @@ declare(strict_types=1);
 namespace TradeTracker\Connect\Service\ProductData\AttributeCollector\Data;
 
 use Exception;
-use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Catalog\Api\Data\CategoryInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\EntityManager\MetadataPool;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Api\StoreRepositoryInterface;
 
 /**
@@ -84,7 +83,7 @@ class Category
     ) {
         $this->resource = $resource;
         $this->storeRepository = $storeRepository;
-        $this->linkField = $metadataPool->getMetadata(ProductInterface::class)->getLinkField();
+        $this->linkField = $metadataPool->getMetadata(CategoryInterface::class)->getLinkField();
     }
 
     /**
@@ -98,7 +97,6 @@ class Category
      * @param string $format
      * @param array $extraParameters
      * @return array[]
-     * @throws NoSuchEntityException
      */
     public function execute(
         $entityIds = [],
@@ -160,11 +158,6 @@ class Category
      */
     private function collectCategoryNames(): void
     {
-        $fields = [
-            'entity_id' => $this->linkField,
-            'value',
-            'store_id'
-        ];
         $connection = $this->resource->getConnection();
         $select = $connection->select()->from(
             ['eav_attribute' => $this->resource->getTableName('eav_attribute')],
@@ -172,8 +165,12 @@ class Category
         )->joinLeft(
             ['catalog_category_entity_varchar' => $this->resource->getTableName('catalog_category_entity_varchar')],
             'catalog_category_entity_varchar.attribute_id = eav_attribute.attribute_id',
-            $fields
-        )->where('eav_attribute.attribute_code = ?', 'name');
+            ['entity_id' => $this->linkField, 'value', 'store_id']
+        )->where(
+            'eav_attribute.attribute_code = ?',
+            'name'
+        );
+
         if ($this->replaceName) {
             $select->orWhere('eav_attribute.attribute_code = ?', $this->replaceName);
         }
@@ -198,11 +195,6 @@ class Category
      */
     private function collectExcluded(): void
     {
-        $fields = [
-            'entity_id' => $this->linkField,
-            'value',
-            'store_id'
-        ];
         $connection = $this->resource->getConnection();
         $select = $connection->select()->from(
             ['eav_attribute' => $this->resource->getTableName('eav_attribute')],
@@ -210,9 +202,15 @@ class Category
         )->joinLeft(
             ['catalog_category_entity_varchar' => $this->resource->getTableName('catalog_category_entity_int')],
             'catalog_category_entity_varchar.attribute_id = eav_attribute.attribute_id',
-            $fields
-        )->where('eav_attribute.attribute_code = ?', $this->exclude['code'])
-            ->where('catalog_category_entity_varchar.store_id IN (?)', [0, $this->storeId]);
+            ['entity_id' => $this->linkField, 'value', 'store_id']
+        )->where(
+            'eav_attribute.attribute_code = ?',
+            $this->exclude['code']
+        )->where(
+            'catalog_category_entity_varchar.store_id IN (?)',
+            [0, $this->storeId]
+        );
+
         foreach ($connection->fetchAll($select) as $item) {
             if ($item['value'] == $this->exclude['value']) {
                 $this->excluded[$item['store_id']][] = $item['entity_id'];
@@ -237,7 +235,10 @@ class Category
                 ['catalog_category_entity' => $this->resource->getTableName('catalog_category_entity')],
                 "catalog_category_entity.{$this->linkField} = catalog_category_product.category_id",
                 ['path']
-            )->where('product_id IN (?)', $this->entityIds);
+            )->where(
+                'product_id IN (?)',
+                $this->entityIds
+            );
         if ($this->excluded) {
             $select->where('catalog_category_entity.' . $this->linkField . ' NOT IN (?)', $this->excluded);
         }
@@ -257,10 +258,12 @@ class Category
         $result = [];
         $realId = 0;
         $rootCategoryId = $this->getRootCategoryId();
-        foreach ($data as $entityId => $categoryPathes) {
+        foreach ($data as $entityId => $categoryPaths) {
             $usedPath = [];
-            $categoryPathes = array_filter($categoryPathes);
-            foreach ($categoryPathes as $categoryPath) {
+            foreach ($categoryPaths as $categoryPath) {
+                if (!$categoryPath) {
+                    continue;
+                }
                 $categoryIds = explode('/', $categoryPath);
                 $key = array_search($rootCategoryId, $categoryIds);
                 if ($key) {
@@ -311,10 +314,10 @@ class Category
     /**
      * @return int|null
      */
-    private function getRootCategoryId()
+    private function getRootCategoryId(): ?int
     {
         try {
-            return $this->storeRepository->getById($this->storeId)->getRootCategoryId();
+            return (int)$this->storeRepository->getById($this->storeId)->getRootCategoryId();
         } catch (\Exception $exception) {
             return null;
         }
@@ -323,23 +326,37 @@ class Category
     /**
      * @param array $data
      * @return array
-     * @throws NoSuchEntityException
      */
     private function mergeUrl(array $data): array
     {
-        $baseUrl = $this->storeRepository->getById((int)$this->storeId)->getBaseUrl();
+        try {
+            $baseUrl = $this->storeRepository->getById((int)$this->storeId)->getBaseUrl();
+        } catch (Exception $exception) {
+            $baseUrl = '';
+        }
+
         $select = $this->resource->getConnection()
             ->select()
             ->from(
+                ['catalog_category_entity' => $this->resource->getTableName('catalog_category_entity')],
+                [$this->linkField]
+            )->join(
                 ['url_rewrite' => $this->resource->getTableName('url_rewrite')],
-                ['entity_id', 'request_path']
-            )->where('entity_id IN (?)', $this->categoryIds)
-            ->where('entity_type = ?', 'category');
-        $url = $this->resource->getConnection()->fetchPairs($select);
+                'catalog_category_entity.entity_id = url_rewrite.entity_id',
+            )->where(
+                "catalog_category_entity.{$this->linkField} in (?)",
+                $this->categoryIds,
+            )->where(
+                'entity_type = ?',
+                'category'
+            );
+
+        $urls = $this->resource->getConnection()->fetchAll($select);
         foreach ($data as &$datum) {
             foreach ($datum as &$item) {
-                if (array_key_exists($item['category_id'], $url)) {
-                    $item['url'] = $baseUrl . $url[$item['category_id']];
+                $key = array_search($item['category_id'], array_column($urls, 'entity_id'));
+                if ($key !== false && isset($urls[$key]['request_path'])) {
+                    $item['url'] = $baseUrl . $urls[$key]['request_path'];
                 }
             }
         }

@@ -10,7 +10,6 @@ namespace TradeTracker\Connect\Model\ProductData;
 use TradeTracker\Connect\Api\Config\System\FeedInterface as FeedConfigRepository;
 use TradeTracker\Connect\Api\ProductData\RepositoryInterface as ProductData;
 use TradeTracker\Connect\Service\ProductData\AttributeCollector\Data\Image;
-use TradeTracker\Connect\Service\ProductData\AttributeCollector\Data\Parents;
 use TradeTracker\Connect\Service\ProductData\Filter;
 use TradeTracker\Connect\Service\ProductData\Type;
 
@@ -27,7 +26,7 @@ class Repository implements ProductData
      * @var array
      */
     private $attributeMap = [
-        'entity_id' => 'entity_id',
+        'product_id' => 'entity_id',
         'sku' => 'sku',
         'visibility' => 'visibility',
         'type_id' => 'type_id',
@@ -40,7 +39,7 @@ class Repository implements ProductData
      * @var array
      */
     private $resultMap = [
-        'ID' => 'entity_id',
+        'ID' => 'product_id',
         'sku' => 'sku',
         'name' => 'name',
         'description' => 'description',
@@ -88,10 +87,6 @@ class Repository implements ProductData
      */
     private $image;
     /**
-     * @var Parents
-     */
-    private $parents;
-    /**
      * @var array
      */
     private $staticFields;
@@ -106,20 +101,17 @@ class Repository implements ProductData
      * @param Filter $filter
      * @param Type $type
      * @param Image $image
-     * @param Parents $parents
      */
     public function __construct(
         FeedConfigRepository $feedConfigRepository,
         Filter $filter,
         Type $type,
-        Image $image,
-        Parents $parents
+        Image $image
     ) {
         $this->feedConfigRepository = $feedConfigRepository;
         $this->filter = $filter;
         $this->type = $type;
         $this->image = $image;
-        $this->parents = $parents;
     }
 
     /**
@@ -137,10 +129,14 @@ class Repository implements ProductData
             if (isset($productData['tradetracker_exclude']) && $productData['tradetracker_exclude']) {
                 continue;
             }
-            $productData['entity_id'] = $entityId;
+            if (empty($productData['product_id'])) {
+                continue;
+            }
+            $productId = (int)$productData['product_id'];
             $this->addImageData($storeId, $entityId, $productData);
             $this->addStaticFields($productData);
             $this->addCategoryData($productData);
+            $result[$productId]['row_id'] = $entityId;
             foreach ($this->resultMap as $index => $attr) {
                 $result[$entityId][$index] = $this->prepareAttribute($attr, $productData);
             }
@@ -175,7 +171,7 @@ class Repository implements ProductData
     }
 
     /**
-     * Collect all atrributes needed for product collection
+     * Collect all attributes needed for product collection
      *
      * @param int $storeId
      */

@@ -39,7 +39,6 @@ class Generate extends Action
      * @var Adapter
      */
     private $adapter;
-
     /**
      * @var RedirectInterface
      */
@@ -51,6 +50,7 @@ class Generate extends Action
      * @param Action\Context $context
      * @param ConfigRepository $configRepository
      * @param Adapter $adapter
+     * @param RedirectInterface $redirect
      */
     public function __construct(
         FeedRepository $feedRepository,
