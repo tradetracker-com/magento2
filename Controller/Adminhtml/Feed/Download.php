@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © Sooqr. All rights reserved.
+ * Copyright © TradeTracker. All rights reserved.
  * See COPYING.txt for license details.
  */
 declare(strict_types=1);
@@ -64,6 +64,7 @@ class Download extends Action
      * @param RawFactory $resultRawFactory
      * @param FileFactory $fileFactory
      * @param File $ioFilesystem
+     * @param RedirectInterface $redirect
      */
     public function __construct(
         Action\Context $context,

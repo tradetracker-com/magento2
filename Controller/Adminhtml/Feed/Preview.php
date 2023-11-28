@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © Sooqr. All rights reserved.
+ * Copyright © TradeTracker. All rights reserved.
  * See COPYING.txt for license details.
  */
 declare(strict_types=1);
@@ -13,7 +13,7 @@ use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Exception\FileSystemException;
-use Magento\Framework\Filesystem\DriverInterface;
+use Magento\Framework\Filesystem\Driver\File;
 use TradeTracker\Connect\Api\Feed\RepositoryInterface as FeedRepository;
 
 /**
@@ -32,7 +32,7 @@ class Preview extends Action
      */
     private $feedRepository;
     /**
-     * @var DriverInterface
+     * @var File
      */
     private $fileDriver;
     /**
@@ -42,14 +42,15 @@ class Preview extends Action
 
     /**
      * Generate constructor.
-     * @param FeedRepository $feedRepository
-     * @param DriverInterface $fileDriver
      * @param Action\Context $context
+     * @param FeedRepository $feedRepository
+     * @param File $fileDriver
+     * @param RedirectInterface $redirect
      */
     public function __construct(
         Action\Context $context,
         FeedRepository $feedRepository,
-        DriverInterface $fileDriver,
+        File $fileDriver,
         RedirectInterface $redirect
     ) {
         $this->feedRepository = $feedRepository;
