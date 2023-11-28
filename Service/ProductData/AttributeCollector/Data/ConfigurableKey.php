@@ -75,10 +75,8 @@ class ConfigurableKey
         if (!$data) {
             return;
         }
-        switch ($type) {
-            case 'entity_ids':
-                $this->entityIds = $data;
-                break;
+        if ($type == 'entity_ids') {
+            $this->entityIds = $data;
         }
     }
 
@@ -103,7 +101,11 @@ and catalog_product_entity_int.' . $this->linkField . ' = catalog_product_relati
                 ['catalog_product_entity_int' => $this->resource->getTableName('catalog_product_entity_int')],
                 $condition,
                 ['value', 'store_id']
-            )->where('child_id IN (?)', $this->entityIds);
+            )->where(
+                'child_id IN (?)',
+                $this->entityIds
+            );
+
         $keysData = $this->resource->getConnection()->fetchAll($select);
         foreach ($keysData as $item) {
             if (!$item['value']) {
@@ -141,10 +143,8 @@ and catalog_product_entity_int.' . $this->linkField . ' = catalog_product_relati
             unset($this->entityIds);
             unset($this->type);
         }
-        switch ($type) {
-            case 'entity_ids':
-                unset($this->entityIds);
-                break;
+        if ($type == 'entity_ids') {
+            unset($this->entityIds);
         }
     }
 }
