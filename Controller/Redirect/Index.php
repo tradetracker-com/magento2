@@ -82,11 +82,6 @@ class Index extends Action
             return $response->setPath('/');
         }
 
-        // If tt is set but r not, redirect to homepage.
-        if ($this->request->getParam('tt') && !$this->request->getParam('r')) {
-            return $response->setPath('/');
-        }
-
         $domainName = $this->storeManager->getStore()->getBaseUrl(UrlInterface::URL_TYPE_LINK);
 
         // phpcs:ignore Magento2.Functions.DiscouragedFunction
