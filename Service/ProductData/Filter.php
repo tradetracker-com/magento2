@@ -215,7 +215,7 @@ class Filter
         )->where(
             "catalog_product_entity.{$this->entityId} in (?)",
             $entityIds
-        )->group($this->entityId);
+        )->group("catalog_product_entity.{$this->entityId}");
 
         if ($behaviour == 'in') {
             $select->where('catalog_category_product.category_id in (?)', $categoryIds);
