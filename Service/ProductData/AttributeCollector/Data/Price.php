@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace TradeTracker\Connect\Service\ProductData\AttributeCollector\Data;
 
+use Exception;
 use Magento\Catalog\Helper\Data as CatalogHelper;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\CatalogPrice;
@@ -16,6 +17,7 @@ use Magento\CatalogRule\Model\ResourceModel\RuleFactory;
 use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\GroupedProduct\Model\Product\Type\Grouped;
+use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
 /**
@@ -69,15 +71,6 @@ class Price
     private $groupedPriceType = null;
     private $products = null;
 
-    /**
-     * Price constructor.
-     * @param CatalogPrice $commonPriceModel
-     * @param RuleFactory $resourceRuleFactory
-     * @param CatalogHelper $catalogHelper
-     * @param StoreManagerInterface $storeManager
-     * @param TimezoneInterface $localeDate
-     * @param CollectionFactory $collectionFactory
-     */
     public function __construct(
         CatalogPrice $commonPriceModel,
         RuleFactory $resourceRuleFactory,
@@ -108,28 +101,32 @@ class Price
         string $bundlePriceType = '',
         int $storeId = 0
     ): array {
-        $this->websiteId = $this->getWebsiteId((int)$storeId);
+        $store = $this->getStore((int)$storeId);
+        $this->websiteId = $store->getWebsiteId();
+        $this->taxClasses = [];
+
         $this->setData('products', $this->getProductData($productIds));
         $this->setData('grouped_price_type', $groupedPriceType);
         $this->setData('bundle_price_type', $bundlePriceType);
+
         foreach ($this->products as $product) {
             $this->setPrices($product, $this->groupedPriceType, $this->bundlePriceType);
-            if (array_key_exists($product->getTaxClassId(), $this->taxClasses)) {
-                $percent = $this->taxClasses[$product->getTaxClassId()];
+
+            if (array_key_exists((int)$product->getTaxClassId(), $this->taxClasses)) {
+                $percent = $this->taxClasses[(int)$product->getTaxClassId()];
             } else {
-                $priceInclTax = $this->processPrice($product, (float)$this->price);
-                if ($this->price == 0) {
-                    $percent = 1;
-                } else {
-                    $percent = $priceInclTax / $this->price;
+                $priceInclTax = $this->processPrice($product, (float)$this->price, $store);
+                $percent = $this->price == 0 ? 1 : round($priceInclTax / $this->price, 2);
+                if ($percent !== 1) {
+                    $this->taxClasses[(int)$product->getTaxClassId()] = $percent;
                 }
-                $this->taxClasses[$product->getTaxClassId()] = $percent;
             }
+
             $result[$product->getId()] = [
                 'price' => $percent * $this->price,
-                'price_ex' => $percent * $this->price,
+                'price_ex' => $this->price,
                 'final_price' => $percent * $this->finalPrice,
-                'final_price_ex' => $percent * $this->finalPrice,
+                'final_price_ex' => $this->finalPrice,
                 'sales_price' => $percent * $this->salesPrice,
                 'min_price' => $percent * $this->minPrice,
                 'max_price' => $percent * $this->maxPrice,
@@ -140,19 +137,20 @@ class Price
                 'tax' => abs(1 - $percent) * 100
             ];
         }
+
         return $result ?? [];
     }
 
     /**
      * @param int $storeId
-     * @return int
+     * @return StoreInterface|null
      */
-    private function getWebsiteId(int $storeId = 0): int
+    private function getStore(int $storeId = 0): ?StoreInterface
     {
         try {
-            return (int)$this->storeManager->getStore($storeId)->getWebsiteId();
-        } catch (\Exception $exception) {
-            return 0;
+            return $this->storeManager->getStore($storeId);
+        } catch (Exception $exception) {
+            return null;
         }
     }
 
@@ -185,7 +183,7 @@ class Price
     private function getProductData(array $productIds = [])
     {
         $products = $this->collectionFactory->create()
-            ->addFieldToSelect(['price', 'special_price'])
+            ->addFieldToSelect(['special_price', 'tax_class_id'])
             ->addFieldToFilter('entity_id', ['in' => $productIds]);
 
         $products->getSelect()->joinLeft(
@@ -198,7 +196,7 @@ class Price
                     'price_index.customer_group_id = 0'
                 ]
             ),
-            ['final_price', 'min_price', 'max_price']
+            ['final_price', 'min_price', 'max_price', 'price']
         );
 
         return $products;
@@ -252,6 +250,10 @@ class Price
         if ($this->finalPrice === null && $this->price !== null) {
             $this->finalPrice = $this->price;
         }
+
+        if ($this->price == '0.0000' && $this->finalPrice > 0) {
+            $this->price = $this->finalPrice;
+        }
     }
 
     /**
@@ -272,6 +274,10 @@ class Price
         $this->specialPrice = $product->getData('special_price');
         $this->minPrice = $product['min_price'] >= 0 ? $product['min_price'] : null;
         $this->maxPrice = $product['max_price'] >= 0 ? $product['max_price'] : null;
+
+        if ($this->minPrice && $this->minPrice < $this->finalPrice) {
+            $this->finalPrice = $this->minPrice;
+        }
     }
 
     /**
@@ -380,7 +386,7 @@ class Price
                 '',
                 $product->getId()
             );
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             return 0.0;
         }
 
@@ -396,13 +402,21 @@ class Price
      *
      * @param Product $product
      * @param float $price inputted product price
-     * @param bool $addTax return price include tax flag
-     *
+     * @param StoreInterface|null $store
      * @return float
      */
-    private function processPrice(Product $product, float $price): float
+    private function processPrice(Product $product, float $price, ?StoreInterface $store): float
     {
-        return (float)$this->catalogHelper->getTaxPrice($product, $price, true);
+
+        return (float)$this->catalogHelper->getTaxPrice(
+            $product,
+            $price,
+            true,
+            null,
+            null,
+            null,
+            $store
+        );
     }
 
     /**
@@ -427,6 +441,7 @@ class Price
             $to = date('Y-m-d', strtotime($product->getSpecialToDate()));
             return $from . '/' . $to;
         }
+
         return '';
     }
 
