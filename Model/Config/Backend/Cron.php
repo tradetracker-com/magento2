@@ -22,19 +22,10 @@ use TradeTracker\Connect\Api\Log\RepositoryInterface as LogRepository;
  */
 class Cron extends Value
 {
-    /**
-     * Config path of TradeTracker Cron Schedule
-     */
-    public const CRON_STRING_PATH = 'crontab/default/jobs/tradetracker/schedule/cron_expr';
 
-    /**
-     * @var WriterInterface
-     */
-    private $configWriter;
-    /**
-     * @var LogRepository
-     */
-    private $logRepository;
+    public const CRON_STRING_PATH = 'crontab/default/jobs/tradetracker_generate_feeds/schedule';
+    private WriterInterface $configWriter;
+    private LogRepository $logRepository;
 
     /**
      * Cron constructor.
@@ -56,8 +47,8 @@ class Cron extends Value
         TypeListInterface $cacheTypeList,
         WriterInterface $configWriter,
         LogRepository $logRepository,
-        AbstractResource $resource = null,
-        AbstractDb $resourceCollection = null,
+        ?AbstractResource $resource = null,
+        ?AbstractDb $resourceCollection = null,
         array $data = []
     ) {
         $this->configWriter = $configWriter;

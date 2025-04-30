@@ -6,7 +6,7 @@ require([
 
     if($mmHeadingComment.length) {
 
-        $(window).load(function() {
+        $(window).on('load', function() {
 
             var showMoreLessBtnHtml = '<div class="tradetracker-show-more-actions"><a href="javascript:void(0)" class="tradetracker-show-btn-more">'
                 + $.mage.__('Show more.') + '</a>'

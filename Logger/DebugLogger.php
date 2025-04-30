@@ -8,49 +8,34 @@ declare(strict_types=1);
 namespace TradeTracker\Connect\Logger;
 
 use Magento\Framework\Serialize\Serializer\Json;
-use Monolog\Logger;
+use Monolog\Logger as MonologLogger;
 
 /**
- * DebugLogger logger class
+ * Wrapper around Monolog\Logger to log debug-level messages for module.
+ * Automatically serializes array or object input using Magento's JSON serializer.
+ *
+ * Example usage:
+ * $logger->addLog('API Debug', ['message' => 'response', 'code' => 200]);
  */
-class DebugLogger extends Logger
+class DebugLogger
 {
+    private MonologLogger $logger;
+    private Json $json;
 
-    /**
-     * @var Json
-     */
-    private $json;
-
-    /**
-     * DebugLogger constructor.
-     *
-     * @param Json $json
-     * @param string $name
-     * @param array $handlers
-     * @param array $processors
-     */
     public function __construct(
-        Json $json,
-        string $name,
-        array $handlers = [],
-        array $processors = []
+        MonologLogger $logger,
+        Json $json
     ) {
+        $this->logger = $logger;
         $this->json = $json;
-        parent::__construct($name, $handlers, $processors);
     }
 
-    /**
-     * Add debug data to log
-     *
-     * @param string $type
-     * @param mixed  $data
-     */
-    public function addLog(string $type, $data)
+    public function addLog(string $type, $data): void
     {
         if (is_array($data) || is_object($data)) {
-            $this->addRecord(static::DEBUG, $type . ': ' . $this->json->serialize($data));
+            $this->logger->info( $type . ': ' . $this->json->serialize($data));
         } else {
-            $this->addRecord(static::DEBUG, $type . ': ' . $data);
+            $this->logger->info( $type . ': ' . $data);
         }
     }
 }
