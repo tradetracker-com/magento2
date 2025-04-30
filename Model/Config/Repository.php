@@ -94,8 +94,8 @@ class Repository implements ConfigRepositoryInterface
      */
     protected function getStoreValue(
         string $path,
-        int $storeId = null,
-        string $scope = null
+        ?int $storeId = null,
+        ?string $scope = null
     ): string {
         if (!$storeId) {
             $storeId = (int)$this->getStore()->getId();
@@ -107,7 +107,7 @@ class Repository implements ConfigRepositoryInterface
     /**
      * {@inheritDoc}
      */
-    public function getStore(int $storeId = null): StoreInterface
+    public function getStore(?int $storeId = null): StoreInterface
     {
         try {
             if ($storeId) {
@@ -135,7 +135,7 @@ class Repository implements ConfigRepositoryInterface
     /**
      * @inheritDoc
      */
-    public function isEnabled(int $storeId = null): bool
+    public function isEnabled(?int $storeId = null): bool
     {
         return $this->isSetFlag(self::XML_PATH_EXTENSION_ENABLE, $storeId);
     }
@@ -149,7 +149,7 @@ class Repository implements ConfigRepositoryInterface
      *
      * @return bool
      */
-    protected function isSetFlag(string $path, int $storeId = null, string $scope = null): bool
+    protected function isSetFlag(string $path, ?int $storeId = null, ?string $scope = null): bool
     {
         if (empty($scope)) {
             $scope = ScopeInterface::SCOPE_STORE;
@@ -172,7 +172,7 @@ class Repository implements ConfigRepositoryInterface
     /**
      * @inheritDoc
      */
-    public function getApiCredentials(int $storeId = null): array
+    public function getApiCredentials(?int $storeId = null): array
     {
         return [
             'customer_id' => $this->getCustomerId($storeId),
@@ -190,7 +190,7 @@ class Repository implements ConfigRepositoryInterface
      *
      * @return int
      */
-    private function getCustomerId(int $storeId = null): int
+    private function getCustomerId(?int $storeId = null): int
     {
         return (int)$this->getStoreValue(self::XML_PATH_CUSTOMER_ID, $storeId);
     }
@@ -202,7 +202,7 @@ class Repository implements ConfigRepositoryInterface
      *
      * @return string
      */
-    private function getPassphrase(int $storeId = null): string
+    private function getPassphrase(?int $storeId = null): string
     {
         return $this->getStoreValue(self::XML_PATH_PASSPHRASE, $storeId);
     }
@@ -216,7 +216,7 @@ class Repository implements ConfigRepositoryInterface
      *
      * @return array
      */
-    protected function getStoreValueArray(string $path, int $storeId = null, string $scope = null): array
+    protected function getStoreValueArray(string $path, ?int $storeId = null, ?string $scope = null): array
     {
         $value = $this->getStoreValue($path, (int)$storeId, $scope);
 
@@ -239,7 +239,7 @@ class Repository implements ConfigRepositoryInterface
      *
      * @return string
      */
-    protected function getUncachedStoreValue(string $path, int $storeId = null): string
+    protected function getUncachedStoreValue(?string $path, ?int $storeId = null): string
     {
         $collection = $this->configDataCollectionFactory->create()
             ->addFieldToSelect('value')
@@ -265,7 +265,7 @@ class Repository implements ConfigRepositoryInterface
      * @param string $key
      * @param int|null $storeId
      */
-    protected function setConfigData(string $value, string $key, int $storeId = null): void
+    protected function setConfigData(string $value, string $key, ?int $storeId = null): void
     {
         if ($storeId) {
             $this->config->saveConfig($key, $value, 'stores', $storeId);

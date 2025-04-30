@@ -28,7 +28,7 @@ interface PixelInterface extends RepositoryInterface
      *
      * @return bool
      */
-    public function isEnabled(int $storeId = null): bool;
+    public function isEnabled(?int $storeId = null): bool;
 
     /**
      * Get campaign ID from config
@@ -37,7 +37,7 @@ interface PixelInterface extends RepositoryInterface
      *
      * @return string
      */
-    public function getCampaignId(int $storeId = null): string;
+    public function getCampaignId(?int $storeId = null): string;
 
     /**
      * Get product ID from config
@@ -46,7 +46,7 @@ interface PixelInterface extends RepositoryInterface
      *
      * @return string
      */
-    public function getProductId(int $storeId = null): string;
+    public function getProductId(?int $storeId = null): string;
 
     /**
      * Get custom currency code if set
@@ -55,5 +55,5 @@ interface PixelInterface extends RepositoryInterface
      *
      * @return null|string
      */
-    public function getCustomCurrencyCode(int $storeId = null): ?string;
+    public function getCustomCurrencyCode(?int $storeId = null): ?string;
 }

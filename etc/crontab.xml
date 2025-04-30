@@ -5,15 +5,10 @@
  * See COPYING.txt for license details.
  */
 -->
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
     <group id="default">
-        <job instance="TradeTracker\Connect\Model\Cron\GenerateFeeds"
-             method="execute" name="tradetracker_generate_feeds">
-            <config_path>crontab/default/jobs/tradetracker/schedule/cron_expr</config_path>
-        </job>
-        <job instance="TradeTracker\Connect\Model\Cron\SyncTransactions"
-             method="execute" name="tradetracker_sync_transactions">
+        <job instance="TradeTracker\Connect\Model\Cron\GenerateFeeds" method="execute" name="tradetracker_generate_feeds" />
+        <job instance="TradeTracker\Connect\Model\Cron\SyncTransactions" method="execute" name="tradetracker_sync_transactions">
             <schedule>0 0 * * *</schedule>
         </job>
     </group>

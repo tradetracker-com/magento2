@@ -46,7 +46,7 @@ interface RepositoryInterface
      *
      * @return bool
      */
-    public function isEnabled(int $storeId = null): bool;
+    public function isEnabled(?int $storeId = null): bool;
 
     /**
      * Get current or specified store
@@ -55,7 +55,7 @@ interface RepositoryInterface
      *
      * @return StoreInterface
      */
-    public function getStore(int $storeId = null): StoreInterface;
+    public function getStore(?int $storeId = null): StoreInterface;
 
     /**
      * Returns true if debug log is enabled
@@ -70,5 +70,5 @@ interface RepositoryInterface
      * @param int|null $storeId
      * @return array
      */
-    public function getApiCredentials(int $storeId = null): array;
+    public function getApiCredentials(?int $storeId = null): array;
 }

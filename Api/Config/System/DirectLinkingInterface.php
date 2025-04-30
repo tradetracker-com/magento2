@@ -24,7 +24,7 @@ interface DirectLinkingInterface extends RepositoryInterface
      *
      * @return bool
      */
-    public function isEnabled(int $storeId = null): bool;
+    public function isEnabled(?int $storeId = null): bool;
 
     /**
      * Get redirect url key
@@ -33,5 +33,5 @@ interface DirectLinkingInterface extends RepositoryInterface
      *
      * @return string
      */
-    public function getRedirectUrl(int $storeId = null): string;
+    public function getRedirectUrl(?int $storeId = null): string;
 }

@@ -19,7 +19,7 @@ class DirectLinkingRepository extends ConfigRepository implements DirectLinkingI
     /**
      * @inheritDoc
      */
-    public function getRedirectUrl(int $storeId = null): string
+    public function getRedirectUrl(?int $storeId = null): string
     {
         if (!$storeId) {
             $storeId = (int)$this->getStore()->getId();

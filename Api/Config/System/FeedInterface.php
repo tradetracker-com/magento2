@@ -82,7 +82,7 @@ interface FeedInterface extends RepositoryInterface
      *
      * @return bool
      */
-    public function isEnabled(int $storeId = null): bool;
+    public function isEnabled(?int $storeId = null): bool;
 
     /**
      * Return all enabled storeIds

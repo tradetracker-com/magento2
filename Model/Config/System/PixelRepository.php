@@ -19,7 +19,7 @@ class PixelRepository extends ConfigRepository implements PixelInterface
     /**
      * @inheritDoc
      */
-    public function getCampaignId(int $storeId = null): string
+    public function getCampaignId(?int $storeId = null): string
     {
         return $this->getStoreValue(self::XML_PATH_CAMPAIGN_ID, $storeId);
     }
@@ -27,7 +27,7 @@ class PixelRepository extends ConfigRepository implements PixelInterface
     /**
      * @inheritDoc
      */
-    public function getProductId(int $storeId = null): string
+    public function getProductId(?int $storeId = null): string
     {
         return $this->getStoreValue(self::XML_PATH_PRODUCT_ID, $storeId);
     }
@@ -35,7 +35,7 @@ class PixelRepository extends ConfigRepository implements PixelInterface
     /**
      * @inheritDoc
      */
-    public function getCustomCurrencyCode(int $storeId = null): ?string
+    public function getCustomCurrencyCode(?int $storeId = null): ?string
     {
         $customCurrencyCode = $this->getStoreValue(self::XML_PATH_NON_DEFAULT_CURRENCY, $storeId);
         if (empty($customCurrencyCode) || $this->isSetFlag(self::XML_PATH_OVERWRITE_CURRENCY, $storeId)) {

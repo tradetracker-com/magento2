@@ -18,3 +18,81 @@
 #tradetracker-button_register {
     background: #f4982b;
 }
+
+//
+//  [ Buttons ]
+//  ---------------------------------------------
+
+form[action*="tradetracker_general"] {
+    .buttons() {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        min-width: 130px;
+        padding: 1.2rem 1.6rem;
+
+        border: 0;
+        border-radius: 8px;
+        font: @font-weight__bold 1.4rem @font-family__base;
+        text-decoration: none;
+        transition: .3s;
+
+        i[class*="icon"] {
+            width: 25px;
+            height: 25px;
+            transition: .3s;
+        }
+    }
+
+    #tradetracker-button_debug,
+    #tradetracker-button_error,
+    #tradetracker-button_version {
+        .buttons();
+
+        padding: .8rem 1.6rem;
+        border: 1px solid fade(@tradetracker-color-gray_light, 80%);
+        background-color: transparent;
+        color: darken(@tradetracker-color-gray_light, 15%);
+        font: @font-weight__semibold 1.3rem @font-family__base;
+
+        &:hover {
+            color: @tradetracker-color__3;
+        }
+    }
+
+    .tradetracker-debug-button-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px 32px;
+    }
+
+    .tradetracker-button-wrapper {
+        position: relative;
+    }
+
+    #tradetracker-button_debug,
+    #tradetracker-button_error {
+        padding: 1rem 1.6rem 1rem 4.2rem;
+
+        & + svg {
+            position: absolute;
+            top: 10px;
+            left: 14px;
+            fill: fade(@tradetracker-color__3, 70%);
+            width: 20px;
+            height: 20px;
+            transition: .3s;
+            pointer-events: none;
+        }
+
+        &:hover + svg._debug {
+            fill: darken(@tradetracker-color__yellow, 20%);
+        }
+
+        &:hover + svg._error {
+            fill: @tradetracker-color__red;
+        }
+    }
+}

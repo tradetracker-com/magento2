@@ -34,7 +34,7 @@ class FeedRepository extends ConfigRepository implements FeedInterface
     /**
      * @inheritDoc
      */
-    public function isEnabled(int $storeId = null): bool
+    public function isEnabled(?int $storeId = null): bool
     {
         if (!parent::isEnabled($storeId)) {
             return false;
@@ -54,7 +54,7 @@ class FeedRepository extends ConfigRepository implements FeedInterface
     /**
      * @inheritDoc
      */
-    public function getAttributes(int $storeId = null): array
+    public function getAttributes(?int $storeId = null): array
     {
         $attributes = [
             'name' => $this->getNameAttribute($storeId),
@@ -198,7 +198,7 @@ class FeedRepository extends ConfigRepository implements FeedInterface
     /**
      * @inheritDoc
      */
-    public function getCategoryAttribute(int $storeId = null): ?string
+    public function getCategoryAttribute(?int $storeId = null): ?string
     {
         return $this->getStoreValue(self::XPATH_CATEGORY_ATTRIBUTE, $storeId);
     }

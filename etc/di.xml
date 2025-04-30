@@ -27,25 +27,30 @@
     <!-- Repositories Block End -->
 
     <!-- Log Block Start -->
-    <type name="TradeTracker\Connect\Logger\Handler">
+    <virtualType name="TradeTrackerDebugMonolog" type="Monolog\Logger">
         <arguments>
-            <argument name="filesystem" xsi:type="object">Magento\Framework\Filesystem\Driver\File</argument>
+            <argument name="name" xsi:type="string">TradeTrackerDebug</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="debug" xsi:type="object">TradeTracker\Connect\Logger\Handler\Debug</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="TradeTrackerErrorMonolog" type="Monolog\Logger">
+        <arguments>
+            <argument name="name" xsi:type="string">TradeTrackerError</argument>
+            <argument name="handlers" xsi:type="array">
+                <item name="error" xsi:type="object">TradeTracker\Connect\Logger\Handler\Error</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <type name="TradeTracker\Connect\Logger\DebugLogger">
+        <arguments>
+            <argument name="logger" xsi:type="object">TradeTrackerDebugMonolog</argument>
         </arguments>
     </type>
     <type name="TradeTracker\Connect\Logger\ErrorLogger">
         <arguments>
-            <argument name="name" xsi:type="string">TradeTrackerError</argument>
-            <argument name="handlers" xsi:type="array">
-                <item name="system" xsi:type="object">TradeTracker\Connect\Logger\Handler\Error</item>
-            </argument>
-        </arguments>
-    </type>
-    <type name="TradeTracker\Connect\Logger\DebugLogger">
-        <arguments>
-            <argument name="name" xsi:type="string">TradeTrackerDebug</argument>
-            <argument name="handlers" xsi:type="array">
-                <item name="system" xsi:type="object">TradeTracker\Connect\Logger\Handler\Debug</item>
-            </argument>
+            <argument name="logger" xsi:type="object">TradeTrackerErrorMonolog</argument>
         </arguments>
     </type>
     <!-- Log Block End -->

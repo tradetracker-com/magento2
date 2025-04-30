@@ -7,22 +7,17 @@ declare(strict_types=1);
 
 namespace TradeTracker\Connect\Logger\Handler;
 
-use Magento\Framework\Logger\Handler\Base;
 use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 
-/**
- * Error logger handler class
- */
-class Error extends Base
+class Error extends StreamHandler
 {
+    public const FILENAME = 'tradetracker-error.log';
+    public const LEVEL = Logger::ERROR;
 
-    /**
-     * @var int
-     */
-    protected $loggerType = Logger::ERROR;
-
-    /**
-     * @var string
-     */
-    protected $fileName = '/var/log/tradetracker/error.log';
+    public function __construct()
+    {
+        /** @phpstan-ignore constant.notFound */
+        parent::__construct(BP . '/var/log/' . self::FILENAME, self::LEVEL);
+    }
 }
