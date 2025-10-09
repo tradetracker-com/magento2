@@ -5,63 +5,140 @@
  */
 ?>
 <?php
-/* @var Magento\Framework\View\Element\Template $block */
-/* @var TradeTracker\Connect\ViewModel\Checkout\Pixel $viewModel */
+/** @var Magento\Framework\View\Element\Template $block */
+/** @var \Magento\Framework\Escaper $escaper */
+/** @var Magento\Framework\View\Helper\SecureHtmlRenderer $secureRenderer */
+/** @var TradeTracker\Connect\ViewModel\Checkout\Pixel $viewModel */
 $viewModel = $block->getViewModel();
 ?>
 <!-- START TRADETRACKER PIXEL -->
 <?php if ($pixelData = $viewModel->getPixelData()): ?>
     <?php if (!empty($pixelData['transactions'])): ?>
+        <?php
+        $multi = !empty($pixelData['multi_country']);
+        $tgi = $multi ? trim((string)($pixelData['tgi'] ?? '')) : '';
+        ?>
         <?php foreach ($pixelData['transactions'] as $productID => $transaction): ?>
-            <!--suppress JSUnusedAssignment -->
-            <script>
-                var ttConversionOptions = ttConversionOptions || [];
-                ttConversionOptions.push({
-                    type: 'sales',
-                    campaignID: '<?= $block->escapeHtml($pixelData['campaign_id']); ?>',
-                    productID: '<?= $block->escapeHtml($productID); ?>',
-                    transactionID: '<?= $block->escapeHtml($pixelData['transaction_id']); ?>',
-                    transactionAmount: '<?= $block->escapeHtml(number_format($transaction['amount'], 2, '.', '')); ?>',
-                    quantity: '1',
-                    descrMerchant: '',
-                    descrAffiliate: '',
-                    currency: '<?= $block->escapeHtml($pixelData['currency']); ?>',
-                    vc: '<?= $block->escapeHtml($pixelData['vc']); ?>',
-                });
-            </script>
-            <noscript>
-                <?php
-                $img = '//ts.tradetracker.net/?' . http_build_query([
-                        'cid' => $pixelData['campaign_id'],
-                        'pid' => $productID,
-                        'tid' => $pixelData['transaction_id'],
-                        'tam' => number_format($block->escapeHtml($transaction['amount']), 2, '.', ''),
-                        'data' => '',
-                        'qty' => 1,
-                        'descrMerchant' => '',
-                        'descrAffiliate' => '',
-                        'event' => 'sale',
-                        'currency' => $pixelData['currency'],
-                        'vc' => $pixelData['vc']
-                    ]);
-                ?>
-                <img src="<?= $block->escapeUrl($img); ?> " alt=""/>
-            </noscript>
+            <?php
+            // Build inline conversion push safely
+            $script = sprintf(
+                "var ttConversionOptions = ttConversionOptions || [];\n" .
+                "ttConversionOptions.push({\n" .
+                "  type: 'sales',\n" .
+                "  campaignID: '%s',\n" .
+                "  productID: '%s',\n" .
+                "  transactionID: '%s',\n" .
+                "  transactionAmount: '%s',\n" .
+                "  quantity: '1',\n" .
+                "  descrMerchant: '',\n" .
+                "  descrAffiliate: '',\n" .
+                "  currency: '%s',\n" .
+                "  vc: '%s'%s\n" .
+                "});",
+                $escaper->escapeJs($pixelData['campaign_id']),
+                $escaper->escapeJs((string)$productID),
+                $escaper->escapeJs($pixelData['transaction_id']),
+                $escaper->escapeJs(number_format($transaction['amount'], 2, '.', '')),
+                $escaper->escapeJs($pixelData['currency']),
+                $escaper->escapeJs((string)$pixelData['vc']),
+                ($multi && $tgi !== '') ? ",\n  trackingGroupID: '" . $escaper->escapeJs($tgi) . "'" : ''
+            );
+            ?>
+
+            <?php
+            // @phpstan-ignore-next-line
+            if (isset($secureRenderer)) {
+                echo /* @noEscape */ $secureRenderer->renderTag('script', ['type' => 'text/javascript'], $script, false);
+            }
+            ?>
+            <?php
+            // @phpstan-ignore-next-line
+            if (!isset($secureRenderer)) {
+                echo /* @noEscape */ '<script type="text/javascript">' . $script . '</script>';
+            }
+            ?>
+
+            <?php
+            // Build noscript pixel
+            if ($multi && $tgi !== '') {
+                // Multi-country version
+                $imgParams = [
+                    'tgi'            => $tgi,
+                    'pid'            => $productID,
+                    'tid'            => $pixelData['transaction_id'],
+                    'tam'            => number_format($transaction['amount'], 2, '.', ''),
+                    'data'           => '',
+                    'qty'            => 1,
+                    'descrMerchant'  => '',
+                    'descrAffiliate' => '',
+                    'event'          => 'sales',
+                    'currency'       => $pixelData['currency'],
+                    'vc'             => $pixelData['vc']
+                ];
+            } else {
+                // Single-country
+                $imgParams = [
+                    'cid'            => $pixelData['campaign_id'],
+                    'pid'            => $productID,
+                    'tid'            => $pixelData['transaction_id'],
+                    'tam'            => number_format($transaction['amount'], 2, '.', ''),
+                    'data'           => '',
+                    'qty'            => 1,
+                    'descrMerchant'  => '',
+                    'descrAffiliate' => '',
+                    'event'          => 'sale',
+                    'currency'       => $pixelData['currency'],
+                    'vc'             => $pixelData['vc']
+                ];
+            }
+            $img = '//ts.tradetracker.net/?' . http_build_query($imgParams);
+            $noscriptHtml = '<img src="' . $escaper->escapeUrl($img) . '" alt=""/>';
+
+            ?>
+
+            <?php
+            // @phpstan-ignore-next-line
+            if (isset($secureRenderer)) {
+                echo $secureRenderer->renderTag('noscript', [], $noscriptHtml, false);
+            }
+            ?>
+            <?php
+            // @phpstan-ignore-next-line
+            if (!isset($secureRenderer)) {
+                echo '<noscript>' . $noscriptHtml . '</noscript>';
+            }
+            ?>
         <?php endforeach; ?>
-        <script>
-            (function (ttConversionOptions) {
-                var campaignID = 'campaignID' in ttConversionOptions ?
-                    ttConversionOptions.campaignID : ('length' in ttConversionOptions && ttConversionOptions.length
-                        ? ttConversionOptions[0].campaignID : null);
-                var tt = document.createElement('script');
-                tt.type = 'text/javascript';
-                tt.async = true;
-                tt.src = '//tm.tradetracker.net/conversion?s=' + encodeURIComponent(campaignID) + '&t=m';
-                var s = document.getElementsByTagName('script');
-                s = s[s.length - 1];
-                s.parentNode.insertBefore(tt, s);
-            })(ttConversionOptions);
-        </script>
+
+        <?php
+        $loader = <<<JS
+(function (ttConversionOptions) {
+    var campaignID = 'campaignID' in ttConversionOptions
+        ? ttConversionOptions.campaignID
+        : ('length' in ttConversionOptions && ttConversionOptions.length
+            ? ttConversionOptions[0].campaignID : null);
+    var tt = document.createElement('script');
+    tt.type = 'text/javascript';
+    tt.async = true;
+    tt.src = '//tm.tradetracker.net/conversion?s=' + encodeURIComponent(campaignID) + '&t=m';
+    var s = document.getElementsByTagName('script');
+    s = s[s.length - 1];
+    s.parentNode.insertBefore(tt, s);
+})(ttConversionOptions);
+JS;
+?>
+        <?php
+        // @phpstan-ignore-next-line
+        if (isset($secureRenderer)) {
+            echo $secureRenderer->renderTag('script', ['type' => 'text/javascript'], $loader, false);
+        }
+        ?>
+        <?php
+        // @phpstan-ignore-next-line
+        if (!isset($secureRenderer)) {
+            echo '<script type="text/javascript">' . $loader . '</script>';
+        }
+        ?>
     <?php endif; ?>
 <?php endif; ?>
 <!-- END TRADETRACKER PIXEL -->

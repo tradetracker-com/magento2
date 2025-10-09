@@ -19,6 +19,7 @@
             <include path="TradeTracker_Connect::system/general.xml"/>
             <include path="TradeTracker_Connect::system/pixel.xml"/>
             <include path="TradeTracker_Connect::system/redirect_linking.xml"/>
+            <include path="TradeTracker_Connect::system/advanced.xml"/>
             <include path="TradeTracker_Connect::system/debug.xml"/>
         </section>
         <section id="tradetracker_feed" translate="label comment" type="text" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">

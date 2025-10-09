@@ -20,6 +20,8 @@
                 type="TradeTracker\Connect\Model\Config\System\FeedRepository"/>
     <preference for="TradeTracker\Connect\Api\Config\System\PixelInterface"
                 type="TradeTracker\Connect\Model\Config\System\PixelRepository"/>
+    <preference for="TradeTracker\Connect\Api\Config\System\AdvancedInterface"
+                type="TradeTracker\Connect\Model\Config\System\AdvancedRepository"/>
     <preference for="TradeTracker\Connect\Api\ProductData\RepositoryInterface"
                 type="TradeTracker\Connect\Model\ProductData\Repository"/>
     <preference for="TradeTracker\Connect\Api\Webapi\ManagementInterface"
