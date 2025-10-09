@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © TradeTracker. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<include xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
+    <group id="advanced" translate="label comment" type="text" sortOrder="50" showInDefault="1" showInWebsite="1"
+           showInStore="1">
+        <label>Advanced Setting</label>
+        <field id="enable_multi_country" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1"
+               showInStore="1">
+            <label>Multi-country tracking group</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>tradetracker/advanced/enable_multi_country</config_path>
+        </field>
+        <field id="tgi_value" translate="label comment" type="text" sortOrder="20" showInDefault="1"
+               showInWebsite="1" showInStore="1">
+            <label>Tracking Group ID (TGI)</label>
+            <comment>Numeric TGI provided by TradeTracker.</comment>
+            <validate>validate-number</validate>
+            <config_path>tradetracker/advanced/tgi_value</config_path>
+            <depends>
+                <field id="enable_multi_country">1</field>
+            </depends>
+        </field>
+    </group>
+</include>

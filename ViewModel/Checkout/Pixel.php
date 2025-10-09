@@ -11,6 +11,7 @@ use Magento\Catalog\Model\CategoryRepository;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use TradeTracker\Connect\Api\Config\System\AdvancedInterface as AdvancedConfig;
 use TradeTracker\Connect\Api\Config\System\PixelInterface as PixelConfig;
 use TradeTracker\Connect\Api\Log\RepositoryInterface as LogRepository;
 
@@ -20,48 +21,27 @@ use TradeTracker\Connect\Api\Log\RepositoryInterface as LogRepository;
  */
 class Pixel implements ArgumentInterface
 {
-    /**
-     * @var Session
-     */
-    private $checkoutSession;
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-    /**
-     * @var LogRepository
-     */
-    private $logger;
-    /**
-     * @var CategoryRepository
-     */
-    private $categoryRepository;
-    /**
-     * @var PixelConfig
-     */
-    private $pixelConfig;
+    private Session $checkoutSession;
+    private StoreManagerInterface $storeManager;
+    private LogRepository $logger;
+    private CategoryRepository $categoryRepository;
+    private PixelConfig $pixelConfig;
+    private AdvancedConfig $advancedConfig;
 
-    /**
-     * Pixel constructor.
-     *
-     * @param Session $checkoutSession
-     * @param LogRepository $logger
-     * @param CategoryRepository $categoryRepository
-     * @param StoreManagerInterface $storeManager
-     * @param PixelConfig $pixelConfig
-     */
     public function __construct(
         Session $checkoutSession,
         LogRepository $logger,
         CategoryRepository $categoryRepository,
         StoreManagerInterface $storeManager,
-        PixelConfig $pixelConfig
+        PixelConfig $pixelConfig,
+        AdvancedConfig $advancedConfig
     ) {
         $this->checkoutSession = $checkoutSession;
         $this->logger = $logger;
         $this->storeManager = $storeManager;
         $this->categoryRepository = $categoryRepository;
         $this->pixelConfig = $pixelConfig;
+        $this->advancedConfig = $advancedConfig;
     }
 
     /**
@@ -76,6 +56,7 @@ class Pixel implements ArgumentInterface
             $subtotal = ($order->getGrandTotal() - $order->getTaxAmount() - $order->getShippingAmount());
             $defaultId = $this->pixelConfig->getProductId();
             $campaignId = $this->pixelConfig->getCampaignId();
+            $storeId = (int)$order->getStoreId();
 
             $pixelData['campaign_id'] = $campaignId;
             $pixelData['transaction_id'] = $order->getIncrementId();
@@ -85,6 +66,11 @@ class Pixel implements ArgumentInterface
 
             if ($customCurrencyCode = $this->pixelConfig->getCustomCurrencyCode((int)$order->getStoreId())) {
                 $pixelData['currency'] = $customCurrencyCode;
+            }
+
+            $pixelData['multi_country'] = $this->advancedConfig->isMultiCountryEnabled($storeId);
+            if ($pixelData['multi_country']) {
+                $pixelData['tgi'] = $this->advancedConfig->getTGIValue($storeId);
             }
 
             foreach ($order->getAllVisibleItems() as $item) {
