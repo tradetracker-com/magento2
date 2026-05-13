@@ -63,7 +63,8 @@ class Repository implements ProductData
         'categories' => 'categories',
         'subcategories' => 'subcategories',
         'subsubcategories' => 'subsubcategories',
-        'extra_info' => 'extra_info'
+        'extra_info' => 'extra_info',
+        'vat_pct' => 'vat_pct'
     ];
 
     /**

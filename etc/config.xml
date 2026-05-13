@@ -40,6 +40,9 @@
                 <configurable_nonvisible>1</configurable_nonvisible>
                 <bundle>parent</bundle>
                 <grouped>parent</grouped>
+                <vat_pct_enabled>0</vat_pct_enabled>
+                <vat_pct_source>static</vat_pct_source>
+                <vat_pct_static>21</vat_pct_static>
             </feed>
         </tradetracker>
     </default>

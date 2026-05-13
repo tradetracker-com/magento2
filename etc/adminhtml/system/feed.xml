@@ -226,6 +226,49 @@
                 <field id="delivery_source">static</field>
             </depends>
         </field>
+        <field id="heading_vat_pct" translate="label comment" type="text" sortOrder="49" showInDefault="1"
+               showInWebsite="1" showInStore="1">
+            <label>VAT Percentage</label>
+            <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
+            <comment><![CDATA[Export the VAT percentage to the feed. This field is required by TradeTracker and must be a numeric value (minimum 0).]]></comment>
+        </field>
+        <field id="vat_pct_enabled" translate="label comment" type="select" sortOrder="50" showInDefault="1"
+               showInWebsite="1" showInStore="1">
+            <label>Enable</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>tradetracker/feed/vat_pct_enabled</config_path>
+        </field>
+        <field id="vat_pct_source" translate="label comment" type="select" sortOrder="51" showInDefault="1"
+               showInWebsite="1" showInStore="1">
+            <label>Type</label>
+            <source_model>TradeTracker\Connect\Model\Config\System\Source\SourceType</source_model>
+            <config_path>tradetracker/feed/vat_pct_source</config_path>
+            <depends>
+                <field id="vat_pct_enabled">1</field>
+            </depends>
+        </field>
+        <field id="vat_pct_attribute" translate="label comment" type="select" sortOrder="52" showInDefault="1"
+               showInWebsite="1" showInStore="1">
+            <label>Attribute</label>
+            <source_model>TradeTracker\Connect\Model\Config\System\Source\Attributes</source_model>
+            <comment><![CDATA[Select a product attribute that contains the VAT percentage value.]]></comment>
+            <config_path>tradetracker/feed/vat_pct_attribute</config_path>
+            <depends>
+                <field id="vat_pct_enabled">1</field>
+                <field id="vat_pct_source">attribute</field>
+            </depends>
+        </field>
+        <field id="vat_pct_static" translate="label comment" type="text" sortOrder="53" showInDefault="1"
+               showInWebsite="1" showInStore="1">
+            <label>Fixed Value</label>
+            <comment><![CDATA[Enter a fixed VAT percentage (e.g. 21 for 21% VAT, 0 for VAT-free). Common values: 0, 9, 21.]]></comment>
+            <config_path>tradetracker/feed/vat_pct_static</config_path>
+            <validate>validate-number validate-zero-or-greater</validate>
+            <depends>
+                <field id="vat_pct_enabled">1</field>
+                <field id="vat_pct_source">static</field>
+            </depends>
+        </field>
     </group>
     <group id="types" translate="label comment" type="text" sortOrder="6" showInDefault="1" showInWebsite="1"
            showInStore="1">
