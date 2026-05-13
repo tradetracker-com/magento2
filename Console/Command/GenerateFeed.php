@@ -70,7 +70,7 @@ class GenerateFeed extends Command
     /**
      *  {@inheritdoc}
      */
-    public function execute(InputInterface $input, OutputInterface $output)
+    public function execute(InputInterface $input, OutputInterface $output): int
     {
         if ($input->getOption('store-id') === null) {
             $storeIds = [];

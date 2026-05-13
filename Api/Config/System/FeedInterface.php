@@ -41,6 +41,10 @@ interface FeedInterface extends RepositoryInterface
     public const XPATH_DELIVERY_ATTRIBUTE = 'tradetracker/feed/delivery_attribute';
     public const XPATH_DELIVERY_IN_STOCK = 'tradetracker/feed/delivery_in_stock';
     public const XPATH_DELIVERY_OUT_OF_STOCK = 'tradetracker/feed/delivery_out_of_stock';
+    public const XPATH_VAT_PCT_ENABLED = 'tradetracker/feed/vat_pct_enabled';
+    public const XPATH_VAT_PCT_SOURCE = 'tradetracker/feed/vat_pct_source';
+    public const XPATH_VAT_PCT_ATTRIBUTE = 'tradetracker/feed/vat_pct_attribute';
+    public const XPATH_VAT_PCT_STATIC = 'tradetracker/feed/vat_pct_static';
 
     /** Product Types Group */
     public const XML_PATH_CONFIGURABLE = 'tradetracker/feed/configurable';
