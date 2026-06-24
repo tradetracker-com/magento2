@@ -1,24 +1,3 @@
-.tradetracker-button__download:before {
-    margin-right: 0.6rem;
-    line-height: 1rem;
-}
-
-.tradetracker-disabled {
-    position: absolute;
-    top: 0;
-}
-
-#tradetracker-button_support {
-    background: #73b72b;
-}
-
-#tradetracker-button_link {
-    background: #4e91ce;
-}
-#tradetracker-button_register {
-    background: #f4982b;
-}
-
 //
 //  [ Buttons ]
 //  ---------------------------------------------
@@ -45,54 +24,91 @@ form[action*="tradetracker_general"] {
         }
     }
 
-    #tradetracker-button_debug,
-    #tradetracker-button_error,
-    #tradetracker-button_version {
-        .buttons();
+    // Subtle outline buttons
+    .mm-acc-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 6px;
+        font: @font-weight__semibold 1.2rem -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        cursor: pointer;
+        transition: .25s;
+        text-decoration: none;
+        border: 0;
 
-        padding: .8rem 1.6rem;
+        svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+
+        &:disabled {
+            opacity: .4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+    }
+
+    .mm-acc-btn--outline {
+        background: transparent;
+        color: @tradetracker-color__3;
         border: 1px solid fade(@tradetracker-color-gray_light, 80%);
-        background-color: transparent;
-        color: darken(@tradetracker-color-gray_light, 15%);
-        font: @font-weight__semibold 1.3rem @font-family__base;
+
+        &:hover {
+            color: @tradetracker-color__orange;
+            border-color: @tradetracker-color__3;
+        }
+
+        svg {
+            fill: none;
+            stroke: @tradetracker-color__3;
+            stroke-width: 1.5;
+        }
+    }
+
+    // Link buttons
+    #mm-ui-button_changelog {
+        display: inline;
+        padding: 0;
+
+        border: none;
+        background: transparent;
+
+        color: fade(@tradetracker-color__3, 70%);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+        transition: .3s;
 
         &:hover {
             color: @tradetracker-color__3;
         }
     }
 
+    // Button group wrappers
+    .mm-acc-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+
     .tradetracker-debug-button-wrapper {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 8px 32px;
+        gap: 8px;
     }
+}
 
-    .tradetracker-button-wrapper {
-        position: relative;
-    }
-
-    #tradetracker-button_debug,
-    #tradetracker-button_error {
-        padding: 1rem 1.6rem 1rem 4.2rem;
-
-        & + svg {
-            position: absolute;
-            top: 10px;
-            left: 14px;
-            fill: fade(@tradetracker-color__3, 70%);
-            width: 20px;
-            height: 20px;
-            transition: .3s;
-            pointer-events: none;
-        }
-
-        &:hover + svg._debug {
-            fill: darken(@tradetracker-color__yellow, 20%);
-        }
-
-        &:hover + svg._error {
-            fill: @tradetracker-color__red;
-        }
-    }
+// Order view button
+#sales_order_view_tabs_tradetracker_order_log_content #change_transaction_status {
+    background-color: #eb5202;
+    border-color: #eb5202;
+    color: #fff;
+    padding: 5px 25px 5px 25px;
+    display: inline-block;
+    border-radius: 4px;
+    pointer-events: auto;
+    cursor: pointer;
 }

@@ -2,14 +2,23 @@
     "name": "tradetracker-com/magento2",
     "description": "TradeTracker integration for Magento 2",
     "type": "magento2-module",
-    "version": "1.7.0",
+    "version": "1.8.0",
     "require": {
         "magento/framework": ">=102.0.3",
-        "php": ">=7.4.0"
+        "php": ">=8.1.0"
     },
     "license": [
         "BSD-2-Clause"
     ],
+    "extra": {
+        "magmodules": {
+            "links": {
+                "docs": {
+                    "en": "https://www.magmodules.eu/help/magento2-tradetracker"
+                }
+            }
+        }
+    },
     "autoload": {
         "files": [
             "registration.php"

@@ -7,77 +7,59 @@ declare(strict_types=1);
 
 namespace TradeTracker\Connect\Console\Command;
 
-use Magento\Framework\App\State as AppState;
+use Magento\Framework\App\State;
 use Magento\Framework\Console\Cli;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use TradeTracker\Connect\Api\Feed\RepositoryInterface;
-use TradeTracker\Connect\Console\CommandOptions\CreateFeedOptions;
+use TradeTracker\Connect\Api\Config\RepositoryInterface as ConfigRepository;
+use TradeTracker\Connect\Api\Feed\RepositoryInterface as FeedRepository;
 
-/**
- * Command to create feed
- */
 class GenerateFeed extends Command
 {
-
-    /**
-     * Create feed command
-     */
     public const COMMAND_NAME = 'tradetracker:feed:create';
 
-    /**
-     * @var RepositoryInterface
-     */
-    private $feedRepository;
-    /**
-     * @var AppState
-     */
-    private $appState;
-    /**
-     * @var CreateFeedOptions
-     */
-    private $options;
-
-    /**
-     * CreateFeed constructor.
-     * @param CreateFeedOptions $options
-     * @param RepositoryInterface $feedRepository
-     * @param AppState $appState
-     */
     public function __construct(
-        CreateFeedOptions $options,
-        RepositoryInterface $feedRepository,
-        AppState $appState
+        private readonly State $state,
+        private readonly ConfigRepository $configRepository,
+        private readonly FeedRepository $feedRepository,
+        ?string $name = null
     ) {
-        $this->options = $options;
-        $this->feedRepository = $feedRepository;
-        $this->appState = $appState;
-        parent::__construct();
+        parent::__construct($name);
     }
 
-    /**
-     *  {@inheritdoc}
-     */
-    public function configure()
+    protected function configure(): void
     {
         $this->setName(self::COMMAND_NAME);
         $this->setDescription('Generate Product Feed');
-        $this->setDefinition($this->options->getOptionsList());
+        $this->addOption('store-id', null, InputOption::VALUE_OPTIONAL, 'Store ID');
         parent::configure();
     }
 
-    /**
-     *  {@inheritdoc}
-     */
-    public function execute(InputInterface $input, OutputInterface $output): int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        if ($input->getOption('store-id') === null) {
-            $storeIds = [];
-        } else {
-            $storeIds[] = $input->getOption('store-id');
+        try {
+            $this->state->setAreaCode('adminhtml');
+        } catch (\Throwable $e) {
+            // Area code already set
         }
-        $this->feedRepository->cliProcess($output, $storeIds);
-        return Cli::RETURN_SUCCESS;
+
+        if (!$this->configRepository->isEnabled()) {
+            $output->writeln('<error>Module is not enabled.</error>');
+            return Cli::RETURN_FAILURE;
+        }
+
+        try {
+            $storeIds = $input->getOption('store-id') !== null
+                ? [(int)$input->getOption('store-id')]
+                : [];
+
+            $this->feedRepository->cliProcess($output, $storeIds);
+            return Cli::RETURN_SUCCESS;
+        } catch (\Throwable $e) {
+            $output->writeln(sprintf('<error>%s</error>', $e->getMessage()));
+            return Cli::RETURN_FAILURE;
+        }
     }
 }

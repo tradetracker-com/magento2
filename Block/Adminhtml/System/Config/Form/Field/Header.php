@@ -12,62 +12,40 @@ use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\Data\Form\Element\AbstractElement;
 use TradeTracker\Connect\Api\Config\RepositoryInterface as ConfigRepository;
 
-/**
- * HTML Renderer for Module Header in system config
- */
 class Header extends Field
 {
-
-    public const MODULE_CODE = 'magento2-tradetracker';
-
-    /**
-     * Template file name
-     *
-     * @var string
-     */
     protected $_template = 'TradeTracker_Connect::system/config/fieldset/header.phtml';
 
-    /**
-     * @var ConfigRepository
-     */
-    private $configRepository;
-
-    /**
-     * Header constructor.
-     *
-     * @param Context $context
-     * @param ConfigRepository $configRepository
-     */
     public function __construct(
         Context $context,
-        ConfigRepository $configRepository
+        private readonly ConfigRepository $configRepository,
+        array $data = []
     ) {
-        $this->configRepository = $configRepository;
-        parent::__construct($context);
+        parent::__construct($context, $data);
     }
 
-    /**
-     * @inheritDoc
-     */
     public function render(AbstractElement $element)
     {
         $element->addClass('magmodules');
-
         return $this->toHtml();
     }
 
-    /**
-     * Image with extension and magento version.
-     *
-     * @return string
-     */
-    public function getImage(): string
+    public function getSupportLink(): string
+    {
+        return $this->configRepository->getSupportLink();
+    }
+
+    public function getVersion(): string
+    {
+        return $this->configRepository->getExtensionVersion();
+    }
+
+    public function getLogoUrl(): string
     {
         return sprintf(
-            'https://www.magmodules.eu/logo/%s/%s/%s/logo.png',
-            self::MODULE_CODE,
-            $this->configRepository->getExtensionVersion(),
-            $this->configRepository->getMagentoVersion()
+            'https://cdn.magmodules.eu/assets/%s/%s/logo.svg',
+            ConfigRepository::EXTENSION_CODE,
+            trim($this->configRepository->getExtensionVersion(), 'v')
         );
     }
 }

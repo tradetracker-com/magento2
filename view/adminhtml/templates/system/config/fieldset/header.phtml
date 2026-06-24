@@ -5,42 +5,47 @@
  *
  * @var $block TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Header
  */
+
+/** @var \Magento\Framework\Escaper $escaper */
+$escaper = $block->getEscaper();
+$logo = $block->getLogoUrl();
 ?>
-<div class="tradetracker-header">
-    <p class="tradetracker-header-text">
-        <?php $img = $block->getViewFileUrl('TradeTracker_Connect::images/tradetracker-logo-xs.svg'); ?>
-        <img src="<?= $block->escapeUrl($img); ?>"/>
-        <strong>TradeTracker extension for Magento 2.</strong><br>
-        Directly connect your Magento e-commerce platform to TradeTracker and have fully functional tracking for your
-        performance marketing programme. Provide the product feed URL so publishers can promote your products with up to
-        date stock information.<br>
-        <a href="https://merchant.tradetracker.com/portal/advertiserBrochure?loc=en_GB" target="_blank">
-            Not yet a client? Sign-up here.
-        </a>
-    </p>
+<div class="tradetracker-header" style="background-image: url(<?= $escaper->escapeUrl($logo); ?>)">
+    <div class="tradetracker-header-text">
+        <strong><?= $escaper->escapeHtml(__('TradeTracker extension for Magento 2')); ?></strong>
+        <div>
+            <?= $escaper->escapeHtml(
+                __('Connect your Magento store to TradeTracker for performance marketing tracking and product feeds.')
+            ); ?>
+        </div>
+    </div>
     <div class="tradetracker-header-actions">
-        <a id="tradetracker-button_help" class="helpbutton"
-           href="mailto:info.nl@tradetracker.com?subject=Magento 2 Extension Support Issue: "
+        <?php $supportLink = $block->getSupportLink(); ?>
+        <?php if ($supportLink): ?>
+        <a id="mm-ui-button_help" class="mm-acc-btn mm-acc-btn--outline"
+           href="<?= $escaper->escapeUrl($supportLink); ?>"
            target="_blank">
-            <i class="tradetracker-icon__question-circled"></i>
-            <span><?= $block->escapeHtml(__('Support')); ?></span>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/>
+            </svg>
+            <span><?= $escaper->escapeHtml(__('Documentation')); ?></span>
         </a>
-        <a id="tradetracker-button_support" class="support"
-           href="https://vimeo.com/552386282/90b3ac3f55"
-           target="_blank">
-            <i class="tradetracker-icon__envelop"></i>
-            <span><?= $block->escapeHtml(__('Documentation')); ?></span>
-        </a>
-        <a id="tradetracker-button_register" class="register"
+        <?php endif; ?>
+        <a id="mm-ui-button_register" class="mm-acc-btn mm-acc-btn--outline"
            href="https://merchant.tradetracker.com/webService"
-           target="_blank" style="background: #ee3824;">
-            <i class="tradetracker-icon__envelop"></i>
-            <span><?= $block->escapeHtml(__('Login')); ?></span>
+           target="_blank">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9"/>
+            </svg>
+            <span><?= $escaper->escapeHtml(__('Login')); ?></span>
+        </a>
+        <a id="mm-ui-button_signup" class="mm-acc-btn mm-acc-btn--outline"
+           href="https://merchant.tradetracker.com/portal/advertiserBrochure?loc=en_GB"
+           target="_blank">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM3 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 9.374 21c-2.331 0-4.512-.645-6.374-1.766Z"/>
+            </svg>
+            <span><?= $escaper->escapeHtml(__('Sign up')); ?></span>
         </a>
     </div>
-</div>
-<br>
-<div class="tradetracker-header-developed">
-    <p style="background-image: url(<?= $block->escapeUrl($block->getImage()); ?>)"></p>
-    <p>Developed in partnership with <a href="https://www.magmodules.eu/" target="_blank">Magmodules</a></p>
 </div>
