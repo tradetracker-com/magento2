@@ -11,7 +11,7 @@ use TradeTracker\Connect\Api\Config\System\FeedInterface as FeedConfigRepository
 use TradeTracker\Connect\Api\ProductData\RepositoryInterface as ProductData;
 use TradeTracker\Connect\Service\ProductData\AttributeCollector\Data\Image;
 use TradeTracker\Connect\Service\ProductData\Filter;
-use TradeTracker\Connect\Service\ProductData\Type;
+use TradeTracker\Connect\Service\ProductData\Collector;
 
 /**
  * Selftest repository class
@@ -76,9 +76,9 @@ class Repository implements ProductData
      */
     private $entityIds;
     /**
-     * @var Type
+     * @var Collector
      */
-    private $type;
+    private $collector;
     /**
      * @var Filter
      */
@@ -100,18 +100,18 @@ class Repository implements ProductData
      * Repository constructor.
      * @param FeedConfigRepository $feedConfigRepository
      * @param Filter $filter
-     * @param Type $type
+     * @param Collector $collector
      * @param Image $image
      */
     public function __construct(
         FeedConfigRepository $feedConfigRepository,
         Filter $filter,
-        Type $type,
+        Collector $collector,
         Image $image
     ) {
         $this->feedConfigRepository = $feedConfigRepository;
         $this->filter = $filter;
-        $this->type = $type;
+        $this->collector = $collector;
         $this->image = $image;
     }
 
@@ -224,12 +224,11 @@ class Repository implements ProductData
             ]
         ];
 
-        return $this->type->execute(
+        return $this->collector->execute(
             $this->entityIds,
             $this->attributeMap,
             $extraParameters,
-            $storeId,
-            $type == 'preview' ? self::PREVIEW_QTY : 100000
+            $storeId
         );
     }
 

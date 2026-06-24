@@ -1,0 +1,13 @@
+{
+  "name": "end-2-end-tests",
+  "version": "1.0.0",
+  "description": "End-to-end tests for TradeTracker Connect",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.47.2",
+    "@types/node": "^22.7.4",
+    "fast-xml-parser": "^4.5.0"
+  }
+}
