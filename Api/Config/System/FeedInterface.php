@@ -209,4 +209,12 @@ interface FeedInterface extends RepositoryInterface
      * @return string
      */
     public function getFileName(int $storeId): string;
+
+    /**
+     * Check if out-of-stock products should be excluded from the feed
+     *
+     * @param int $storeId
+     * @return bool
+     */
+    public function excludeOutOfStock(int $storeId): bool;
 }

@@ -143,8 +143,7 @@ class Repository implements ProductData
             }
         }
 
-        $addDisabled = $this->feedConfigRepository->getFilters($storeId)['add_disabled_products'];
-        if (!$addDisabled) {
+        if ($this->feedConfigRepository->excludeOutOfStock($storeId)) {
             foreach ($result as $id => &$datum) {
                 if ($datum['availability'] == 'out of stock') {
                     unset($result[$id]);

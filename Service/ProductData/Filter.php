@@ -151,7 +151,7 @@ class Filter
      */
     private function filterStatus(array $entityIds, bool $addDisabled = false, int $storeId = 0): array
     {
-        if (empty($entityIds) || $addDisabled || !$this->statusAttributeId) {
+        if (empty($entityIds) || !$this->statusAttributeId) {
             return $entityIds;
         }
 
