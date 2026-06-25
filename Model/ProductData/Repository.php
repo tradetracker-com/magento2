@@ -206,7 +206,7 @@ class Repository implements ProductData
             'filters' => [
                 'custom' => $this->feedConfigRepository->getFilters($storeId)['advanced_filters'],
                 'exclude_attribute' => 'tradetracker_exclude',
-                'exclude_disabled' => !$this->feedConfigRepository->getFilters($storeId)['add_disabled_products']
+                'exclude_disabled' => true
             ],
             'stock' => [
                 'inventory' => true,

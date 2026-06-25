@@ -46,7 +46,7 @@ class Filter
         $this->prefetchAttributeIds();
 
         $entityIds = $this->filterVisibility($filter, $storeId);
-        $entityIds = $this->filterStatus($entityIds, $filter['add_disabled_products'], $storeId);
+        $entityIds = $this->filterStatus($entityIds, $storeId);
 
         return $this->filterByWebsiteAndCategory(
             $entityIds,
@@ -149,7 +149,7 @@ class Filter
      * @param int $storeId
      * @return array
      */
-    private function filterStatus(array $entityIds, bool $addDisabled = false, int $storeId = 0): array
+    private function filterStatus(array $entityIds, int $storeId = 0): array
     {
         if (empty($entityIds) || !$this->statusAttributeId) {
             return $entityIds;

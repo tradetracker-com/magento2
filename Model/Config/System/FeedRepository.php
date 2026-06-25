@@ -425,7 +425,7 @@ class FeedRepository extends ConfigRepository implements FeedInterface
             'restrict_by_category' => $this->restrictProductFeedByCategory($storeId),
             'category_restriction_behaviour' => $this->categoryRestrictionsFilterType($storeId),
             'category' => $this->getCategoryIds($storeId),
-            'add_disabled_products' => !$this->excludeOutOfStock($storeId),
+            'exclude_out_of_stock' => $this->excludeOutOfStock($storeId),
             'advanced_filters' => $this->getAdvancedFiltersData($storeId),
         ];
     }
