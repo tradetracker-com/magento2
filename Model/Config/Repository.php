@@ -12,6 +12,8 @@ use Magento\Config\Model\ResourceModel\Config as ConfigData;
 use Magento\Config\Model\ResourceModel\Config\Data\CollectionFactory as ConfigDataCollectionFactory;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ProductMetadataInterface;
+use Magento\Framework\Component\ComponentRegistrarInterface;
+use Magento\Framework\Filesystem\Driver\File as FileDriver;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\ScopeInterface;
@@ -24,48 +26,25 @@ use TradeTracker\Connect\Api\Config\RepositoryInterface as ConfigRepositoryInter
 class Repository implements ConfigRepositoryInterface
 {
 
-    /**
-     * @var StoreManagerInterface
-     */
-    public $storeManager;
-    /**
-     * @var ScopeConfigInterface
-     */
-    private $scopeConfig;
-    /**
-     * @var Json
-     */
-    private $json;
-    /**
-     * @var ProductMetadataInterface
-     */
-    private $metadata;
-    /**
-     * @var ConfigDataCollectionFactory
-     */
-    private $configDataCollectionFactory;
-    /**
-     * @var ConfigData
-     */
-    private $config;
+    public StoreManagerInterface $storeManager;
+    private ScopeConfigInterface $scopeConfig;
+    private Json $json;
+    private ProductMetadataInterface $metadata;
+    private ConfigDataCollectionFactory $configDataCollectionFactory;
+    private ConfigData $config;
+    private ComponentRegistrarInterface $componentRegistrar;
+    private FileDriver $fileDriver;
+    private ?array $composerData = null;
 
-    /**
-     * Repository constructor.
-     *
-     * @param StoreManagerInterface $storeManager
-     * @param ScopeConfigInterface $scopeConfig
-     * @param ConfigDataCollectionFactory $configDataCollectionFactory
-     * @param ConfigData $config
-     * @param Json $json
-     * @param ProductMetadataInterface $metadata
-     */
     public function __construct(
         StoreManagerInterface $storeManager,
         ScopeConfigInterface $scopeConfig,
         ConfigDataCollectionFactory $configDataCollectionFactory,
         ConfigData $config,
         Json $json,
-        ProductMetadataInterface $metadata
+        ProductMetadataInterface $metadata,
+        ComponentRegistrarInterface $componentRegistrar,
+        FileDriver $fileDriver
     ) {
         $this->storeManager = $storeManager;
         $this->configDataCollectionFactory = $configDataCollectionFactory;
@@ -73,6 +52,8 @@ class Repository implements ConfigRepositoryInterface
         $this->config = $config;
         $this->json = $json;
         $this->metadata = $metadata;
+        $this->componentRegistrar = $componentRegistrar;
+        $this->fileDriver = $fileDriver;
     }
 
     /**
@@ -80,7 +61,40 @@ class Repository implements ConfigRepositoryInterface
      */
     public function getExtensionVersion(): string
     {
-        return $this->getStoreValue(self::XML_PATH_EXTENSION_VERSION);
+        return 'v' . (string)($this->getComposerData()['version'] ?? '0.0.0');
+    }
+
+    public function getSupportLink(): string
+    {
+        $links = $this->getComposerData()['extra']['magmodules']['links']['docs'] ?? [];
+        return (string)($links['en'] ?? '');
+    }
+
+    protected function getComposerData(): array
+    {
+        if ($this->composerData !== null) {
+            return $this->composerData;
+        }
+
+        $this->composerData = [];
+
+        $path = $this->componentRegistrar->getPath('module', ConfigRepositoryInterface::EXTENSION_CODE);
+        if (!$path) {
+            return $this->composerData;
+        }
+
+        try {
+            $filePath = $path . '/composer.json';
+            if ($this->fileDriver->isExists($filePath)) {
+                $this->composerData = $this->json->unserialize(
+                    $this->fileDriver->fileGetContents($filePath)
+                );
+            }
+        } catch (\Throwable $e) {
+            $this->composerData = [];
+        }
+
+        return $this->composerData;
     }
 
     /**

@@ -7,14 +7,13 @@
 -->
 <include xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_include.xsd">
-    <group id="general" translate="label comment" type="text" sortOrder="2" showInDefault="1" showInWebsite="1"
+    <group id="general" translate="label comment" type="text" sortOrder="1" showInDefault="1" showInWebsite="1"
            showInStore="1">
         <label>General</label>
-        <field id="version_button" translate="label" type="button" sortOrder="1" showInDefault="1"
+        <field id="version" translate="label" type="label" sortOrder="1" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Version</label>
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Button\VersionCheck</frontend_model>
-            <config_path>tradetracker/general/version</config_path>
         </field>
         <field id="enable" translate="label comment" type="select" sortOrder="2" showInDefault="1" showInWebsite="0"
                showInStore="0">
@@ -26,21 +25,33 @@
                showInWebsite="1" showInStore="1">
             <label>Customer ID</label>
             <config_path>tradetracker/general/customer_id</config_path>
+            <depends>
+                <field id="enable">1</field>
+            </depends>
         </field>
         <field id="passphrase" translate="label comment" type="text" sortOrder="20" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Passphrase</label>
             <config_path>tradetracker/general/passphrase</config_path>
+            <depends>
+                <field id="enable">1</field>
+            </depends>
         </field>
-        <field id="button" translate="label" type="button" sortOrder="100" showInDefault="1"
+        <field id="button" translate="label" type="button" sortOrder="30" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label/>
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Button\Credentials</frontend_model>
+            <depends>
+                <field id="enable">1</field>
+            </depends>
         </field>
-        <field id="integration_token" translate="label comment" type="text" sortOrder="110" showInDefault="1"
+        <field id="integration_token" translate="label comment" type="text" sortOrder="40" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Magento Integration Token</label>
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\AccessToken</frontend_model>
+            <depends>
+                <field id="enable">1</field>
+            </depends>
         </field>
     </group>
 </include>

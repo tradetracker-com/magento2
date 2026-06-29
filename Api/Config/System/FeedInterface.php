@@ -69,6 +69,10 @@ interface FeedInterface extends RepositoryInterface
     public const XML_PATH_SHIPPING = 'tradetracker/feed/shipping';
     public const XML_PATH_UTM_STRING = 'tradetracker/feed/utm_string';
 
+    /** Performance */
+    public const XML_PATH_BATCH_SIZE = 'tradetracker/general/batch_size';
+    public const XML_PATH_PREVIEW_SIZE = 'tradetracker/general/preview_size';
+
     /** Filter Options Group */
     public const XML_PATH_VISBILITY = 'tradetracker/feed/filter_visbility';
     public const XML_PATH_VISIBILITY_OPTIONS = 'tradetracker/feed/filter_visbility_options';
@@ -209,4 +213,22 @@ interface FeedInterface extends RepositoryInterface
      * @return string
      */
     public function getFileName(int $storeId): string;
+
+    /**
+     * Check if out-of-stock products should be excluded from the feed
+     *
+     * @param int $storeId
+     * @return bool
+     */
+    public function excludeOutOfStock(int $storeId): bool;
+
+    /**
+     * @return int
+     */
+    public function getBatchSize(): int;
+
+    /**
+     * @return int
+     */
+    public function getPreviewSize(): int;
 }

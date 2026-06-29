@@ -43,6 +43,27 @@
                 <field id="cron_frequency">custom</field>
             </depends>
         </field>
+        <field id="performance_heading" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Performance Params</label>
+            <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
+            <depends>
+                <field id="enable">1</field>
+            </depends>
+        </field>
+        <field id="batch_size" translate="label" type="text" sortOrder="31" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+            <label>Batch Size</label>
+            <config_path>tradetracker/general/batch_size</config_path>
+            <depends>
+                <field id="enable">1</field>
+            </depends>
+        </field>
+        <field id="preview_size" translate="label" type="text" sortOrder="32" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+            <label>Preview Size</label>
+            <config_path>tradetracker/general/preview_size</config_path>
+            <depends>
+                <field id="enable">1</field>
+            </depends>
+        </field>
     </group>
     <group id="data" translate="label comment" type="text" sortOrder="5" showInDefault="1" showInWebsite="1"
            showInStore="1">

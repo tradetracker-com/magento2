@@ -20,8 +20,7 @@ interface RepositoryInterface
 
     /** General Group */
     public const XML_PATH_EXTENSION_ENABLE = 'tradetracker/general/enable';
-    public const XML_PATH_EXTENSION_VERSION = 'tradetracker/general/version';
-    public const XML_PATH_DEBUG = 'tradetracker/general/debug';
+public const XML_PATH_DEBUG = 'tradetracker/general/debug';
     public const XML_PATH_CUSTOMER_ID = 'tradetracker/general/customer_id';
     public const XML_PATH_PASSPHRASE = 'tradetracker/general/passphrase';
 
@@ -71,4 +70,11 @@ interface RepositoryInterface
      * @return array
      */
     public function getApiCredentials(?int $storeId = null): array;
+
+    /**
+     * Get support/docs link from composer.json
+     *
+     * @return string
+     */
+    public function getSupportLink(): string;
 }

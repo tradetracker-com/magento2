@@ -17,6 +17,7 @@
                 <values>
                     <value id="ts-tradetracker" type="host">ts.tradetracker.net</value>
                     <value id="www-magmodules" type="host">www.magmodules.eu</value>
+                    <value id="cdn-magmodules" type="host">cdn.magmodules.eu</value>
                 </values>
             </policy>
         </policies>
