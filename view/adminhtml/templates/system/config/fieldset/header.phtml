@@ -4,10 +4,9 @@
  * See COPYING.txt for license details.
  *
  * @var $block TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Header
+ * @var \Magento\Framework\Escaper $escaper
  */
 
-/** @var \Magento\Framework\Escaper $escaper */
-$escaper = $block->getEscaper();
 $logo = $block->getLogoUrl();
 ?>
 <div class="tradetracker-header" style="background-image: url(<?= $escaper->escapeUrl($logo); ?>)">
