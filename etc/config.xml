@@ -12,6 +12,8 @@
             <general>
                 <enable>1</enable>
                 <debug>1</debug>
+                <batch_size>10000</batch_size>
+                <preview_size>5000</preview_size>
             </general>
             <direct_linking>
                 <enable>0</enable>

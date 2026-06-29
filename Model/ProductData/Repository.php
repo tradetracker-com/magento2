@@ -18,7 +18,6 @@ use TradeTracker\Connect\Service\ProductData\Collector;
  */
 class Repository implements ProductData
 {
-    public const PREVIEW_QTY = 250;
 
     /**
      * Base attributes map to pull from product
@@ -123,10 +122,65 @@ class Repository implements ProductData
         $this->collectIds($storeId, $entityIds);
         $this->collectAttributes($storeId);
         $this->staticFields = $this->feedConfigRepository->getStaticFields($storeId);
+
+        if ($type === 'preview') {
+            $this->entityIds = array_slice(
+                $this->entityIds,
+                0,
+                $this->feedConfigRepository->getPreviewSize()
+            );
+        }
+
         $this->imageData = $this->image->execute($this->entityIds, $storeId);
 
         $result = [];
-        foreach ($this->collectProductData($storeId, $type) as $entityId => $productData) {
+        $batchSize = $this->feedConfigRepository->getBatchSize();
+
+        foreach (array_chunk($this->entityIds, $batchSize) as $batchIds) {
+            $this->processBatch($storeId, $batchIds, $result);
+        }
+
+        if ($this->feedConfigRepository->excludeOutOfStock($storeId)) {
+            foreach ($result as $id => &$datum) {
+                if ($datum['availability'] == 'out of stock') {
+                    unset($result[$id]);
+                }
+            }
+        }
+        return $result;
+    }
+
+    private function processBatch(int $storeId, array $batchIds, array &$result): void
+    {
+        $extraParameters = [
+            'filters' => [
+                'custom' => $this->feedConfigRepository->getFilters($storeId)['advanced_filters'],
+                'exclude_attribute' => 'tradetracker_exclude',
+                'exclude_disabled' => true
+            ],
+            'stock' => [
+                'inventory' => true,
+            ],
+            'category' => [
+                'exclude_attribute' => ['code' => 'tradetracker_disable_export', 'value' => 1],
+                'replace_attribute' => 'tradetracker_category',
+                'include_anchor' => true
+            ],
+            'behaviour' => [
+                'configurable' => $this->feedConfigRepository->getConfigProductsBehaviour($storeId),
+                'bundle' => $this->feedConfigRepository->getBundleProductsBehaviour($storeId),
+                'grouped' => $this->feedConfigRepository->getGroupedProductsBehaviour($storeId)
+            ]
+        ];
+
+        $data = $this->collector->execute(
+            $batchIds,
+            $this->attributeMap,
+            $extraParameters,
+            $storeId
+        );
+
+        foreach ($data as $entityId => $productData) {
             if (isset($productData['tradetracker_exclude']) && $productData['tradetracker_exclude']) {
                 continue;
             }
@@ -142,15 +196,6 @@ class Repository implements ProductData
                 $result[$entityId][$index] = $this->prepareAttribute($attr, $productData);
             }
         }
-
-        if ($this->feedConfigRepository->excludeOutOfStock($storeId)) {
-            foreach ($result as $id => &$datum) {
-                if ($datum['availability'] == 'out of stock') {
-                    unset($result[$id]);
-                }
-            }
-        }
-        return $result;
     }
 
     /**
@@ -191,44 +236,6 @@ class Repository implements ProductData
         }
 
         $this->attributeMap = array_filter($this->attributeMap);
-    }
-
-    /**
-     * Collect all product data
-     *
-     * @param int $storeId
-     * @param string $type
-     * @return array
-     */
-    private function collectProductData(int $storeId, string $type = 'manual'): array
-    {
-        $extraParameters = [
-            'filters' => [
-                'custom' => $this->feedConfigRepository->getFilters($storeId)['advanced_filters'],
-                'exclude_attribute' => 'tradetracker_exclude',
-                'exclude_disabled' => true
-            ],
-            'stock' => [
-                'inventory' => true,
-            ],
-            'category' => [
-                'exclude_attribute' => ['code' => 'tradetracker_disable_export', 'value' => 1],
-                'replace_attribute' => 'tradetracker_category',
-                'include_anchor' => true
-            ],
-            'behaviour' => [
-                'configurable' => $this->feedConfigRepository->getConfigProductsBehaviour($storeId),
-                'bundle' => $this->feedConfigRepository->getBundleProductsBehaviour($storeId),
-                'grouped' => $this->feedConfigRepository->getGroupedProductsBehaviour($storeId)
-            ]
-        ];
-
-        return $this->collector->execute(
-            $this->entityIds,
-            $this->attributeMap,
-            $extraParameters,
-            $storeId
-        );
     }
 
     /**

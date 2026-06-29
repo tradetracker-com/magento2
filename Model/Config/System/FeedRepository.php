@@ -787,4 +787,24 @@ class FeedRepository extends ConfigRepository implements FeedInterface
         $filename = $this->getStoreValue(self::XPATH_FEED_FILENAME, $storeId) ?? 'tradetracker.xml';
         return str_replace('.xml', sprintf('-%s.xml', $storeId), $filename);
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function getBatchSize(): int
+    {
+        return $this->getStoreValue(self::XML_PATH_BATCH_SIZE)
+            ? (int)$this->getStoreValue(self::XML_PATH_BATCH_SIZE)
+            : 10000;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getPreviewSize(): int
+    {
+        return $this->getStoreValue(self::XML_PATH_PREVIEW_SIZE)
+            ? (int)$this->getStoreValue(self::XML_PATH_PREVIEW_SIZE)
+            : 5000;
+    }
 }
