@@ -106,7 +106,10 @@ class Collector
 
         $this->unsetReplacedParentTypes($toUnset, $allIds, $extraParameters);
 
-        return array_diff_key($data, array_flip($toUnset));
+        return array_intersect_key(
+            array_diff_key($data, array_flip($toUnset)),
+            array_flip($entityIds)
+        );
     }
 
     /**
