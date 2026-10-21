@@ -47,4 +47,4 @@ php bin/magento setup:static-content:deploy
 Available Soon
 
 ## Compatibility
-The module has a minimum requirement of Magento 2.3 and PHP 7.1 and is tested on Magento version 2.3.x & 2.4.x.
+The module has a minimum functional requirement of Magento 2.3 and PHP 8.1 and is tested on Magento version 2.3.x & 2.4.x. For security, run a PHP version that includes the October 2026 security fixes (8.2.35, 8.3.36, 8.4.27, 8.5.12 or later). PHP 8.1 and older no longer receive security updates and are not supported.
