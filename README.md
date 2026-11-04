@@ -47,4 +47,9 @@ php bin/magento setup:static-content:deploy
 Available Soon
 
 ## Compatibility
-The module has a minimum functional requirement of Magento 2.3 and PHP 8.1 and is tested on Magento version 2.3.x & 2.4.x. For security, run a PHP version that includes the October 2026 security fixes (8.2.35, 8.3.36, 8.4.27, 8.5.12 or later). PHP 8.1 and older no longer receive security updates and are not supported.
+The module requires PHP 8.2 or higher and is tested on Magento 2.4.7 through 2.4.9 with PHP 8.2, 8.3, 8.4 and 8.5.
+
+PHP 8.1 and older are not supported: these versions no longer receive security fixes from the PHP project. Run a PHP build that includes the October 2026 security fixes (8.2.35, 8.3.36, 8.4.27, 8.5.12 or later). Merchants on an older PHP version can keep using release 1.8.0 but are strongly advised to update PHP first.
+
+## Credentials storage
+The Customer ID and Passphrase are entered under _Stores_ > _Configuration_ > _TradeTracker_ > _General_ and can be set per website or store view. Magento stores them in the `core_config_data` table under `tradetracker/general/customer_id` and `tradetracker/general/passphrase`. The passphrase is stored encrypted with the Magento encryption key; existing plain-text values are encrypted automatically during `bin/magento setup:upgrade`.

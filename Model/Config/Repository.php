@@ -13,6 +13,7 @@ use Magento\Config\Model\ResourceModel\Config\Data\CollectionFactory as ConfigDa
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ProductMetadataInterface;
 use Magento\Framework\Component\ComponentRegistrarInterface;
+use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\Filesystem\Driver\File as FileDriver;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Store\Api\Data\StoreInterface;
@@ -34,6 +35,7 @@ class Repository implements ConfigRepositoryInterface
     private ConfigData $config;
     private ComponentRegistrarInterface $componentRegistrar;
     private FileDriver $fileDriver;
+    private EncryptorInterface $encryptor;
     private ?array $composerData = null;
 
     public function __construct(
@@ -44,7 +46,8 @@ class Repository implements ConfigRepositoryInterface
         Json $json,
         ProductMetadataInterface $metadata,
         ComponentRegistrarInterface $componentRegistrar,
-        FileDriver $fileDriver
+        FileDriver $fileDriver,
+        EncryptorInterface $encryptor
     ) {
         $this->storeManager = $storeManager;
         $this->configDataCollectionFactory = $configDataCollectionFactory;
@@ -54,6 +57,7 @@ class Repository implements ConfigRepositoryInterface
         $this->metadata = $metadata;
         $this->componentRegistrar = $componentRegistrar;
         $this->fileDriver = $fileDriver;
+        $this->encryptor = $encryptor;
     }
 
     /**
@@ -212,13 +216,33 @@ class Repository implements ConfigRepositoryInterface
     /**
      * Get passphrase
      *
+     * The passphrase is stored encrypted (Magento\Config\Model\Config\Backend\Encrypted). Values written before
+     * the EncryptPassphrase data patch ran are still plain text and are returned as-is.
+     *
      * @param int|null $storeId
      *
      * @return string
      */
     private function getPassphrase(?int $storeId = null): string
     {
-        return $this->getStoreValue(self::XML_PATH_PASSPHRASE, $storeId);
+        $value = $this->getStoreValue(self::XML_PATH_PASSPHRASE, $storeId);
+        if ($value === '' || !self::isEncryptedValue($value)) {
+            return $value;
+        }
+
+        return (string)$this->encryptor->decrypt($value);
+    }
+
+    /**
+     * Whether a stored value is in Magento's encrypted format ("<key version>:<cipher version>:<payload>")
+     *
+     * @param string $value
+     *
+     * @return bool
+     */
+    public static function isEncryptedValue(string $value): bool
+    {
+        return (bool)preg_match('/^\d+:\d+:/', $value);
     }
 
     /**
