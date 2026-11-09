@@ -14,7 +14,7 @@
         <section id="tradetracker_general" translate="label comment" type="text" sortOrder="200" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>TradeTracker - General</label>
             <tab>magmodules</tab>
-            <resource>TradeTracker_Connect::general</resource>
+            <resource>TradeTracker_Connect::config</resource>
             <include path="TradeTracker_Connect::system/branding.xml"/>
             <include path="TradeTracker_Connect::system/general.xml"/>
             <include path="TradeTracker_Connect::system/pixel.xml"/>
@@ -25,7 +25,7 @@
         <section id="tradetracker_feed" translate="label comment" type="text" sortOrder="201" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>TradeTracker - Product Feed</label>
             <tab>magmodules</tab>
-            <resource>TradeTracker_Connect::feed</resource>
+            <resource>TradeTracker_Connect::config</resource>
             <include path="TradeTracker_Connect::system/branding.xml"/>
             <include path="TradeTracker_Connect::system/feed.xml"/>
         </section>
