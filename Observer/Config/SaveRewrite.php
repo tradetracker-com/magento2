@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace TradeTracker\Connect\Observer\Config;
 
-use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Event\Observer as EventObserver;
 use Magento\Framework\Event\ObserverInterface;
@@ -27,10 +26,6 @@ class SaveRewrite implements ObserverInterface
      */
     private $request;
     /**
-     * @var WriterInterface
-     */
-    private $configWriter;
-    /**
      * @var UrlRewrite
      */
     private $urlRewrite;
@@ -46,20 +41,17 @@ class SaveRewrite implements ObserverInterface
     /**
      * SaveRewrite constructor.
      * @param RequestInterface $request
-     * @param WriterInterface $configWriter
      * @param UrlRewrite $urlRewrite
      * @param ConfigRepository $configRepository
      * @param StoreRepository $storeRepository
      */
     public function __construct(
         RequestInterface $request,
-        WriterInterface $configWriter,
         UrlRewrite $urlRewrite,
         ConfigRepository $configRepository,
         StoreRepository $storeRepository
     ) {
         $this->request = $request;
-        $this->configWriter = $configWriter;
         $this->urlRewrite = $urlRewrite;
         $this->configRepository = $configRepository;
         $this->storeRepository = $storeRepository;
