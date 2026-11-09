@@ -186,7 +186,7 @@ class Repository implements FeedRepository
     /**
      * @inheritDoc
      */
-    public function generateAndSaveFeed(int $storeId, $type = 'manual'): array
+    public function generateAndSaveFeed(int $storeId, string $type = 'manual'): array
     {
         $timeStart = microtime(true);
 
