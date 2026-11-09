@@ -19,15 +19,18 @@ class Create
      * @var File
      */
     private $file;
+    private Sanitizer $sanitizer;
 
     /**
      * Create constructor.
      * @param File $file
      */
     public function __construct(
-        File $file
+        File $file,
+        Sanitizer $sanitizer
     ) {
         $this->file = $file;
+        $this->sanitizer = $sanitizer;
     }
 
     /**
@@ -60,7 +63,7 @@ XML;
             }
             if (!is_array($value)) {
                 // phpcs:ignore Magento2.Functions.DiscouragedFunction
-                $value = htmlspecialchars((string)$value, ENT_XML1, 'UTF-8');
+                $value = htmlspecialchars($this->sanitizer->text($value), ENT_XML1, 'UTF-8');
                 $xmlStr .= <<<XML
 <$key>$value
 XML;
