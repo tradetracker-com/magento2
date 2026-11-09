@@ -1,3 +1,5 @@
 .idea/
 *.zip
 .DS_Store
+/.phpunit.cache
+/Test/vendor
