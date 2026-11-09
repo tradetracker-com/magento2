@@ -12,7 +12,7 @@
         <label>Conversion Pixel</label>
         <comment>
             <![CDATA[With the conversion pixel the extension is able to record the placed orders your shop. This makes it possible to position popular products better, this greatly enhances your conversion. In addition, you get better insights in the orders and the assigned commission.]]></comment>
-        <field id="enable" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1"
+        <field id="enable" canRestore="1" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1"
                showInStore="1">
             <label>Enable</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -26,7 +26,7 @@
                 <field id="enable">1</field>
             </depends>
         </field>
-        <field id="campaign_id" translate="label comment" type="text" sortOrder="11" showInDefault="1"
+        <field id="campaign_id" canRestore="1" translate="label comment" type="text" sortOrder="11" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Campaign ID</label>
             <config_path>tradetracker/pixel/campaign_id</config_path>
@@ -35,7 +35,7 @@
                 <field id="enable">1</field>
             </depends>
         </field>
-        <field id="product_id" translate="label comment" type="text" sortOrder="12" showInDefault="1"
+        <field id="product_id" canRestore="1" translate="label comment" type="text" sortOrder="12" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Product ID</label>
             <config_path>tradetracker/pixel/product_id</config_path>
@@ -52,7 +52,7 @@
                 <field id="enable">1</field>
             </depends>
         </field>
-        <field id="overwrite_currency" translate="label comment" type="select" sortOrder="21" showInDefault="1"
+        <field id="overwrite_currency" canRestore="1" translate="label comment" type="select" sortOrder="21" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Overwrite Currency Code</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -61,7 +61,7 @@
                 <field id="enable">1</field>
             </depends>
         </field>
-        <field id="non_default_currency" translate="label comment" type="text" sortOrder="22" showInDefault="1"
+        <field id="non_default_currency" canRestore="1" translate="label comment" type="text" sortOrder="22" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Currency Code</label>
             <config_path>tradetracker/pixel/non_default_currency</config_path>
