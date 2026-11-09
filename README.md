@@ -53,3 +53,6 @@ PHP 8.1 and older are not supported: these versions no longer receive security f
 
 ## Credentials storage
 The Customer ID and Passphrase are entered under _Stores_ > _Configuration_ > _TradeTracker_ > _General_ and can be set per website or store view. Magento stores them in the `core_config_data` table under `tradetracker/general/customer_id` and `tradetracker/general/passphrase`. The passphrase is stored encrypted with the Magento encryption key; existing plain-text values are encrypted automatically during `bin/magento setup:upgrade`.
+
+## CLI
+The product feed can be generated from the command line with `bin/magento tradetracker:feed:create`. See [docs/CLI_COMMANDS.md](docs/CLI_COMMANDS.md) for the options.
