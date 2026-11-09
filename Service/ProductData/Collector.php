@@ -1,33 +1,32 @@
 <?php
 /**
- * Copyright © TradeTracker. All rights reserved.
+ * Copyright © Magmodules.eu. All rights reserved.
  * See COPYING.txt for license details.
  */
 declare(strict_types=1);
 
 namespace TradeTracker\Connect\Service\ProductData;
 
-use Magento\Catalog\Api\Data\ProductInterface;
+use Magento\Catalog\Api\Data\CategoryInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\EntityManager\MetadataPool;
-use TradeTracker\Connect\Service\ProductData\AttributeCollector\Data\ConfigurableKey;
-use TradeTracker\Connect\Service\ProductData\AttributeCollector\Data\Parents;
 
 class Collector
 {
     private const ATTR_URL = 'url';
     private const ATTR_IMAGE = 'image';
+    private const PARENT_TYPES = ['configurable', 'bundle', 'grouped'];
     private string $linkField;
 
     private Data $data;
-    private ConfigurableKey $configurableKey;
-    private Parents $parents;
+    private AttributeCollector\Data\ConfigurableKey $configurableKey;
+    private AttributeCollector\Data\Parents $parents;
     private ResourceConnection $resourceConnection;
 
     public function __construct(
         Data $data,
-        ConfigurableKey $configurableKey,
-        Parents $parents,
+        AttributeCollector\Data\ConfigurableKey $configurableKey,
+        AttributeCollector\Data\Parents $parents,
         ResourceConnection $resourceConnection,
         MetadataPool $metadataPool
     ) {
@@ -35,18 +34,18 @@ class Collector
         $this->configurableKey = $configurableKey;
         $this->parents = $parents;
         $this->resourceConnection = $resourceConnection;
-        $this->linkField = $metadataPool->getMetadata(ProductInterface::class)->getLinkField();
+        $this->linkField = $metadataPool->getMetadata(CategoryInterface::class)->getLinkField();
     }
 
     /**
      * Process product data for given entity IDs, handling parent-child relationships,
      * attribute inheritance, and applying filters.
      *
-     * @param array $entityIds
-     * @param array $attributeMap
-     * @param array $extraParameters
-     * @param int $storeId
-     * @return array
+     * @param int[] $entityIds List of product entity IDs.
+     * @param array $attributeMap Mapping of attributes to retrieve.
+     * @param array $extraParameters Additional parameters including behavior and filters.
+     * @param int $storeId Store ID context for data retrieval.
+     * @return array<int, array<string, mixed>> Processed product data keyed by product entity ID.
      */
     public function execute(
         array $entityIds,
@@ -93,29 +92,37 @@ class Collector
         }
 
         $allIds = array_merge($entityIds, $extraProductsToLoad);
+        $rowIds = $this->getRowsIds($allIds);
 
         $data = $this->data->execute(
             $allIds,
             $attributeMap,
             $extraParameters,
-            $storeId
+            $storeId,
+            $rowIds
         );
 
-        $configKeys = $this->configurableKey->execute(array_merge($entityIds, $extraProductsToLoad));
-        $this->processData($data, $parents, $parentAttributeToUse, $configKeys, $extraParameters, $storeId, $toUnset);
+        $configKeys = $this->configurableKey->execute($productIds, $excludeDisabled, $storeId);
+        $this->processData(
+            $data,
+            $parents,
+            $parentAttributeToUse,
+            $configKeys,
+            $extraParameters,
+            $storeId,
+            $toUnset,
+            $rowIds
+        );
 
         $this->unsetReplacedParentTypes($toUnset, $allIds, $extraParameters);
 
-        return array_intersect_key(
-            array_diff_key($data, array_flip($toUnset)),
-            array_flip($entityIds)
-        );
+        return array_diff_key($data, array_flip($toUnset));
     }
 
     /**
-     * For any behaviour with use='simple', remove products of that type from the result.
-     * The per-child unset in handleParentUsage misses parents that the Parents lookup drops
-     * (e.g. Not Visible Individually), so we also remove by type_id directly.
+     * For any behaviour set to "No" (empty) or use='simple', remove products of that type from
+     * the result. The per-child unset in handleParentUsage misses parents that the Parents lookup
+     * drops (e.g. Not Visible Individually), so we also remove by type_id directly.
      */
     private function unsetReplacedParentTypes(array &$toUnset, array $allIds, array $extraParameters): void
     {
@@ -125,7 +132,7 @@ class Collector
 
         $typesToReplace = [];
         foreach ($extraParameters['behaviour'] ?? [] as $type => $behaviour) {
-            if (($behaviour['use'] ?? null) === 'simple') {
+            if (empty($behaviour['use']) || $behaviour['use'] === 'simple') {
                 $typesToReplace[] = $type;
             }
         }
@@ -148,8 +155,8 @@ class Collector
     /**
      * Retrieve mapping of entity IDs to their corresponding row IDs.
      *
-     * @param int[] $entityIds
-     * @return array<int, int>
+     * @param int[] $entityIds List of product entity IDs.
+     * @return array<int, int> Array mapping entity IDs to row IDs keyed by entity ID.
      */
     public function getRowsIds(array $entityIds): array
     {
@@ -166,8 +173,9 @@ class Collector
     /**
      * Retrieve parent attributes to inherit based on behavior settings.
      *
-     * @param array $extraParameters
-     * @return array<string, string[]>
+     * @param array $extraParameters Additional parameters defining behavior.
+     * @return array<string, string[]> Array keyed by product type ('configurable', 'grouped', 'bundle')
+     *                                 with lists of parent attributes to inherit.
      */
     private function getParentAttributes(array $extraParameters): array
     {
@@ -191,16 +199,19 @@ class Collector
 
     /**
      * Handle the usage of parent product data for a specific product entity.
+     * This method updates arrays tracking which products to exclude,
+     * which parent attributes to use, and additional parent products to load.
      *
-     * @param int $entityId
-     * @param int $parentId
-     * @param string $parentType
-     * @param array $extraParameters
-     * @param int[] &$toUnset
-     * @param array $parentAttributes
-     * @param array &$parentAttributeToUse
-     * @param int[] &$extraProductsToLoad
-     * @param int[] $entityIds
+     * @param int $entityId Current product entity ID.
+     * @param int $parentId Parent product entity ID.
+     * @param string $parentType Type of the parent product.
+     * @param array $extraParameters Additional behavior parameters.
+     * @param int[] &$toUnset Reference to array of product IDs to exclude from final results.
+     * @param array<string, string[]> $parentAttributes Attributes inherited from parents keyed by product type.
+     * @param array<int, array<string, int>> &$parentAttributeToUse Reference to array mapping product IDs to parent
+     *                                                              attributes and their parent IDs.
+     * @param int[] &$extraProductsToLoad Reference to array of additional parent product IDs to load.
+     * @param int[] $entityIds Original list of product entity IDs.
      */
     private function handleParentUsage(
         int $entityId,
@@ -214,7 +225,9 @@ class Collector
         array $entityIds
     ): void {
         $behaviour = $extraParameters['behaviour'][$parentType];
-        if ($behaviour['use'] === 'simple') {
+        // "No" (an empty value) leaves the parent out, like "only simples"; its linked simples
+        // are then handled as standalone products.
+        if (empty($behaviour['use']) || $behaviour['use'] === 'simple') {
             $toUnset[] = $parentId;
         } elseif ($behaviour['use'] === 'parent' && in_array($parentId, $entityIds)) {
             $toUnset[] = $entityId;
@@ -237,15 +250,15 @@ class Collector
 
     /**
      * Process product data by applying parent attributes, checking filters,
-     * and setting image logic flags.
+     * and setting additional flags.
      *
-     * @param array &$data
-     * @param array $parents
-     * @param array $parentAttributeToUse
-     * @param array $configKeys
-     * @param array $extraParameters
-     * @param int $storeId
-     * @param int[] &$toUnset
+     * @param array<int, array> &$data Product data keyed by product entity ID.
+     * @param array<int, array<int, string>> $parents Parent relationships keyed by product ID.
+     * @param array<int, array<string, int>> $parentAttributeToUse Attributes to inherit from parents.
+     * @param array $configKeys Configuration keys for URLs.
+     * @param array $extraParameters Additional behavior and filter parameters.
+     * @param int $storeId Store ID context.
+     * @param int[] &$toUnset Reference to array of product IDs to exclude from final results.
      */
     private function processData(
         array &$data,
@@ -254,50 +267,57 @@ class Collector
         array $configKeys,
         array $extraParameters,
         int $storeId,
-        array &$toUnset
+        array &$toUnset,
+        array $rowIds
     ): void {
-        foreach ($data as $entityId => $productData) {
+        $productIds = array_flip($rowIds);
+        foreach ($data as $productId => $productData) {
             if (!$this->checkExtraFilters($extraParameters['filters']['custom'], $productData)) {
-                $toUnset[] = $entityId;
+                $toUnset[] = $productId;
             }
 
-            if (isset($parents[$entityId])) {
-                $keys = array_keys($parents[$entityId]);
-                $data[$entityId]['parent_id'] = reset($keys);
+            if (isset($parents[$productId])) {
+                $parentRowId = key($parents[$productId]);
+                if ($parentRowId !== null && $parentId = $productIds[$parentRowId] ?? null) {
+                    $data[$productId]['parent_id'] = $parentId;
+                    $data[$productId]['parent_title'] = $data[$parentId]['title'] ?? null;
+                }
             }
 
-            if (isset($parentAttributeToUse[$entityId])) {
-                foreach ($parentAttributeToUse[$entityId] as $parentAttribute => $parentId) {
+            if (isset($parentAttributeToUse[$productId])) {
+                foreach ($parentAttributeToUse[$productId] as $parentAttribute => $rowId) {
+                    $parentId = $productIds[$rowId];
                     if (!isset($data[$parentId][$parentAttribute])) {
                         continue;
                     }
 
-                    $data[$entityId][$parentAttribute] = $data[$parentId][$parentAttribute];
+                    $data[$productId][$parentAttribute] = $data[$parentId][$parentAttribute];
 
                     if ($parentAttribute == self::ATTR_URL) {
                         $this->appendConfigKeyUrl(
                             $data,
-                            $entityId,
+                            $productId,
                             $parentId,
                             $configKeys,
                             $extraParameters,
-                            $storeId
+                            $storeId,
+                            $rowId
                         );
                     }
                 }
             }
 
-            $this->setImageLogic($data, $entityId, $extraParameters);
+            $this->setImageLogic($data, $productId, $extraParameters);
+            $this->setCategoryLogic($data, $productId, $extraParameters);
         }
     }
 
     /**
      * Validate product data against extra custom filters.
-     * Iterates ALL filters (unlike the old Type.php which returned after first).
      *
-     * @param array $filters
-     * @param array $productData
-     * @return bool
+     * @param array<int, array<string, mixed>> $filters List of custom filter conditions.
+     * @param array<string, mixed> $productData Product data to validate.
+     * @return bool True if the product passes all filters, false otherwise.
      */
     private function checkExtraFilters(array $filters, array $productData): bool
     {
@@ -306,7 +326,7 @@ class Collector
             if (!isset($productData[$attribute]) && $filter['condition'] !== 'not-empty') {
                 continue;
             }
-            if (!empty($filter['product_type']) && $productData['type_id'] !== $filter['product_type']) {
+            if (!$this->filterAppliesToType($filter['product_type'] ?? '', $productData['type_id'] ?? '')) {
                 continue;
             }
             if (!$this->validateCondition(
@@ -322,12 +342,34 @@ class Collector
     }
 
     /**
-     * Validate a single filter condition against an attribute value.
+     * Check whether a filter row's "Apply To" setting covers the given product type.
+     * Empty (or '0' for the built-in exclude filter) applies to all products,
+     * 'parent' applies to configurable, bundle and grouped products.
      *
-     * @param string $condition
-     * @param mixed $attributeValue
-     * @param mixed $filterValue
+     * @param string|null $filterType Value of the filter's product_type column.
+     * @param string $typeId Magento product type_id.
      * @return bool
+     */
+    private function filterAppliesToType(?string $filterType, string $typeId): bool
+    {
+        if (empty($filterType)) {
+            return true;
+        }
+        if ($filterType === 'parent') {
+            return in_array($typeId, self::PARENT_TYPES, true);
+        }
+
+        return $typeId === $filterType;
+    }
+
+    /**
+     * Validate a single filter condition against an attribute value.
+     * Supported conditions: eq, neq, gt, gteq, lt, lteg, in, nin, like, empty, not-empty.
+     *
+     * @param string $condition Condition type.
+     * @param mixed $attributeValue Value from product data.
+     * @param mixed $filterValue Value to compare against.
+     * @return bool True if the condition is met, false otherwise.
      */
     private function validateCondition(string $condition, $attributeValue, $filterValue): bool
     {
@@ -349,6 +391,7 @@ class Collector
             case 'nin':
                 return !in_array($attributeValue, explode(',', (string)$filterValue), true);
             case 'like':
+                // Convert SQL-style wildcards to regex: % => .*, _ => .
                 $clean = preg_quote((string)$filterValue, '/');
                 $pattern = '/' . str_replace(['%', '_'], ['.*', '.'], $clean) . '/i';
                 return preg_match($pattern, $attributeValue) === 1;
@@ -364,43 +407,55 @@ class Collector
     /**
      * Append configuration key suffix to product URL if required by behavior settings.
      *
-     * @param array &$data
-     * @param int $productId
-     * @param int $parentId
-     * @param array $configKeys
-     * @param array $extraParameters
-     * @param int $storeId
+     * @param array<int, array<string, mixed>> &$data Product data keyed by product entity ID.
+     * @param int $productId Current product ID.
+     * @param int $parentId Parent product entity ID.
+     * @param array $configKeys Configuration keys indexed by [entityId][parentId][storeId].
+     * @param array $extraParameters Additional behavior parameters.
+     * @param int $storeId Store ID context.
      */
     private function appendConfigKeyUrl(
         array &$data,
-        $productId,
-        $parentId,
+        int $productId,
+        int $parentId,
         array $configKeys,
         array $extraParameters,
-        int $storeId
+        int $storeId,
+        int $rowId
     ): void {
         $parentType = $data[$parentId]['type_id'] ?? '';
-        if (($extraParameters['behaviour'][$parentType]['use_parent_url'] ?? 0) == 2) {
-            if (!array_key_exists($productId, $configKeys)) {
-                return;
-            }
-            if (array_key_exists($storeId, $configKeys[$productId][$parentId] ?? [])) {
-                $data[$productId][self::ATTR_URL] .= $configKeys[$productId][$parentId][$storeId];
-            } elseif (array_key_exists(0, $configKeys[$productId][$parentId] ?? [])) {
-                $data[$productId][self::ATTR_URL] .= $configKeys[$productId][$parentId][0];
+        if (($extraParameters['behaviour'][$parentType]['use_parent_url'] ?? 0) == 1) {
+            $suffix = $this->getConfigKeySuffix($configKeys, $productId, $rowId, $storeId);
+            if ($suffix !== null) {
+                $data[$productId][self::ATTR_URL] .= $suffix;
             }
         }
     }
 
     /**
-     * Set the 'image_logic' flag on product data based on parent relationships and behavior.
-     * Implements 4-level image merge logic.
+     * Resolve the config key suffix for a child/parent/store combination.
      *
-     * @param array &$data
+     * @param array $configKeys
      * @param int $productId
-     * @param array $extraParameters
+     * @param int $parentId
+     * @param int $storeId
+     * @return string|null
      */
-    private function setImageLogic(array &$data, $productId, array $extraParameters): void
+    private function getConfigKeySuffix(array $configKeys, int $productId, int $parentId, int $storeId): ?string
+    {
+        return $configKeys[$productId][$parentId][$storeId]
+            ?? $configKeys[$productId][$parentId][0]
+            ?? null;
+    }
+
+    /**
+     * Set the 'image_logic' flag on product data based on parent relationships and behavior.
+     *
+     * @param array<int, array<string, mixed>> &$data Product data keyed by product entity ID.
+     * @param int $productId Current product ID.
+     * @param array $extraParameters Additional behavior parameters.
+     */
+    private function setImageLogic(array &$data, int $productId, array $extraParameters): void
     {
         if (isset($data[$productId]['parent_id'], $data[$data[$productId]['parent_id']])) {
             $parentId = $data[$productId]['parent_id'];
@@ -411,40 +466,39 @@ class Collector
 
             switch ($data[$productId]['image_logic']) {
                 case 1: // Always use parent images
-                    if (isset($parentProduct['image_data'])) {
-                        $data[$productId]['image_data'] = $parentProduct['image_data'];
-                    }
+                    $data[$productId]['image_data'] = $parentProduct['image_data'] ?? [];
                     break;
 
                 case 2: // Use own images if present, otherwise parent
-                    if (empty($data[$productId]['image_data']) && isset($parentProduct['image_data'])) {
-                        $data[$productId]['image_data'] = $parentProduct['image_data'];
-                    }
+                    $data[$productId]['image_data'] = $data[$productId]['image_data']
+                        ?? ($parentProduct['image_data'] ?? []);
                     break;
 
-                case 3: // Merge: child images first, then parent
+                case 3: // Merge: simple images first (child first, then parent)
                     $childImages = $data[$productId]['image_data'] ?? [];
                     $parentImages = $parentProduct['image_data'] ?? [];
 
-                    foreach ($parentImages as $sid => $images) {
-                        if (!isset($childImages[$sid])) {
-                            $childImages[$sid] = $images;
+                    foreach ($parentImages as $storeId => $images) {
+                        if (!isset($childImages[$storeId])) {
+                            $childImages[$storeId] = $images;
                         } else {
-                            $childImages[$sid] = array_merge($childImages[$sid], $images);
+                            // Simple (child) first, then parent
+                            $childImages[$storeId] = [...$childImages[$storeId], ...$images];
                         }
                     }
                     $data[$productId]['image_data'] = $childImages;
                     break;
 
-                case 4: // Merge: parent images first, then child
+                case 4: // Merge: parent images first (parent first, then child)
                     $childImages = $data[$productId]['image_data'] ?? [];
                     $parentImages = $parentProduct['image_data'] ?? [];
 
-                    foreach ($parentImages as $sid => $images) {
-                        if (!isset($childImages[$sid])) {
-                            $childImages[$sid] = $images;
+                    foreach ($parentImages as $storeId => $images) {
+                        if (!isset($childImages[$storeId])) {
+                            $childImages[$storeId] = $images;
                         } else {
-                            $childImages[$sid] = array_merge($images, $childImages[$sid]);
+                            // Parent first, then simple (child)
+                            $childImages[$storeId] = [...$images, ...$childImages[$storeId]];
                         }
                     }
                     $data[$productId]['image_data'] = $childImages;
@@ -452,6 +506,29 @@ class Collector
             }
         } else {
             $data[$productId]['image_logic'] = 0;
+        }
+    }
+
+    /**
+     * Set the parent category data on child product when child has no categories.
+     *
+     * @param array<int, array<string, mixed>> &$data Product data keyed by product entity ID.
+     * @param int $productId Current product ID.
+     * @param array $extraParameters Additional behavior parameters.
+     */
+    private function setCategoryLogic(array &$data, int $productId, array $extraParameters): void
+    {
+        if (!isset($data[$productId]['parent_id'], $data[$data[$productId]['parent_id']])) {
+            return;
+        }
+
+        $parentId = $data[$productId]['parent_id'];
+        $parentProduct = $data[$parentId];
+        $typeId = $parentProduct['type_id'] ?? '';
+        $useParentCategories = $extraParameters['behaviour'][$typeId]['use_parent_categories'] ?? 0;
+
+        if ($useParentCategories === 1 && empty($data[$productId]['category'])) {
+            $data[$productId]['category'] = $parentProduct['category'] ?? [];
         }
     }
 }
