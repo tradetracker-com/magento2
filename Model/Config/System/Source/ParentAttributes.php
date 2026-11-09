@@ -9,7 +9,6 @@ namespace TradeTracker\Connect\Model\Config\System\Source;
 
 use Magento\Framework\App\Request\Http;
 use Magento\Framework\Data\OptionSourceInterface;
-use TradeTracker\Connect\Api\Config\System\FeedInterface as FeedConfigRepository;
 use TradeTracker\Connect\Api\ProductData\RepositoryInterface as ProductDataRepository;
 
 /**
@@ -38,10 +37,6 @@ class ParentAttributes implements OptionSourceInterface
     ];
 
     /**
-     * @var FeedConfigRepository
-     */
-    private $feedConfigRepository;
-    /**
      * @var Http
      */
     private $request;
@@ -53,15 +48,12 @@ class ParentAttributes implements OptionSourceInterface
     /**
      * ParentAttributes constructor.
      * @param Http $request
-     * @param FeedConfigRepository $feedConfigRepository
      * @param ProductDataRepository $productDataRepository
      */
     public function __construct(
         Http $request,
-        FeedConfigRepository $feedConfigRepository,
         ProductDataRepository $productDataRepository
     ) {
-        $this->feedConfigRepository = $feedConfigRepository;
         $this->request = $request;
         $this->productDataRepository = $productDataRepository;
     }

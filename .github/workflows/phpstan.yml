@@ -3,8 +3,10 @@ on:
   pull_request:
     paths:
       - '**/*.php'
+      - '**/*.phtml'
       - '**/*.xml'
       - 'composer.json'
+      - 'phpstan.neon'
 
 jobs:
   build:
@@ -28,6 +30,9 @@ jobs:
       - name: Start Docker
         run: docker run --detach --name magento-project-community-edition michielgerritsen/magento-project-community-edition:${{ matrix.PHP_VERSION }}-magento${{ matrix.MAGENTO_VERSION }}
 
+      - name: Resolve the module directory
+        run: echo "MODULE_DIR=$(basename "$PWD")" >> "$GITHUB_ENV"
+
       - name: Remove version from composer.json
         run: sed -i '/version/d' ./composer.json
 
@@ -40,5 +45,11 @@ jobs:
       - name: Activate the extension
         run: docker exec magento-project-community-edition ./retry "php bin/magento module:enable TradeTracker_Connect && php bin/magento setup:upgrade && php bin/magento setup:di:compile"
 
+      # The PHPStan Magento extension lives in Test/vendor, next to PHPUnit (see Test/composer.json).
+      - name: Install the analysis dependencies
+        run: docker exec magento-project-community-edition /bin/bash -c "cd /data/extensions/$MODULE_DIR/Test && composer install --no-interaction --prefer-dist --no-progress"
+
+      # Runs from the Magento root on purpose: the extension resolves Magento's own classes, and
+      # from inside the module directory it cannot find them.
       - name: Run PHPStan
-        run: docker exec magento-project-community-edition /bin/bash -c "./vendor/bin/phpstan analyse --no-progress -c /data/extensions/*/phpstan.neon /data/extensions"
+        run: docker exec magento-project-community-edition /bin/bash -c "cd /data && ./vendor/bin/phpstan analyse --no-progress -a extensions/$MODULE_DIR/Test/vendor/autoload.php -c extensions/$MODULE_DIR/phpstan.neon extensions/$MODULE_DIR"

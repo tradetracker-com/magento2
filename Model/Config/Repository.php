@@ -14,6 +14,7 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ProductMetadataInterface;
 use Magento\Framework\Component\ComponentRegistrarInterface;
 use Magento\Framework\Encryption\EncryptorInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Filesystem\Driver\File as FileDriver;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Store\Api\Data\StoreInterface;
@@ -90,9 +91,8 @@ class Repository implements ConfigRepositoryInterface
         try {
             $filePath = $path . '/composer.json';
             if ($this->fileDriver->isExists($filePath)) {
-                $this->composerData = $this->json->unserialize(
-                    $this->fileDriver->fileGetContents($filePath)
-                );
+                $data = $this->json->unserialize($this->fileDriver->fileGetContents($filePath));
+                $this->composerData = is_array($data) ? $data : [];
             }
         } catch (\Throwable $e) {
             $this->composerData = [];
@@ -139,7 +139,11 @@ class Repository implements ConfigRepositoryInterface
             }
         }
         $stores = $this->storeManager->getStores();
-        return reset($stores);
+        $store = reset($stores);
+        if ($store === false) {
+            throw new NoSuchEntityException(__('No store view is available'));
+        }
+        return $store;
     }
 
     /**
@@ -226,7 +230,7 @@ class Repository implements ConfigRepositoryInterface
     private function getPassphrase(?int $storeId = null): string
     {
         $value = $this->getStoreValue(self::XML_PATH_PASSPHRASE, $storeId);
-        if ($value === '' || !self::isEncryptedValue($value)) {
+        if ($value === '' || !$this->isEncryptedValue($value)) {
             return $value;
         }
 
@@ -240,7 +244,7 @@ class Repository implements ConfigRepositoryInterface
      *
      * @return bool
      */
-    public static function isEncryptedValue(string $value): bool
+    private function isEncryptedValue(string $value): bool
     {
         return (bool)preg_match('/^\d+:\d+:/', $value);
     }
@@ -263,10 +267,11 @@ class Repository implements ConfigRepositoryInterface
         }
 
         try {
-            return $this->json->unserialize($value);
+            $data = $this->json->unserialize($value);
         } catch (\Exception $e) {
             return [];
         }
+        return is_array($data) ? $data : [];
     }
 
     /**

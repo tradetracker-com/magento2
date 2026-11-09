@@ -11,7 +11,6 @@ use Magento\Framework\Encryption\EncryptorInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
 use TradeTracker\Connect\Api\Config\RepositoryInterface as ConfigRepository;
-use TradeTracker\Connect\Model\Config\Repository;
 
 /**
  * Encrypt passphrases that were stored as plain text by releases before the field became an encrypted field.
@@ -48,7 +47,7 @@ class EncryptPassphrase implements DataPatchInterface
     /**
      * @inheritDoc
      */
-    public function apply()
+    public function apply(): self
     {
         $connection = $this->moduleDataSetup->getConnection();
         $table = $this->moduleDataSetup->getTable('core_config_data');
@@ -63,7 +62,9 @@ class EncryptPassphrase implements DataPatchInterface
 
         foreach ($connection->fetchAll($select) as $row) {
             $value = (string)$row['value'];
-            if (Repository::isEncryptedValue($value)) {
+            // Magento's encrypted format is "<key version>:<cipher version>:<payload>"; anything
+            // else is a plain-text value written before the field got its backend model.
+            if (preg_match('/^\d+:\d+:/', $value)) {
                 continue;
             }
             $connection->update(

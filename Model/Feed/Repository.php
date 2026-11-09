@@ -10,7 +10,6 @@ namespace TradeTracker\Connect\Model\Feed;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Filesystem\Driver\File;
-use Magento\Framework\Serialize\Serializer\Json as SerializerJson;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -39,10 +38,6 @@ class Repository implements FeedRepository
      * @var DateTime
      */
     private $datetime;
-    /**
-     * @var SerializerJson
-     */
-    private $serializerJson;
     /**
      * @var FeedService
      */
@@ -74,7 +69,6 @@ class Repository implements FeedRepository
      * @param StoreManagerInterface $storeManager
      * @param DateTime $datetime
      * @param FeedConfigRepository $feedConfigRepository
-     * @param SerializerJson $serializerJson
      * @param FeedService $feedService
      * @param LogRepository $logRepository
      * @param UrlInterface $urlInterface
@@ -86,7 +80,6 @@ class Repository implements FeedRepository
         StoreManagerInterface $storeManager,
         DateTime $datetime,
         FeedConfigRepository $feedConfigRepository,
-        SerializerJson $serializerJson,
         FeedService $feedService,
         LogRepository $logRepository,
         UrlInterface $urlInterface,
@@ -97,7 +90,6 @@ class Repository implements FeedRepository
         $this->feedConfigRepository = $feedConfigRepository;
         $this->datetime = $datetime;
         $this->storeManager = $storeManager;
-        $this->serializerJson = $serializerJson;
         $this->feedService = $feedService;
         $this->logRepository = $logRepository;
         $this->urlInterface = $urlInterface;
@@ -150,7 +142,7 @@ class Repository implements FeedRepository
     /**
      * {@inheritDoc}
      */
-    public function getFeedLocation(int $storeId, $type = null): array
+    public function getFeedLocation(int $storeId, ?string $type = null): array
     {
         $filename = $this->feedConfigRepository->getFilename((int)$storeId);
         if ($type == 'preview') {

@@ -54,7 +54,7 @@ class FeedRepository extends ConfigRepository implements FeedInterface
     /**
      * @inheritDoc
      */
-    public function getAttributes(?int $storeId = null): array
+    public function getAttributes(int $storeId): array
     {
         $attributes = [
             'name' => $this->getNameAttribute($storeId),
@@ -784,7 +784,7 @@ class FeedRepository extends ConfigRepository implements FeedInterface
      */
     public function getFileName(int $storeId): string
     {
-        $filename = $this->getStoreValue(self::XPATH_FEED_FILENAME, $storeId) ?? 'tradetracker.xml';
+        $filename = $this->getStoreValue(self::XPATH_FEED_FILENAME, $storeId) ?: 'tradetracker.xml';
         return str_replace('.xml', sprintf('-%s.xml', $storeId), $filename);
     }
 

@@ -6,7 +6,6 @@
 
 namespace TradeTracker\Connect\Model\Config\System\Source;
 
-use Magento\Catalog\Model\CategoryFactory;
 use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory;
 use Magento\Framework\Data\OptionSourceInterface;
 
@@ -23,10 +22,6 @@ class CategoryList implements OptionSourceInterface
      */
     public $options = null;
     /**
-     * @var CategoryFactory
-     */
-    private $categoryFactory;
-    /**
      * @var CollectionFactory
      */
     private $categoryCollectionFactory;
@@ -34,14 +29,11 @@ class CategoryList implements OptionSourceInterface
     /**
      * CategoryList constructor.
      *
-     * @param CategoryFactory $categoryFactory
      * @param CollectionFactory $categoryCollectionFactory
      */
     public function __construct(
-        CategoryFactory $categoryFactory,
         CollectionFactory $categoryCollectionFactory
     ) {
-        $this->categoryFactory = $categoryFactory;
         $this->categoryCollectionFactory = $categoryCollectionFactory;
     }
 

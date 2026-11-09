@@ -50,7 +50,7 @@ class ProductAttributes implements DataPatchInterface, PatchRevertableInterface
     /**
      * @inheritDoc
      */
-    public function apply()
+    public function apply(): self
     {
         $this->moduleDataSetup->getConnection()->startSetup();
         $this->addProductAttribute();

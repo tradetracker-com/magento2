@@ -20,7 +20,7 @@ interface RepositoryInterface
 
     /** General Group */
     public const XML_PATH_EXTENSION_ENABLE = 'tradetracker/general/enable';
-public const XML_PATH_DEBUG = 'tradetracker/general/debug';
+    public const XML_PATH_DEBUG = 'tradetracker/general/debug';
     public const XML_PATH_CUSTOMER_ID = 'tradetracker/general/customer_id';
     public const XML_PATH_PASSPHRASE = 'tradetracker/general/passphrase';
 

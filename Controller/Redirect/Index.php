@@ -85,7 +85,7 @@ class Index extends Action
         $domainName = $this->storeManager->getStore()->getBaseUrl(UrlInterface::URL_TYPE_LINK);
 
         // phpcs:ignore Magento2.Functions.DiscouragedFunction
-        $domainName = empty(parse_url($domainName)['host']) ? null : '.' . parse_url($domainName)['host'];
+        $domainName = empty(parse_url($domainName)['host']) ? '' : '.' . parse_url($domainName)['host'];
         $trackingParam = explode('_', $this->request->getParam('tt'));
         $campaignID = $trackingParam[0] ?? '';
         $materialID = $trackingParam[1] ?? '';
