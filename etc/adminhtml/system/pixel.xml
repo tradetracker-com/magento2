@@ -64,7 +64,7 @@
         <field id="non_default_currency" translate="label comment" type="text" sortOrder="22" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Currency Code</label>
-            <config_path>tradetracker/pixel/overwrite_currency</config_path>
+            <config_path>tradetracker/pixel/non_default_currency</config_path>
             <comment><![CDATA[Fill in the ISO code of the currency that needs to be used within the tracking pixel. Only change this in consultation with your Tradetracker account manager. Please note that the currency code needs to be in <a href="https://en.wikipedia.org/wiki/ISO_4217" target="_blank">ISO_4217</a> format.]]></comment>
             <depends>
                 <field id="overwrite_currency">1</field>

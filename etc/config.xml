@@ -19,6 +19,9 @@
                 <enable>0</enable>
                 <url_key>tradetracker-redirect</url_key>
             </direct_linking>
+            <feeds>
+                <results></results>
+            </feeds>
             <feed>
                 <enable>0</enable>
                 <cron_frequency>0 0 * * *</cron_frequency>
@@ -27,10 +30,7 @@
                 <description_attribute>short_description</description_attribute>
                 <description_long_attribute>description</description_long_attribute>
                 <image>image</image>
-                <gtin_attribute>sku</gtin_attribute>
                 <brand_attribute>manufacturer</brand_attribute>
-                <condition_type>static</condition_type>
-                <condition_default>new</condition_default>
                 <color_attribute>color</color_attribute>
                 <size_attribute>size</size_attribute>
                 <gender_attribute>gender</gender_attribute>
