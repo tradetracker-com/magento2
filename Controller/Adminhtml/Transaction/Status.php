@@ -73,9 +73,18 @@ class Status extends Action
      */
     public function execute()
     {
-        $orderId = $this->getRequest()->getParam('id');
+        $orderId = (int)$this->getRequest()->getParam('id');
         $reason = $this->getRequest()->getParam('reason');
-        $order = $this->orderRepository->get((int)$orderId);
+        $resultJson = $this->resultJsonFactory->create();
+
+        try {
+            $order = $this->orderRepository->get($orderId);
+        } catch (\Magento\Framework\Exception\LocalizedException $exception) {
+            return $resultJson->setData([
+                'status' => ['success' => false, 'error' => (string)__('Order %1 was not found.', $orderId)]
+            ]);
+        }
+
         $incrementId = $order->getIncrementId();
         $storeId = (int)$order->getStoreId();
         $campaignID = $this->configRepository->getCampaignId($storeId);
@@ -103,7 +112,6 @@ class Status extends Action
                 ];
             }
         }
-        $resultJson = $this->resultJsonFactory->create();
         return $resultJson->setData(['status' => $result]);
     }
 }
