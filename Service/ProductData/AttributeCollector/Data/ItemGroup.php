@@ -57,7 +57,12 @@ class ItemGroup extends AbstractDataCollector
                 ['cpe' => $cpeTable],
                 "cpe.{$this->linkField} = cpr.parent_id",
                 ['sku']
-            )->join(
+            )
+            // catalog_product_relation also links bundle and grouped parents to their children. Those
+            // are not variants: a yoga brick in a bundle grouped under the bundle's SKU is one product
+            // hidden behind another in the catalog. Only a configurable's children share a group.
+            ->where('cpe.type_id = ?', 'configurable')
+            ->join(
                 ['cpw' => $cpwTable],
                 "cpw.product_id = cpe.{$this->linkField}",
                 []

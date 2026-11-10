@@ -35,6 +35,9 @@ use ReflectionClass;
  */
 class ItemGroupTest extends TestCase
 {
+    /** @var array<int, array<int, mixed>> */
+    private array $whereClauses = [];
+
     public function testOnlyChildrenAreGivenAGroupId(): void
     {
         $collector = $this->collector([
@@ -68,9 +71,13 @@ class ItemGroupTest extends TestCase
     private function collector(array $rows): ItemGroup
     {
         $select = $this->createMock(Select::class);
-        foreach (['from', 'join', 'joinLeft', 'where', 'columns', 'group', 'order', 'limit', 'distinct'] as $method) {
+        foreach (['from', 'join', 'joinLeft', 'columns', 'group', 'order', 'limit', 'distinct'] as $method) {
             $select->method($method)->willReturnSelf();
         }
+        $select->method('where')->willReturnCallback(function (...$arguments) use ($select) {
+            $this->whereClauses[] = $arguments;
+            return $select;
+        });
 
         $connection = $this->createMock(AdapterInterface::class);
         $connection->method('select')->willReturn($select);
@@ -88,6 +95,24 @@ class ItemGroupTest extends TestCase
         $this->setPrivate($collector, 'websiteRepository', $this->createMock(WebsiteRepositoryInterface::class));
 
         return $collector;
+    }
+
+    /**
+     * catalog_product_relation also links bundle and grouped parents to their children. Those are
+     * not variants: the yoga brick inside the yoga bundle was exported with the bundle's SKU as its
+     * item_group_id, and the channel grouped two products as one.
+     */
+    public function testOnlyConfigurableParentsFormAGroup(): void
+    {
+        $this->whereClauses = [];
+        $this->collector([])->execute([1], false, 1);
+
+        $clauses = array_map(fn (array $arguments) => array_slice($arguments, 0, 2), $this->whereClauses);
+        self::assertContains(
+            ['cpe.type_id = ?', 'configurable'],
+            $clauses,
+            'the relation query is not limited to configurable parents'
+        );
     }
 
     private function setPrivate(object $object, string $property, $value): void

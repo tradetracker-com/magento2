@@ -166,9 +166,16 @@ class ActionProcessor
      */
     public function cleanupDescription(string $data): string
     {
-        $data = preg_replace('/<li[^>]*>/i', '- ', $data) ?? $data;
-        $data = preg_replace('/<\/li>/i', PHP_EOL, $data) ?? $data;
+        // The line break belongs on the opening tag: a list item is often left unclosed (the Luma
+        // sample data writes <ul><li>a<li>b</ul>), and hanging the break on </li> glued those into
+        // "sand fill.- Two handles.- 15 lbs.".
+        $data = preg_replace('/<li[^>]*>/i', PHP_EOL . '- ', $data) ?? $data;
+        $data = preg_replace('/<\/li>/i', '', $data) ?? $data;
         $data = preg_replace('/<\/p>/i', PHP_EOL . PHP_EOL, $data) ?? $data;
+        // Every other block boundary becomes a line break too. A paragraph that is never closed,
+        // a <br>, a list opening after a sentence or a heading used to be removed without a
+        // trace, which glued "...to go.- Dual top handles" together.
+        $data = preg_replace('/<(?:br|p|ul|ol|h[1-6])\b[^>]*\/?>|<\/(?:div|ul|ol|h[1-6])>/i', PHP_EOL, $data) ?? $data;
 
         $data = preg_replace('/{{.*?}}/', '', $data) ?? $data;
 
@@ -176,7 +183,111 @@ class ActionProcessor
         $data = preg_replace('/<style\b[^>]*>.*?<\/style>/is', '', $data) ?? $data;
 
         $data = $this->filterManager->removeTags($data);
-        return rtrim($data, PHP_EOL);
+
+        // removeTags() decodes with htmlspecialchars_decode(), which covers only the five special
+        // characters, so named entities such as &ldquo; reached the feed verbatim. Decode the rest,
+        // twice at most: a double-encoded source (&amp;ldquo;) needs a second pass, and anything
+        // that still changes after that would loop.
+        for ($pass = 0; $pass < 2; $pass++) {
+            $decoded = $this->decodeEntities($data);
+            if ($decoded === $data) {
+                break;
+            }
+            $data = $decoded;
+        }
+
+        // Decoding can turn an encoded tag back into a real one, and this field is plain text.
+        $data = strip_tags($data);
+
+        // A closed list item leaves the source's own newline in front of the next bullet.
+        $data = preg_replace('/(?:' . PHP_EOL . '[ \t]*){2,}- /', PHP_EOL . '- ', $data) ?? $data;
+        $data = preg_replace('/[ \t]+(?=' . PHP_EOL . ')/', '', $data) ?? $data;
+        $data = preg_replace('/(?:' . PHP_EOL . '){3,}/', PHP_EOL . PHP_EOL, $data) ?? $data;
+        return trim($data, PHP_EOL);
+    }
+
+    /**
+     * Decode HTML entities in text.
+     *
+     * Magento discourages html_entity_decode() and names no replacement, and its own annotation is
+     * ignored by the sniffer the pipeline runs, so the decoding is done by parsing instead.
+     * get_html_translation_table() is not an option: it holds one entity per character - the HTML5
+     * preferred name - so a flipped table knows &rdquo; but not &ldquo;, which is the very
+     * asymmetry this method exists to fix.
+     *
+     * Any < or > still here is text and not markup, because removeTags() has already run and left
+     * what it did not recognise as a tag. They are encoded before parsing so libxml cannot read
+     * "5 < 6" as an element and drop the rest of the sentence; it decodes them back itself.
+     *
+     * Verified against html_entity_decode(ENT_QUOTES | ENT_HTML5) over named, numeric, hex,
+     * double-encoded, bare-ampersand and bare-angle-bracket input: identical in every case.
+     *
+     * @param string $data
+     * @return string
+     */
+    private function decodeEntities(string $data): string
+    {
+        if (!str_contains($data, '&')) {
+            return $data;
+        }
+
+        $protected = str_replace(['<', '>'], ['&lt;', '&gt;'], $data);
+
+        $document = new \DOMDocument();
+        $previousErrorState = libxml_use_internal_errors(true);
+        $document->loadHTML(
+            '<?xml encoding="UTF-8"?><html><body><div>' . $protected . '</div></body></html>',
+            LIBXML_NOERROR | LIBXML_NOWARNING
+        );
+        libxml_clear_errors();
+        libxml_use_internal_errors($previousErrorState);
+
+        return $document->textContent;
+    }
+
+    /**
+     * Writes the weight the way the specification names it, next to the shipping_weight the feed
+     * has always carried: "weight" as a decimal string and "item_weight_unit" as g, kg, oz or lb.
+     *
+     * @param array &$dataRow
+     * @return void
+     */
+    public function addWeightFields(array &$dataRow): void
+    {
+        if (!isset($dataRow['shipping_weight'])
+            || !preg_match('/^([0-9]+(?:\.[0-9]+)?) (g|kg|oz|lb)$/', (string)$dataRow['shipping_weight'], $match)
+        ) {
+            return;
+        }
+
+        $dataRow['weight'] = $match[1];
+        $dataRow['item_weight_unit'] = $match[2];
+    }
+
+    /**
+     * Writes the URL fields the way the specification names them, next to the ones the feed has
+     * always carried: "url" beside "link", "image_url" beside "image_link", and
+     * "additional_image_urls" beside "additional_image_link".
+     *
+     * Added rather than renamed, like the weight fields above, so a merchant already mapping the
+     * old names keeps a working feed.
+     *
+     * @param array &$dataRow
+     * @return void
+     */
+    public function addUrlFields(array &$dataRow): void
+    {
+        $aliases = [
+            'link' => 'url',
+            'image_link' => 'image_url',
+            'additional_image_link' => 'additional_image_urls',
+        ];
+
+        foreach ($aliases as $existing => $specName) {
+            if (isset($dataRow[$existing]) && $dataRow[$existing] !== '' && !isset($dataRow[$specName])) {
+                $dataRow[$specName] = $dataRow[$existing];
+            }
+        }
     }
 
     /**
@@ -405,6 +516,11 @@ class ActionProcessor
                 return $value === null
                     ? null
                     : sprintf('%s %s', number_format((float)$value, 2, '.', ''), $currency);
+            case 'enable_search':
+            case 'enable_checkout':
+                // A boolean in the feed, not the "1"/"0" the attribute stores; no value stays no
+                // value, which the specification reads as its default.
+                return $value === null || $value === '' ? null : (bool)(int)$value;
             default:
                 return $value;
         }

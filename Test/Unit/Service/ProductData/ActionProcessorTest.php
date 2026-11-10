@@ -130,11 +130,122 @@ class ActionProcessorTest extends TestCase
         self::assertStringEndsWith('Done', $description, 'trailing newlines are trimmed');
     }
 
+    /**
+     * Luma's "Joust Duffle Bag" opens a paragraph it never closes and then starts a list, and a
+     * description with <br> or headings has the same shape. Removing those tags without a trace
+     * glued "...to go.- Dual top handles" into one line.
+     */
+    public function testEveryBlockBoundaryBecomesALineBreak(): void
+    {
+        $html = '<p>Ready to go.<ul><li>Dual top handles</li><li>Adjustable strap</li></ul>'
+            . '<div>First<br>Second</div><h3>Details</h3>Last';
+
+        $description = $this->processor->cleanupDescription($html);
+
+        self::assertStringNotContainsString('go.- Dual', $description);
+        self::assertStringNotContainsString('FirstSecond', $description);
+        self::assertStringNotContainsString('SecondDetails', $description);
+        self::assertStringNotContainsString('DetailsLast', $description);
+        self::assertStringContainsString("Ready to go.\n- Dual top handles\n- Adjustable strap", $description);
+        self::assertStringNotContainsString("\n\n\n", $description, 'blank lines do not pile up');
+        self::assertStringEndsWith('Last', $description);
+    }
+
+    /**
+     * Luma's sample data writes lists whose items are never closed: <ul><li>a<li>b</ul>. Hanging
+     * the line break on </li> left those glued as "sand fill.- Two handles.- 15 lbs.".
+     */
+    public function testAnUnclosedListItemStillStartsItsOwnLine(): void
+    {
+        $html = "<ul><li>Durable plastic shell with sand fill.\n<li>Two handles.\n<li>15 lbs.</ul>";
+
+        $description = $this->processor->cleanupDescription($html);
+
+        self::assertStringNotContainsString('fill.- Two', $description);
+        self::assertStringNotContainsString('handles.- 15', $description);
+        self::assertSame("- Durable plastic shell with sand fill.\n- Two handles.\n- 15 lbs.", $description);
+    }
+
+    /**
+     * removeTags() decodes with htmlspecialchars_decode(), which covers only the five special
+     * characters, so a named entity reached the feed verbatim.
+     */
+    public function testNamedEntitiesAreDecoded(): void
+    {
+        $description = $this->processor->cleanupDescription('Some shorts are &ldquo;all-purpose,&rdquo; others not.');
+
+        self::assertSame('Some shorts are "all-purpose," others not.', str_replace(
+            ["\u{201C}", "\u{201D}"],
+            '"',
+            $description
+        ));
+        self::assertStringNotContainsString('&ldquo;', $description);
+        self::assertStringNotContainsString('&rdquo;', $description);
+    }
+
+    public function testADoubleEncodedEntityIsDecodedToo(): void
+    {
+        $description = $this->processor->cleanupDescription('Shorts are &amp;ldquo;all-purpose&amp;rdquo; here.');
+
+        self::assertStringNotContainsString('ldquo', $description);
+        self::assertStringNotContainsString('&amp;', $description);
+    }
+
     public function testADescriptionWithEscapedStyleMarkupIsAlsoCleaned(): void
     {
         $description = $this->processor->cleanupDescription('Before&lt;style&gt;.x{color:red}&lt;/style&gt;After');
 
         self::assertStringNotContainsString('color:red', $description);
+    }
+
+    /**
+     * The specification names the weight "weight" with an "item_weight_unit" of g, kg, oz or lb.
+     * The feed keeps shipping_weight for the readers that had it, and writes both.
+     */
+    public function testTheWeightIsAlsoWrittenAsWeightAndUnit(): void
+    {
+        $row = ['shipping_weight' => '0.75 kg'];
+
+        $this->processor->addWeightFields($row);
+
+        self::assertSame('0.75', $row['weight']);
+        self::assertSame('kg', $row['item_weight_unit']);
+        self::assertSame('0.75 kg', $row['shipping_weight'], 'the old field stays');
+    }
+
+    public function testARowWithoutAWeightGetsNoWeightFields(): void
+    {
+        $row = ['id' => '1'];
+
+        $this->processor->addWeightFields($row);
+
+        self::assertSame(['id' => '1'], $row);
+    }
+
+    /**
+     * The attribute stores "1"/"0"; the specification wants JSON true/false, and reads an omitted
+     * flag as its default. "0" in the feed would be neither.
+     */
+    #[DataProvider('flagValues')]
+    public function testTheEligibilityFlagsAreBooleans(?string $stored, ?bool $expected): void
+    {
+        foreach (['enable_search', 'enable_checkout'] as $flag) {
+            $row = $stored === null ? [] : [$flag => $stored];
+            self::assertSame($expected, $this->processor->prepareAttribute($flag, $row, $flag, 'EUR'), $flag);
+        }
+    }
+
+    /**
+     * @return array<string, array{?string, ?bool}>
+     */
+    public static function flagValues(): array
+    {
+        return [
+            'on' => ['1', true],
+            'off' => ['0', false],
+            'no value' => [null, null],
+            'empty' => ['', null],
+        ];
     }
 
     public function testTheUtmCodeIsAppendedBeforeTheFragment(): void

@@ -9,6 +9,7 @@ namespace TradeTracker\Connect\Service\ProductData\AttributeCollector\Data;
 
 use Magento\Framework\UrlInterface;
 use Magento\Store\Api\Data\StoreInterface;
+use Magento\Store\Model\Store;
 
 /**
  * Service class for URL data
@@ -72,7 +73,15 @@ class Url extends AbstractDataCollector
 
         $values = $this->resource->getConnection()->fetchAll($select);
 
+        // URL_TYPE_WEB for the domain: it reads web/unsecure/base_url of this store directly,
+        // where URL_TYPE_LINK goes through the base_link_url placeholder (multi-domain
+        // stores). But only URL_TYPE_LINK appends the store code, so with "Add Store Code to Urls"
+        // every link of a non-default store view opened the default store. The code is added here
+        // the way Magento's own _updatePathUseStoreView() does it.
         $storeUrl = $this->store->getBaseUrl(UrlInterface::URL_TYPE_WEB);
+        if ($this->store instanceof Store && $this->store->isUseStoreInUrl()) {
+            $storeUrl .= $this->store->getCode() . '/';
+        }
         foreach ($values as $value) {
             $entityId = $value['entity_id'] ?? null;
             if ($entityId === null) {
