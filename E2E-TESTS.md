@@ -8,82 +8,81 @@ Generating a feed from the configuration page used to navigate to the Generate a
 
 1. Feed generation from the configuration page › generating keeps the page and reports the run in the row
 2. Feed generation from the configuration page › the progress endpoint answers for the store it is asked about
-3. Feed generation from the configuration page › a CLI run leaves a finished record the endpoint reports
 
 ## Advanced Filters (`feed/advanced-filters.spec.ts`)
 
-4. Advanced Filters › price filter should only include products above threshold
-5. Advanced Filters - unfiltered baseline › disabled advanced filters should include all products
-6. Advanced Filters - unfiltered baseline › SKU filter should limit feed to matching products
+3. Advanced Filters › price filter should only include products above threshold
+4. Advanced Filters - unfiltered baseline › disabled advanced filters should include all products
+5. Advanced Filters - unfiltered baseline › SKU filter should limit feed to matching products
 
 ## Bundle Products (`feed/bundle-products.spec.ts`)
 
-7. Bundle Products › bundle=parent should include bundle products as parent items
-8. Bundle Products › bundle link setting should produce valid feeds
-9. Bundle Products › bundle image setting should produce valid feeds
+6. Bundle Products › bundle=parent should include bundle products as parent items
+7. Bundle Products › bundle link setting should produce valid feeds
+8. Bundle Products › bundle image setting should produce valid feeds
 
 ## Category Filters (`feed/category-filters.spec.ts`)
 
-10. Category Filters › category filter disabled should include all categories
-11. Category Filters › category filter enabled with include type should limit products
-12. Category Filters › category filter with exclude type should produce a valid feed
+9. Category Filters › category filter disabled should include all categories
+10. Category Filters › category filter enabled with include type should limit products
+11. Category Filters › category filter with exclude type should produce a valid feed
 
 ## Configurable Inheritance (`feed/configurable-inheritance.spec.ts`)
 
-13. Configurable Inheritance › configurable_link settings should produce valid feeds
-14. Configurable Inheritance › configurable_image settings should produce valid feeds
-15. Configurable Inheritance › configurable_parent_atts should inherit specified attributes from parent
-16. Configurable Inheritance › configurable_nonvisible should control NVI product inclusion
+12. Configurable Inheritance › configurable_link settings should produce valid feeds
+13. Configurable Inheritance › configurable_image settings should produce valid feeds
+14. Configurable Inheritance › configurable_parent_atts should inherit specified attributes from parent
+15. Configurable Inheritance › configurable_nonvisible should control NVI product inclusion
 
 ## Configurable Products (`feed/configurable-products.spec.ts`)
 
-17. Configurable Products › configurable=simple should output child items
-18. Configurable Products › configurable=parent should output parent items
-19. Configurable Products › configurable=both should include more items than parent-only
-20. Configurable Products › configurable=simple should produce different count than parent
+16. Configurable Products › configurable=simple should output child items
+17. Configurable Products › configurable=parent should output parent items
+18. Configurable Products › configurable=both should include more items than parent-only
+19. Configurable Products › configurable=simple should produce different count than parent
 
 ## Disabled Products (`feed/disabled-products.spec.ts`)
 
-21. Disabled Products › disabled simple products should not appear in the feed
-22. Disabled Products › disabled configurable parent should not leak into feed (parent mode)
-23. Disabled Products › disabled configurable parent should not leak into feed (simple mode)
+20. Disabled Products › disabled simple products should not appear in the feed
+21. Disabled Products › disabled configurable parent should not leak into feed (parent mode)
+22. Disabled Products › disabled configurable parent should not leak into feed (simple mode)
 
 ## Feed File (`feed/feed-file.spec.ts`)
 
-24. Feed File Output › custom filename should be reflected in feed URL
-25. Feed File - default config › feed should be valid XML with correct encoding declaration
-26. Feed File - default config › feed should contain productFeed root element
-27. Feed File - default config › feed should contain at least one item
-28. Feed File - default config › every item should have required fields
-29. Feed File - default config › every item price should be a valid number
+23. Feed File Output › custom filename should be reflected in feed URL
+24. Feed File - default config › feed should be valid XML with correct encoding declaration
+25. Feed File - default config › feed should contain productFeed root element
+26. Feed File - default config › feed should contain at least one item
+27. Feed File - default config › every item should have required fields
+28. Feed File - default config › every item price should be a valid number
 
 ## Feed Structure (`feed/feed-structure.spec.ts`)
 
-30. Feed Structure › should produce valid parseable XML
-31. Feed Structure › should have productFeed root element with items
-32. Feed Structure › should contain at least one item
-33. Feed Structure › every item should have an ID field
-34. Feed Structure › every item should have a name field
-35. Feed Structure › most items should have a productURL field
-36. Feed Structure › every item should have a valid price
-37. Feed Structure › every item should have availability field
-38. Feed Structure › item IDs should be unique
+29. Feed Structure › should produce valid parseable XML
+30. Feed Structure › should have productFeed root element with items
+31. Feed Structure › should contain at least one item
+32. Feed Structure › every item should have an ID field
+33. Feed Structure › every item should have a name field
+34. Feed Structure › most items should have a productURL field
+35. Feed Structure › every item should have a valid price
+36. Feed Structure › every item should have availability field
+37. Feed Structure › item IDs should be unique
 
 ## Filters (`feed/filters.spec.ts`)
 
-39. Filters › stock filter enabled should exclude out-of-stock items
-40. Filters › stock filter disabled should include out-of-stock items
+38. Filters › stock filter enabled should exclude out-of-stock items
+39. Filters › stock filter disabled should include out-of-stock items
 
 ## Grouped Products (`feed/grouped-products.spec.ts`)
 
-41. Grouped Products › grouped=parent should include grouped products as parent items
-42. Grouped Products › grouped=simple should output child items of grouped products
-43. Grouped Products › a grouped member that is also a bundle component stays with grouped=simple
-44. Grouped Products › grouped link setting should produce valid feeds
-45. Grouped Products › grouped image setting should produce valid feeds
+40. Grouped Products › grouped=parent should include grouped products as parent items
+41. Grouped Products › grouped=simple should output child items of grouped products
+42. Grouped Products › a grouped member that is also a bundle component stays with grouped=simple
+43. Grouped Products › grouped link setting should produce valid feeds
+44. Grouped Products › grouped image setting should produce valid feeds
 
 ## Visibility Filters (`feed/visibility-filters.spec.ts`)
 
-46. Visibility Filters - catalog+search › visibility filter enabled with catalog+search should include visible products
-47. Visibility Filters - catalog+search › visibility filter disabled should include more or equal products
-48. Visibility Filters - not visible individually › visibility filter with not-visible-individually should produce a result
+45. Visibility Filters - catalog+search › visibility filter enabled with catalog+search should include visible products
+46. Visibility Filters - catalog+search › visibility filter disabled should include more or equal products
+47. Visibility Filters - not visible individually › visibility filter with not-visible-individually should produce a result

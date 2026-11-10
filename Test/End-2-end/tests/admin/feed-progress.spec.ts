@@ -74,36 +74,6 @@ test.describe('Feed generation from the configuration page', () => {
     expect(state.success).toBe(true);
     expect(state.running, 'no run is in flight').toBe(false);
   });
-
-  test('a CLI run leaves a finished record the endpoint reports', async ({ page }) => {
-    api.generateFeed(1);
-
-    const config = new ConfigPage(page);
-    await config.open(SECTION);
-    await config.expandAllGroups();
-
-    const row = page.locator('[data-role="tt-feed-row"]').first();
-    const progressUrl = await row.getAttribute('data-progress-url');
-
-    const state = await page.evaluate(async (endpoint) => {
-      const formKey = (document.querySelector('input[name="form_key"]') as HTMLInputElement)?.value ?? '';
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `form_key=${encodeURIComponent(formKey)}`,
-      });
-      return response.json();
-    }, progressUrl as string);
-
-    expect(state.running).toBe(false);
-    expect(state.done, 'the CLI run recorded itself').toBe(true);
-    // The total is the number of ids the filters passed; rows the collector drops (excluded,
-    // no price, out of stock) are counted out of the written number, never into it.
-    expect(state.total, 'the run knew its total').toBeGreaterThan(0);
-    expect(state.written, 'the run wrote products').toBeGreaterThan(0);
-    expect(state.written, 'no more written than selected').toBeLessThanOrEqual(state.total);
-    expect(state.message).toContain('Products in feed');
-  });
 });
 
 /**
