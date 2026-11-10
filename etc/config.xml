@@ -22,6 +22,13 @@
             <feeds>
                 <results></results>
             </feeds>
+            <advanced>
+                <enable_multi_country>0</enable_multi_country>
+            </advanced>
+            <pixel>
+                <enable>0</enable>
+                <overwrite_currency>0</overwrite_currency>
+            </pixel>
             <feed>
                 <enable>0</enable>
                 <cron_frequency>0 0 * * *</cron_frequency>
@@ -40,7 +47,15 @@
                 <configurable_parent_atts>description</configurable_parent_atts>
                 <configurable_nonvisible>1</configurable_nonvisible>
                 <bundle>parent</bundle>
+                <bundle_nonvisible>0</bundle_nonvisible>
                 <grouped>parent</grouped>
+                <grouped_nonvisible>0</grouped_nonvisible>
+                <delivery_source>static</delivery_source>
+                <filter_visbility>0</filter_visbility>
+                <filter_category>0</filter_category>
+                <filter_type_category>in</filter_type_category>
+                <filter_stock>0</filter_stock>
+                <custom_filters>0</custom_filters>
                 <vat_pct_enabled>0</vat_pct_enabled>
                 <vat_pct_source>static</vat_pct_source>
                 <vat_pct_static>21</vat_pct_static>
