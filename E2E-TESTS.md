@@ -78,11 +78,12 @@ Generating a feed from the configuration page used to navigate to the Generate a
 
 41. Grouped Products › grouped=parent should include grouped products as parent items
 42. Grouped Products › grouped=simple should output child items of grouped products
-43. Grouped Products › grouped link setting should produce valid feeds
-44. Grouped Products › grouped image setting should produce valid feeds
+43. Grouped Products › a grouped member that is also a bundle component stays with grouped=simple
+44. Grouped Products › grouped link setting should produce valid feeds
+45. Grouped Products › grouped image setting should produce valid feeds
 
 ## Visibility Filters (`feed/visibility-filters.spec.ts`)
 
-45. Visibility Filters - catalog+search › visibility filter enabled with catalog+search should include visible products
-46. Visibility Filters - catalog+search › visibility filter disabled should include more or equal products
-47. Visibility Filters - not visible individually › visibility filter with not-visible-individually should produce a result
+46. Visibility Filters - catalog+search › visibility filter enabled with catalog+search should include visible products
+47. Visibility Filters - catalog+search › visibility filter disabled should include more or equal products
+48. Visibility Filters - not visible individually › visibility filter with not-visible-individually should produce a result

@@ -22,19 +22,22 @@ class Collector
     private AttributeCollector\Data\ConfigurableKey $configurableKey;
     private AttributeCollector\Data\Parents $parents;
     private ResourceConnection $resourceConnection;
+    private ChildSelection $childSelection;
 
     public function __construct(
         Data $data,
         AttributeCollector\Data\ConfigurableKey $configurableKey,
         AttributeCollector\Data\Parents $parents,
         ResourceConnection $resourceConnection,
-        MetadataPool $metadataPool
+        MetadataPool $metadataPool,
+        ChildSelection $childSelection
     ) {
         $this->data = $data;
         $this->configurableKey = $configurableKey;
         $this->parents = $parents;
         $this->resourceConnection = $resourceConnection;
         $this->linkField = $metadataPool->getMetadata(CategoryInterface::class)->getLinkField();
+        $this->childSelection = $childSelection;
     }
 
     /**
@@ -82,7 +85,6 @@ class Collector
                     $parentEntityId,
                     $parentType,
                     $extraParameters,
-                    $toUnset,
                     $parentAttributes,
                     $parentAttributeToUse,
                     $extraProductsToLoad,
@@ -90,6 +92,9 @@ class Collector
                 );
             }
         }
+
+        $selection = $this->childSelection->resolve($parents, $extraParameters['behaviour'] ?? [], $entityIds);
+        $toUnset = array_merge($toUnset, $selection['parents'], $selection['children']);
 
         $allIds = array_merge($entityIds, $extraProductsToLoad);
         $rowIds = $this->getRowsIds($allIds);
@@ -199,14 +204,13 @@ class Collector
 
     /**
      * Handle the usage of parent product data for a specific product entity.
-     * This method updates arrays tracking which products to exclude,
-     * which parent attributes to use, and additional parent products to load.
+     * This method updates arrays tracking which parent attributes to use and additional parent
+     * products to load.
      *
      * @param int $entityId Current product entity ID.
      * @param int $parentId Parent product entity ID.
      * @param string $parentType Type of the parent product.
      * @param array $extraParameters Additional behavior parameters.
-     * @param int[] &$toUnset Reference to array of product IDs to exclude from final results.
      * @param array<string, string[]> $parentAttributes Attributes inherited from parents keyed by product type.
      * @param array<int, array<string, int>> &$parentAttributeToUse Reference to array mapping product IDs to parent
      *                                                              attributes and their parent IDs.
@@ -218,20 +222,14 @@ class Collector
         int $parentId,
         string $parentType,
         array $extraParameters,
-        array &$toUnset,
         array $parentAttributes,
         array &$parentAttributeToUse,
         array &$extraProductsToLoad,
         array $entityIds
     ): void {
+        // Which parents and children leave the feed is decided over all of a child's parents at
+        // once, in ChildSelection; this method only wires up what a child inherits.
         $behaviour = $extraParameters['behaviour'][$parentType];
-        // "No" (an empty value) leaves the parent out, like "only simples"; its linked simples
-        // are then handled as standalone products.
-        if (empty($behaviour['use']) || $behaviour['use'] === 'simple') {
-            $toUnset[] = $parentId;
-        } elseif ($behaviour['use'] === 'parent' && in_array($parentId, $entityIds)) {
-            $toUnset[] = $entityId;
-        }
 
         if (!$behaviour['use_parent_attributes'] && !$behaviour['use_parent_url'] && !$behaviour['use_parent_images']) {
             return;
