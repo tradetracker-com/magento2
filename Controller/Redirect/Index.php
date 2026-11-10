@@ -3,6 +3,7 @@
  * Copyright © TradeTracker. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
 
 namespace TradeTracker\Connect\Controller\Redirect;
 
@@ -11,9 +12,12 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Request\Http;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Encryption\Encryptor;
+use Magento\Framework\Stdlib\Cookie\CookieMetadataFactory;
+use Magento\Framework\Stdlib\CookieManagerInterface;
 use Magento\Framework\Stdlib\DateTime\TimezoneInterface;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Laminas\Uri\UriFactory;
 use TradeTracker\Connect\Api\Config\System\DirectLinkingInterface as DirectLinkingConfigRepository;
 
 /**
@@ -45,6 +49,8 @@ class Index extends Action
      * @var DirectLinkingConfigRepository
      */
     private $directLinkingConfig;
+    private CookieManagerInterface $cookieManager;
+    private CookieMetadataFactory $cookieMetadataFactory;
 
     /**
      * Index constructor.
@@ -55,6 +61,8 @@ class Index extends Action
      * @param StoreManagerInterface $storeManager
      * @param TimezoneInterface $date
      * @param DirectLinkingConfigRepository $directLinkingConfig
+     * @param CookieManagerInterface $cookieManager
+     * @param CookieMetadataFactory $cookieMetadataFactory
      */
     public function __construct(
         Context $context,
@@ -62,9 +70,13 @@ class Index extends Action
         Encryptor $encryptor,
         StoreManagerInterface $storeManager,
         TimezoneInterface $date,
-        DirectLinkingConfigRepository $directLinkingConfig
+        DirectLinkingConfigRepository $directLinkingConfig,
+        CookieManagerInterface $cookieManager,
+        CookieMetadataFactory $cookieMetadataFactory
     ) {
         parent::__construct($context);
+        $this->cookieManager = $cookieManager;
+        $this->cookieMetadataFactory = $cookieMetadataFactory;
         $this->request = $request;
         $this->encryptor = $encryptor;
         $this->storeManager = $storeManager;
@@ -82,18 +94,18 @@ class Index extends Action
             return $response->setPath('/');
         }
 
-        $domainName = $this->storeManager->getStore()->getBaseUrl(UrlInterface::URL_TYPE_LINK);
-
-        // phpcs:ignore Magento2.Functions.DiscouragedFunction
-        $domainName = empty(parse_url($domainName)['host']) ? '' : '.' . parse_url($domainName)['host'];
-        $trackingParam = explode('_', $this->request->getParam('tt'));
+        $host = (string)UriFactory::factory(
+            $this->storeManager->getStore()->getBaseUrl(UrlInterface::URL_TYPE_LINK)
+        )->getHost();
+        $domainName = $host === '' ? '' : '.' . $host;
+        $trackingParam = explode('_', (string)$this->request->getParam('tt'));
         $campaignID = $trackingParam[0] ?? '';
         $materialID = $trackingParam[1] ?? '';
         $affiliateID = $trackingParam[2] ?? '';
         $reference = $trackingParam[3] ?? '';
         $redirectURL = $this->request->getParam('r');
         $time = $this->date->scopeTimeStamp();
-        $expireTime = time() + 31536000;
+        $yearInSeconds = 31536000;
 
         // Calculate MD5 checksum.
         $checkSum = $this->encryptor->encrypt(
@@ -103,13 +115,9 @@ class Index extends Action
         // Set tracking data.
         $trackingData = $materialID . '::' . $affiliateID . '::' . $reference . '::' . $checkSum . '::' . $time;
 
-        // Set regular tracking cookie.
-        // phpcs:ignore Magento2.Functions.DiscouragedFunction
-        setcookie('TT2_' . $campaignID, $trackingData, $expireTime, '/', $domainName);
-
-        // Set session tracking cookie.
-        // phpcs:ignore Magento2.Functions.DiscouragedFunction
-        setcookie('TTS_' . $campaignID, $trackingData, 0, '/', $domainName);
+        // Set regular tracking cookie (a year) and session tracking cookie (until the browser closes).
+        $this->setTrackingCookie('TT2_' . $campaignID, $trackingData, $domainName, $yearInSeconds);
+        $this->setTrackingCookie('TTS_' . $campaignID, $trackingData, $domainName, null);
 
         // Set track-back URL.
         $trackBackURL = sprintf(
@@ -126,5 +134,25 @@ class Index extends Action
         $response->setHttpResponseCode(301);
         $response->setPath($trackBackURL);
         return $response;
+    }
+
+    /**
+     * A tracking cookie the way the pixel reads it: on the shop's domain, for the whole path, readable by
+     * script, and a session cookie when no duration is given.
+     */
+    private function setTrackingCookie(string $name, string $value, string $domain, ?int $duration): void
+    {
+        $metadata = $this->cookieMetadataFactory->createPublicCookieMetadata()
+            ->setPath('/')
+            ->setHttpOnly(false)
+            ->setSecure(false);
+        if ($domain !== '') {
+            $metadata->setDomain($domain);
+        }
+        if ($duration !== null) {
+            $metadata->setDuration($duration);
+        }
+
+        $this->cookieManager->setPublicCookie($name, $value, $metadata);
     }
 }

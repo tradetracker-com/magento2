@@ -40,9 +40,9 @@ class GenerateFeed extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         try {
+            $this->state->getAreaCode();
+        } catch (\Magento\Framework\Exception\LocalizedException $e) {
             $this->state->setAreaCode('adminhtml');
-        } catch (\Throwable $e) {
-            // Area code already set
         }
 
         if (!$this->configRepository->isEnabled()) {

@@ -62,8 +62,8 @@ XML;
                 $key = 'item';
             }
             if (!is_array($value)) {
-                // phpcs:ignore Magento2.Functions.DiscouragedFunction
-                $value = htmlspecialchars($this->sanitizer->text($value), ENT_XML1, 'UTF-8');
+                // The three characters XML 1.0 reserves in text; quotes stay, as before.
+                $value = str_replace(['&', '<', '>'], ['&amp;', '&lt;', '&gt;'], $this->sanitizer->text($value));
                 $xmlStr .= <<<XML
 <$key>$value
 XML;

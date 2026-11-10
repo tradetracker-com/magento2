@@ -3,6 +3,7 @@
  * Copyright © TradeTracker. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
 
 namespace TradeTracker\Connect\Model\Config\System\Source;
 
@@ -83,7 +84,7 @@ class Attributes implements OptionSourceInterface
             }
         }
         usort($attributes, function ($a, $b) {
-            return strcmp($a["label"], $b["label"]);
+            return strcmp((string)$a["label"], (string)$b["label"]);
         });
         return ['label' => __('Atttibutes'), 'value' => $attributes, 'optgroup-name' => __('Atttibutes')];
     }
@@ -103,6 +104,6 @@ class Attributes implements OptionSourceInterface
      */
     public function getLabel($attribute)
     {
-        return str_replace("'", '', $attribute->getFrontendLabel());
+        return str_replace("'", '', (string)$attribute->getFrontendLabel());
     }
 }
