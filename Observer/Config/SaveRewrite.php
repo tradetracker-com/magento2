@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace TradeTracker\Connect\Observer\Config;
 
-use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Event\Observer as EventObserver;
 use Magento\Framework\Event\ObserverInterface;
@@ -27,10 +26,6 @@ class SaveRewrite implements ObserverInterface
      */
     private $request;
     /**
-     * @var WriterInterface
-     */
-    private $configWriter;
-    /**
      * @var UrlRewrite
      */
     private $urlRewrite;
@@ -46,20 +41,17 @@ class SaveRewrite implements ObserverInterface
     /**
      * SaveRewrite constructor.
      * @param RequestInterface $request
-     * @param WriterInterface $configWriter
      * @param UrlRewrite $urlRewrite
      * @param ConfigRepository $configRepository
      * @param StoreRepository $storeRepository
      */
     public function __construct(
         RequestInterface $request,
-        WriterInterface $configWriter,
         UrlRewrite $urlRewrite,
         ConfigRepository $configRepository,
         StoreRepository $storeRepository
     ) {
         $this->request = $request;
-        $this->configWriter = $configWriter;
         $this->urlRewrite = $urlRewrite;
         $this->configRepository = $configRepository;
         $this->storeRepository = $storeRepository;
@@ -72,47 +64,48 @@ class SaveRewrite implements ObserverInterface
     public function execute(EventObserver $observer): self
     {
         $meetParams = $this->request->getParam('groups');
-        $storeId = $this->request->getParam('store');
         if (!isset($meetParams['redirect_linking']['fields']['url_key'])) {
             return $this;
         }
 
-        if (!array_key_exists('value', $meetParams['redirect_linking']['fields']['url_key'])) {
-            $data = [
-                'entity_type' => 'trade_tracker',
-                'entity_id' => 0,
-                'request_path' => $this->configRepository->getRedirectUrl(),
-                'target_path' => 'tradetracker/redirect',
-                'store_id' => $storeId,
-                'description' => 'TradeTracker redirect URL'
-            ];
-            $this->urlRewrite->execute($data);
+        $field = $meetParams['redirect_linking']['fields']['url_key'];
+        $storeId = (int)$this->request->getParam('store');
+
+        // "Use system value" posts the field without a value: the key then comes from the scope the
+        // merchant is saving, which is the inherited value for that store or, on Default Config,
+        // the value every store view inherits.
+        $inherited = !array_key_exists('value', $field);
+        $requestPath = $inherited ? null : (string)$field['value'];
+
+        if (!$inherited && $requestPath === '') {
             return $this;
         }
-        $requestPath = $meetParams['redirect_linking']['fields']['url_key']['value'];
-        if ($storeId && $requestPath) {
-            $data = [
-                'entity_type' => 'trade_tracker',
-                'entity_id' => 0,
-                'request_path' => $requestPath,
-                'target_path' => 'tradetracker/redirect',
-                'store_id' => $storeId,
-                'description' => 'TradeTracker redirect URL'
-            ];
-            $this->urlRewrite->execute($data);
-        } elseif ($requestPath) {
-            foreach ($this->storeRepository->getList() as $store) {
-                $data = [
-                    'entity_type' => 'trade_tracker',
-                    'entity_id' => 0,
-                    'request_path' => $this->configRepository->getRedirectUrl((int)$store->getId()),
-                    'target_path' => 'tradetracker/redirect',
-                    'store_id' => $store->getId(),
-                    'description' => 'TradeTracker redirect URL'
-                ];
-                $this->urlRewrite->execute($data);
-            }
+
+        if ($storeId) {
+            $this->saveRewrite($requestPath ?? $this->configRepository->getRedirectUrl($storeId), $storeId);
+            return $this;
         }
+
+        foreach ($this->storeRepository->getList() as $store) {
+            $this->saveRewrite($this->configRepository->getRedirectUrl((int)$store->getId()), (int)$store->getId());
+        }
+
         return $this;
+    }
+
+    private function saveRewrite(string $requestPath, int $storeId): void
+    {
+        if ($requestPath === '') {
+            return;
+        }
+
+        $this->urlRewrite->execute([
+            'entity_type' => 'trade_tracker',
+            'entity_id' => 0,
+            'request_path' => $requestPath,
+            'target_path' => 'tradetracker/redirect',
+            'store_id' => $storeId,
+            'description' => 'TradeTracker redirect URL'
+        ]);
     }
 }

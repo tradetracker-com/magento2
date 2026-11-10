@@ -11,7 +11,7 @@ export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: 0,
   workers: 1,
   maxFailures: process.env.CI ? 3 : undefined,
   reporter: process.env.CI
@@ -30,13 +30,34 @@ export default defineConfig({
     { name: 'setup', testMatch: /.*\.setup\.ts/ },
 
     {
-      name: 'chromium',
+      name: 'admin',
       use: {
         ...devices['Desktop Chrome'],
         storageState: '.auth/backend.json',
       },
       dependencies: ['setup'],
-      testMatch: /.*\.spec\.ts/,
+      testMatch: /\/admin\/.*\.spec\.ts/,
+    },
+
+    {
+      name: 'api',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: '.auth/backend.json',
+      },
+      dependencies: ['setup'],
+      testMatch: /\/feed\/.*\.spec\.ts/,
+    },
+
+    // Last on purpose: the baseline rewrites the whole configuration and resets it afterwards.
+    {
+      name: 'baseline',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: '.auth/backend.json',
+      },
+      dependencies: ['admin', 'api'],
+      testMatch: /\/baseline\/.*\.spec\.ts/,
     },
   ],
 });

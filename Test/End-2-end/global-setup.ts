@@ -4,12 +4,17 @@
  */
 
 import { type FullConfig } from '@playwright/test';
+import TradeTrackerApi from './support/services/TradeTrackerApi';
 
 async function globalSetup(config: FullConfig) {
   process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0';
   const { baseURL } = config.projects[0].use;
+  if (!baseURL) {
+    throw new Error('No baseURL configured: set BASE_URL');
+  }
 
   await getAdminToken(baseURL);
+  prepareStore();
 }
 
 const getAdminToken = async (baseURL: string) => {
@@ -29,6 +34,23 @@ const getAdminToken = async (baseURL: string) => {
 
   process.env.admin_token = await response.json();
   console.log('Admin token acquired.');
+};
+
+/**
+ * Everything about the shop that must be true before the first request. Secret keys in admin URLs
+ * and the admin captcha break the admin specs; the configure script switches them off too, but a
+ * box that was provisioned differently gets the same treatment here.
+ */
+const prepareStore = () => {
+  if (!process.env.MAGENTO_CONTAINER) {
+    return;
+  }
+  const api = new TradeTrackerApi();
+  api.setBaseConfig({
+    'admin/security/use_form_key': 0,
+    'admin/captcha/enable': 0,
+  });
+  api.flushAllCaches();
 };
 
 export default globalSetup;

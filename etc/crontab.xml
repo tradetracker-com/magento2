@@ -6,8 +6,10 @@
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
-    <group id="default">
-        <job instance="TradeTracker\Connect\Model\Cron\GenerateFeeds" method="execute" name="tradetracker_generate_feeds" />
+    <group id="tradetracker">
+        <job instance="TradeTracker\Connect\Model\Cron\GenerateFeeds" method="execute" name="tradetracker_generate_feeds">
+            <config_path>tradetracker/feed/cron_frequency</config_path>
+        </job>
         <job instance="TradeTracker\Connect\Model\Cron\SyncTransactions" method="execute" name="tradetracker_sync_transactions">
             <schedule>0 0 * * *</schedule>
         </job>

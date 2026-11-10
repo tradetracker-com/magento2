@@ -12,6 +12,7 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Integration\Api\AuthorizationServiceInterface;
 use Magento\Integration\Api\IntegrationServiceInterface;
 use Magento\Integration\Api\OauthServiceInterface;
+use Magento\Integration\Model\Oauth\Token;
 
 /**
  * Service model to create, delete and get integration token
@@ -63,7 +64,7 @@ class Integration
         $integration = $this->integrationService->findByName(self::INTEGRATION_NAME);
         if ($integration->getId()) {
             $customerId = $integration->getConsumerId();
-            return $this->oauthService->getAccessToken($customerId)->getToken();
+            return $this->accessToken((int)$customerId);
         }
 
         $integrationData = [
@@ -79,7 +80,20 @@ class Integration
         $this->authorizationService->grantPermissions($integrationId, ['TradeTracker_Connect::webapi']);
 
         $this->oauthService->createAccessToken($customerId, true);
-        return $this->oauthService->getAccessToken($customerId)->getToken();
+        return $this->accessToken((int)$customerId);
+    }
+
+    /**
+     * @throws LocalizedException when the consumer has no access token
+     */
+    private function accessToken(int $customerId): string
+    {
+        $token = $this->oauthService->getAccessToken($customerId);
+        if (!$token instanceof Token) {
+            throw new LocalizedException(__('The TradeTracker integration has no access token'));
+        }
+
+        return (string)$token->getToken();
     }
 
     /**
@@ -90,7 +104,7 @@ class Integration
         $integration = $this->integrationService->findByName(self::INTEGRATION_NAME);
         if ($integration->getId()) {
             $customerId = $integration->getConsumerId();
-            return $this->oauthService->getAccessToken($customerId)->getToken();
+            return $this->accessToken((int)$customerId);
         }
     }
 }

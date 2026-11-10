@@ -10,20 +10,20 @@
     <group id="general" translate="label comment" type="text" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
         <label>General</label>
         <attribute type="expanded">1</attribute>
-        <field id="enable" translate="label comment" type="select" sortOrder="2" showInDefault="1" showInWebsite="1"
+        <field id="enable" canRestore="1" translate="label comment" type="select" sortOrder="2" showInDefault="1" showInWebsite="1"
                showInStore="1">
             <label>Enable</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <config_path>tradetracker/feed/enable</config_path>
         </field>
-        <field id="filename" translate="label comment" type="text" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="filename" canRestore="1" translate="label comment" type="text" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Filename</label>
             <config_path>tradetracker/feed/filename</config_path>
             <depends>
                 <field id="enable">1</field>
             </depends>
         </field>
-        <field id="cron_frequency" translate="label comment" type="select" sortOrder="22" showInDefault="1"
+        <field id="cron_frequency" canRestore="1" translate="label comment" type="select" sortOrder="22" showInDefault="1"
                showInWebsite="0" showInStore="0">
             <label>Auto Generate</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\CronFrequency</source_model>
@@ -33,7 +33,7 @@
                 <field id="enable">1</field>
             </depends>
         </field>
-        <field id="custom_cron_frequency" translate="label comment" type="text" sortOrder="23" showInDefault="1"
+        <field id="custom_cron_frequency" canRestore="1" translate="label comment" type="text" sortOrder="23" showInDefault="1"
                showInWebsite="0" showInStore="0">
             <label>Custom Frequency</label>
             <config_path>tradetracker/feed/custom_cron_frequency</config_path>
@@ -77,21 +77,21 @@
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
             <comment>Connect the right attributes for the name, short and long description to export the values to the TradeTracker feed.</comment>
         </field>
-        <field id="name_attribute" translate="label comment" type="select" sortOrder="2" showInDefault="1"
+        <field id="name_attribute" canRestore="1" translate="label comment" type="select" sortOrder="2" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Name</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Attributes</source_model>
             <comment><![CDATA[Select the attribute for the product name. This need to match the title of your landing page. Suggested field: Product Name]]></comment>
             <config_path>tradetracker/feed/name_attribute</config_path>
         </field>
-        <field id="description_attribute" translate="label comment" type="select" sortOrder="4" showInDefault="1"
+        <field id="description_attribute" canRestore="1" translate="label comment" type="select" sortOrder="4" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Short Description</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Attributes</source_model>
             <config_path>tradetracker/feed/description_attribute</config_path>
             <comment><![CDATA[Select the attribute for the short description. Suggested field: Short Description]]></comment>
         </field>
-        <field id="description_long_attribute" translate="label comment" type="select" sortOrder="6"
+        <field id="description_long_attribute" canRestore="1" translate="label comment" type="select" sortOrder="6"
                showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Long Description</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Attributes</source_model>
@@ -103,14 +103,14 @@
             <label>Image Source</label>
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
         </field>
-        <field id="image" translate="label comment" type="select" sortOrder="9" showInDefault="1" showInWebsite="1"
+        <field id="image" canRestore="1" translate="label comment" type="select" sortOrder="9" showInDefault="1" showInWebsite="1"
                showInStore="1">
             <label>Source</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\ImageSource</source_model>
             <comment>Select which image you would like to display for your product ad. It is recommended that you select all images if they are available, so that any additional images are also exported.</comment>
             <config_path>tradetracker/feed/image</config_path>
         </field>
-        <field id="main_image" translate="label comment" type="select" sortOrder="10" showInDefault="1"
+        <field id="main_image" canRestore="1" translate="label comment" type="select" sortOrder="10" showInDefault="1"
                showInWebsite="1"
                showInStore="1">
             <label>Main Image</label>
@@ -128,43 +128,43 @@
             <comment>It's recommended to provide as much product information as possible to export the most detailed product to your TradeTracker account as some for some channels these values are required.
             </comment>
         </field>
-        <field id="ean_attribute" translate="label comment" type="select" sortOrder="21" showInDefault="1"
+        <field id="ean_attribute" canRestore="1" translate="label comment" type="select" sortOrder="21" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>EAN-code</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Attributes</source_model>
             <config_path>tradetracker/feed/ean_attribute</config_path>
         </field>
-        <field id="brand_attribute" translate="label comment" type="select" sortOrder="23" showInDefault="1"
+        <field id="brand_attribute" canRestore="1" translate="label comment" type="select" sortOrder="23" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Brand</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Attributes</source_model>
             <config_path>tradetracker/feed/brand_attribute</config_path>
         </field>
-        <field id="color_attribute" translate="label comment" type="select" sortOrder="25" showInDefault="1"
+        <field id="color_attribute" canRestore="1" translate="label comment" type="select" sortOrder="25" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Color</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Attributes</source_model>
             <config_path>tradetracker/feed/color_attribute</config_path>
         </field>
-        <field id="material_attribute" translate="label comment" type="select" sortOrder="27" showInDefault="1"
+        <field id="material_attribute" canRestore="1" translate="label comment" type="select" sortOrder="27" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Material</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Attributes</source_model>
             <config_path>tradetracker/feed/material_attribute</config_path>
         </field>
-        <field id="size_attribute" translate="label comment" type="select" sortOrder="29" showInDefault="1"
+        <field id="size_attribute" canRestore="1" translate="label comment" type="select" sortOrder="29" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Size</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Attributes</source_model>
             <config_path>tradetracker/feed/size_attribute</config_path>
         </field>
-        <field id="gender_attribute" translate="label comment" type="select" sortOrder="31" showInDefault="1"
+        <field id="gender_attribute" canRestore="1" translate="label comment" type="select" sortOrder="31" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Gender</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Attributes</source_model>
             <config_path>tradetracker/feed/gender_attribute</config_path>
         </field>
-        <field id="extra_info" translate="label comment" type="text" sortOrder="34" showInDefault="1"
+        <field id="extra_info" canRestore="1" translate="label comment" type="text" sortOrder="34" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Extra Info</label>
             <comment>For example: Free pickup from store.</comment>
@@ -185,14 +185,14 @@
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
             <comment><![CDATA[Add a default category term to indicate the category of the products.]]></comment>
         </field>
-        <field id="category_source" translate="label comment" type="select" sortOrder="41" showInDefault="1"
+        <field id="category_source" canRestore="1" translate="label comment" type="select" sortOrder="41" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Type</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\CategorySource</source_model>
             <comment><![CDATA[Select if you want to use the Magento category structure, a custom value or a product attribute.]]></comment>
             <config_path>tradetracker/feed/category_source</config_path>
         </field>
-        <field id="category_attribute" translate="label comment" type="select" sortOrder="42" showInDefault="1"
+        <field id="category_attribute" canRestore="1" translate="label comment" type="select" sortOrder="42" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Attribute</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Attributes</source_model>
@@ -201,7 +201,7 @@
                 <field id="category_source">attribute</field>
             </depends>
         </field>
-        <field id="category_custom" translate="label comment" type="text" sortOrder="43" showInDefault="1"
+        <field id="category_custom" canRestore="1" translate="label comment" type="text" sortOrder="43" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Category</label>
             <comment><![CDATA[When the products are in multiple categories, you can also specify, for example, by a path: Computers/Hardware/memory. You can overwrite this value to specify the category.<br><br>Overwrite this value to specify the category.<br><br><strong>On Category Level<br></strong>Catalog » Manage Categories » Select Category » Feeds » TradeTracker Category<br><br><strong>On Product Level<br></strong>Catalog » Manage Products » Select Product » TradeTracker Tab » TradeTracker Category.]]></comment>
@@ -216,13 +216,13 @@
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
             <comment><![CDATA[Export the delivery time to the feed based on the stock level of the products or based on a custom product attribute.]]></comment>
         </field>
-        <field id="delivery_source" translate="label comment" type="select" sortOrder="45" showInDefault="1"
+        <field id="delivery_source" canRestore="1" translate="label comment" type="select" sortOrder="45" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Type</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\SourceType</source_model>
             <config_path>tradetracker/feed/delivery_source</config_path>
         </field>
-        <field id="delivery_attribute" translate="label comment" type="select" sortOrder="46" showInDefault="1"
+        <field id="delivery_attribute" canRestore="1" translate="label comment" type="select" sortOrder="46" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Attribute</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Attributes</source_model>
@@ -231,7 +231,7 @@
                 <field id="delivery_source">attribute</field>
             </depends>
         </field>
-        <field id="delivery_in_stock" translate="label comment" type="text" sortOrder="47" showInDefault="1"
+        <field id="delivery_in_stock" canRestore="1" translate="label comment" type="text" sortOrder="47" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Delivery Time - In Stock</label>
             <config_path>tradetracker/feed/delivery_in_stock</config_path>
@@ -239,7 +239,7 @@
                 <field id="delivery_source">static</field>
             </depends>
         </field>
-        <field id="delivery_out_of_stock" translate="label comment" type="text" sortOrder="48" showInDefault="1"
+        <field id="delivery_out_of_stock" canRestore="1" translate="label comment" type="text" sortOrder="48" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Delivery Time - Out of Stock</label>
             <config_path>tradetracker/feed/delivery_out_of_stock</config_path>
@@ -253,13 +253,13 @@
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
             <comment><![CDATA[Export the VAT percentage to the feed. This field is required by TradeTracker and must be a numeric value (minimum 0).]]></comment>
         </field>
-        <field id="vat_pct_enabled" translate="label comment" type="select" sortOrder="50" showInDefault="1"
+        <field id="vat_pct_enabled" canRestore="1" translate="label comment" type="select" sortOrder="50" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Enable</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <config_path>tradetracker/feed/vat_pct_enabled</config_path>
         </field>
-        <field id="vat_pct_source" translate="label comment" type="select" sortOrder="51" showInDefault="1"
+        <field id="vat_pct_source" canRestore="1" translate="label comment" type="select" sortOrder="51" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Type</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\SourceType</source_model>
@@ -268,7 +268,7 @@
                 <field id="vat_pct_enabled">1</field>
             </depends>
         </field>
-        <field id="vat_pct_attribute" translate="label comment" type="select" sortOrder="52" showInDefault="1"
+        <field id="vat_pct_attribute" canRestore="1" translate="label comment" type="select" sortOrder="52" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Attribute</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Attributes</source_model>
@@ -279,7 +279,7 @@
                 <field id="vat_pct_source">attribute</field>
             </depends>
         </field>
-        <field id="vat_pct_static" translate="label comment" type="text" sortOrder="53" showInDefault="1"
+        <field id="vat_pct_static" canRestore="1" translate="label comment" type="text" sortOrder="53" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Fixed Value</label>
             <comment><![CDATA[Enter a fixed VAT percentage (e.g. 21 for 21% VAT, 0 for VAT-free). Common values: 0, 9, 21.]]></comment>
@@ -301,13 +301,13 @@
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
             <comment><![CDATA[For configurable products, we recommend to only add the simple products to the configuration as a ‘configurable product’ by itself cannot be purchased. Choose the attribute(s) that you want to use from the parent relation configurable product.]]></comment>
         </field>
-        <field id="configurable" translate="label comment" type="select" sortOrder="21" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="configurable" canRestore="1" translate="label comment" type="select" sortOrder="21" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Use Configurable/Simple Products</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Configurable\Option</source_model>
             <config_path>tradetracker/feed/configurable</config_path>
             <comment><![CDATA[<strong>Recommended:</strong> Only Linked Simple Products. Selecting this option will export linked simple products that are part of a configurable product. This option is recommended so that the unique product variants are exported to the TradeTracker Feed.]]></comment>
         </field>
-        <field id="configurable_link" translate="label comment" type="select" sortOrder="22" showInDefault="1"
+        <field id="configurable_link" canRestore="1" translate="label comment" type="select" sortOrder="22" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Use Parent URL for Simples</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Configurable\Link</source_model>
@@ -317,7 +317,7 @@
                 <field id="configurable" separator=",">simple,both</field>
             </depends>
         </field>
-        <field id="configurable_image" translate="label comment" type="select" sortOrder="23" showInDefault="1"
+        <field id="configurable_image" canRestore="1" translate="label comment" type="select" sortOrder="23" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Use Parent Image for Simples</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Configurable\Image</source_model>
@@ -327,7 +327,7 @@
             <comment><![CDATA[<strong>Recommended:</strong> Only if Empty. Selecting this option will export the parent image which will be used if there is no image available for a simple product.]]></comment>
             <config_path>tradetracker/feed/configurable_image</config_path>
         </field>
-        <field id="configurable_parent_atts" translate="label comment" type="multiselect" sortOrder="24"
+        <field id="configurable_parent_atts" canRestore="1" translate="label comment" type="multiselect" sortOrder="24"
                showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Use Parent Data for Simples</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\ParentAttributes</source_model>
@@ -337,7 +337,7 @@
             <comment><![CDATA[Select the attributes that you want to use from the parent configurable product. It is not recommended to select the attributes that need to be unique for the simples, such as GTIN and Color.]]></comment>
             <config_path>tradetracker/feed/configurable_parent_atts</config_path>
         </field>
-        <field id="configurable_nonvisible" translate="label comment" type="select" sortOrder="25" showInDefault="1"
+        <field id="configurable_nonvisible" canRestore="1" translate="label comment" type="select" sortOrder="25" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Use Fallback only on Non Visible Simples</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -354,7 +354,7 @@
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
             <comment><![CDATA[For Bundle Products, we recommend to only add the Bundle product by itself as this is the item that can be purchased.<br>]]></comment>
         </field>
-        <field id="bundle" translate="label comment" type="select" sortOrder="31" showInDefault="1"
+        <field id="bundle" canRestore="1" translate="label comment" type="select" sortOrder="31" showInDefault="1"
                showInWebsite="1"
                showInStore="1">
             <label>Use Bundle Products</label>
@@ -362,7 +362,7 @@
             <comment><![CDATA[<strong>Recommended:</strong> Only Bundle Product. Selecting this option will export the bundle product by itself to the TradeTracker Feed.]]></comment>
             <config_path>tradetracker/feed/bundle</config_path>
         </field>
-        <field id="bundle_link" translate="label comment" type="select" sortOrder="32" showInDefault="1"
+        <field id="bundle_link" canRestore="1" translate="label comment" type="select" sortOrder="32" showInDefault="1"
                showInWebsite="1"
                showInStore="1">
             <label>Use Parent URL for Simples</label>
@@ -373,7 +373,7 @@
             <comment><![CDATA[<strong>Recommended:</strong> Yes. Selecting this option will export the URL that links directly to the Bundle Product.]]></comment>
             <config_path>tradetracker/feed/bundle_link</config_path>
         </field>
-        <field id="bundle_image" translate="label comment" type="select" sortOrder="33" showInDefault="1"
+        <field id="bundle_image" canRestore="1" translate="label comment" type="select" sortOrder="33" showInDefault="1"
                showInWebsite="1"
                showInStore="1">
             <label>Use Parent Image for Simples</label>
@@ -384,7 +384,7 @@
             <comment><![CDATA[<strong>Recommended:</strong> Only if Empty. Selecting this option will export the parent image which will be used if there is no image available for a simple product]]></comment>
             <config_path>tradetracker/feed/bundle_image</config_path>
         </field>
-        <field id="bundle_parent_atts" translate="label comment" type="multiselect" sortOrder="34" showInDefault="1"
+        <field id="bundle_parent_atts" canRestore="1" translate="label comment" type="multiselect" sortOrder="34" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Use Parent Data for Simples</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\ParentAttributes</source_model>
@@ -394,7 +394,7 @@
             <comment><![CDATA[Select the attributes that you want to use from the parent bundle product. It is not recommended to select the attributes that need to be unique for the simples, such as GTIN and Color.]]></comment>
             <config_path>tradetracker/feed/bundle_parent_atts</config_path>
         </field>
-        <field id="bundle_nonvisible" translate="label comment" type="select" sortOrder="35" showInDefault="1"
+        <field id="bundle_nonvisible" canRestore="1" translate="label comment" type="select" sortOrder="35" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Use Fallback only on Non Visible Simples</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -410,17 +410,18 @@
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
             <comment><![CDATA[For Grouped Products we recommend to only add the Grouped product by itself as that is the product that can be bought.<br>]]></comment>
         </field>
-        <field id="grouped" translate="label comment" type="select" sortOrder="41" showInDefault="1"
+        <field id="grouped" canRestore="1" translate="label comment" type="select" sortOrder="41" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Use Grouped Products</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Grouped\Option</source_model>
             <comment><![CDATA[For Group Products, we recommend to only add the Grouped Product by itself as that is the product that can be purchased.<br>]]></comment>
             <config_path>tradetracker/feed/grouped</config_path>
         </field>
-        <field id="grouped_link" translate="label comment" type="select" sortOrder="42" showInDefault="1"
+        <field id="grouped_link" canRestore="1" translate="label comment" type="select" sortOrder="42" showInDefault="1"
                showInWebsite="1"
                showInStore="1">
             <label>Use Parent URL for Simples</label>
+            <config_path>tradetracker/feed/grouped_link</config_path>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\Grouped\Link</source_model>
             <depends>
                 <field id="grouped" separator=",">simple,both</field>
@@ -428,7 +429,7 @@
             <comment>
                 <![CDATA[<strong>Recommended:</strong> Yes. Selecting this option will export the URL that links directly to the Bundle Product.]]></comment>
         </field>
-        <field id="grouped_image" translate="label comment" type="select" sortOrder="43" showInDefault="1"
+        <field id="grouped_image" canRestore="1" translate="label comment" type="select" sortOrder="43" showInDefault="1"
                showInWebsite="1"
                showInStore="1">
             <label>Use Parent Image for Simples</label>
@@ -439,7 +440,7 @@
             <comment><![CDATA[<strong>Recommended:</strong> Only if Empty. Selecting this option will export the parent image which will be used if there is no image available for a simple product]]></comment>
             <config_path>tradetracker/feed/grouped_image</config_path>
         </field>
-        <field id="grouped_parent_price" translate="label comment" type="select" sortOrder="44" showInDefault="1"
+        <field id="grouped_parent_price" canRestore="1" translate="label comment" type="select" sortOrder="44" showInDefault="1"
                showInWebsite="1"
                showInStore="1">
             <label>Parent Price</label>
@@ -449,7 +450,7 @@
             </depends>
             <config_path>tradetracker/feed/grouped_parent_price</config_path>
         </field>
-        <field id="grouped_parent_atts" translate="label comment" type="multiselect" sortOrder="45"
+        <field id="grouped_parent_atts" canRestore="1" translate="label comment" type="multiselect" sortOrder="45"
                showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Use Parent Data for Simples</label>
@@ -460,7 +461,7 @@
             <comment><![CDATA[Select the attributes that you want to use from the parent grouped product. It is not recommended to select the attributes that need to be unique for the simples, such as GTIN and Color.]]></comment>
             <config_path>tradetracker/feed/grouped_parent_atts</config_path>
         </field>
-        <field id="grouped_nonvisible" translate="label comment" type="select" sortOrder="46" showInDefault="1"
+        <field id="grouped_nonvisible" canRestore="1" translate="label comment" type="select" sortOrder="46" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Use Fallback only on Non Visible Simples</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -514,7 +515,7 @@
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
             <comment>When you are using Google Analytics you can add your UTM tags eg. utm_source=tradetracker&amp;utm_medium=cpc&amp;utm_campaign=tradetracker</comment>
         </field>
-        <field id="utm_string" translate="label comment" type="text" sortOrder="31" showInDefault="1" showInWebsite="1"
+        <field id="utm_string" canRestore="1" translate="label comment" type="text" sortOrder="31" showInDefault="1" showInWebsite="1"
                showInStore="1">
             <label>UTM Code</label>
             <config_path>tradetracker/feed/utm_string</config_path>
@@ -533,13 +534,13 @@
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
             <comment>Include or exclude products based on the visibility.</comment>
         </field>
-        <field id="filter_visbility" translate="label comment" type="select" sortOrder="3" showInDefault="1"
+        <field id="filter_visbility" canRestore="1" translate="label comment" type="select" sortOrder="3" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Enable</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <config_path>tradetracker/feed/filter_visbility</config_path>
         </field>
-        <field id="filter_visbility_options" translate="label comment" type="multiselect" sortOrder="4" showInDefault="1"
+        <field id="filter_visbility_options" canRestore="1" translate="label comment" type="multiselect" sortOrder="4" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Only add products with the following Visibility</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\ProductVisibility</source_model>
@@ -555,13 +556,13 @@
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
             <comment><![CDATA[Include or Exclude products based on the category.<br><strong><br>Note for Include:</strong><br>Simple products within a bundled, configurable or grouped product are treated as own entities, so these should also be present in the included categories.<br><br><strong>Note for Exclude: </strong><br>Exclude the products from these categories. Products that are available within different categories need to be excluded from all of the categories they are assigned to.]]></comment>
         </field>
-        <field id="filter_category" translate="label comment" type="select" sortOrder="11" showInDefault="1"
+        <field id="filter_category" canRestore="1" translate="label comment" type="select" sortOrder="11" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Enable</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <config_path>tradetracker/feed/filter_category</config_path>
         </field>
-        <field id="category_type" translate="label comment" type="select" sortOrder="12" showInDefault="1"
+        <field id="category_type" canRestore="1" translate="label comment" type="select" sortOrder="12" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Type of filter</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\CategoryTypeList</source_model>
@@ -570,7 +571,7 @@
             </depends>
             <config_path>tradetracker/feed/filter_type_category</config_path>
         </field>
-        <field id="filter_category_ids" translate="label comment" type="multiselect" sortOrder="13" showInDefault="1"
+        <field id="filter_category_ids" canRestore="1" translate="label comment" type="multiselect" sortOrder="13" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Category</label>
             <source_model>TradeTracker\Connect\Model\Config\System\Source\CategoryList</source_model>
@@ -585,7 +586,7 @@
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
             <comment>Exclude products that are out of stock in your store.</comment>
         </field>
-        <field id="filter_stock" translate="label comment" type="select" sortOrder="21" showInDefault="1" showInWebsite="1"
+        <field id="filter_stock" canRestore="1" translate="label comment" type="select" sortOrder="21" showInDefault="1" showInWebsite="1"
                showInStore="1">
             <label>Enable</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -597,7 +598,7 @@
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field\Heading</frontend_model>
             <comment>Configure the advanced filter using your attributes and different filter options.</comment>
         </field>
-        <field id="custom_filters" translate="label comment" type="select" sortOrder="31" showInDefault="1"
+        <field id="custom_filters" canRestore="1" translate="label comment" type="select" sortOrder="31" showInDefault="1"
                showInWebsite="1"
                showInStore="1">
             <label>Enabled</label>

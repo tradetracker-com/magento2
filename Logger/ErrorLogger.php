@@ -33,9 +33,9 @@ class ErrorLogger
     public function addLog(string $type, $data): void
     {
         if (is_array($data) || is_object($data)) {
-            $this->logger->error( $type . ': ' . $this->json->serialize($data));
+            $this->logger->error($type . ': ' . $this->json->serialize(is_object($data) ? (array)$data : $data));
         } else {
-            $this->logger->error( $type . ': ' . $data);
+            $this->logger->error($type . ': ' . $data);
         }
     }
 }

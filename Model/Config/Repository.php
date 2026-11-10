@@ -13,6 +13,8 @@ use Magento\Config\Model\ResourceModel\Config\Data\CollectionFactory as ConfigDa
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ProductMetadataInterface;
 use Magento\Framework\Component\ComponentRegistrarInterface;
+use Magento\Framework\Encryption\EncryptorInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Filesystem\Driver\File as FileDriver;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Store\Api\Data\StoreInterface;
@@ -34,6 +36,7 @@ class Repository implements ConfigRepositoryInterface
     private ConfigData $config;
     private ComponentRegistrarInterface $componentRegistrar;
     private FileDriver $fileDriver;
+    private EncryptorInterface $encryptor;
     private ?array $composerData = null;
 
     public function __construct(
@@ -44,7 +47,8 @@ class Repository implements ConfigRepositoryInterface
         Json $json,
         ProductMetadataInterface $metadata,
         ComponentRegistrarInterface $componentRegistrar,
-        FileDriver $fileDriver
+        FileDriver $fileDriver,
+        EncryptorInterface $encryptor
     ) {
         $this->storeManager = $storeManager;
         $this->configDataCollectionFactory = $configDataCollectionFactory;
@@ -54,6 +58,7 @@ class Repository implements ConfigRepositoryInterface
         $this->metadata = $metadata;
         $this->componentRegistrar = $componentRegistrar;
         $this->fileDriver = $fileDriver;
+        $this->encryptor = $encryptor;
     }
 
     /**
@@ -86,9 +91,8 @@ class Repository implements ConfigRepositoryInterface
         try {
             $filePath = $path . '/composer.json';
             if ($this->fileDriver->isExists($filePath)) {
-                $this->composerData = $this->json->unserialize(
-                    $this->fileDriver->fileGetContents($filePath)
-                );
+                $data = $this->json->unserialize($this->fileDriver->fileGetContents($filePath));
+                $this->composerData = is_array($data) ? $data : [];
             }
         } catch (\Throwable $e) {
             $this->composerData = [];
@@ -135,7 +139,11 @@ class Repository implements ConfigRepositoryInterface
             }
         }
         $stores = $this->storeManager->getStores();
-        return reset($stores);
+        $store = reset($stores);
+        if ($store === false) {
+            throw new NoSuchEntityException(__('No store view is available'));
+        }
+        return $store;
     }
 
     /**
@@ -212,13 +220,33 @@ class Repository implements ConfigRepositoryInterface
     /**
      * Get passphrase
      *
+     * The passphrase is stored encrypted (Magento\Config\Model\Config\Backend\Encrypted). Values written before
+     * the EncryptPassphrase data patch ran are still plain text and are returned as-is.
+     *
      * @param int|null $storeId
      *
      * @return string
      */
     private function getPassphrase(?int $storeId = null): string
     {
-        return $this->getStoreValue(self::XML_PATH_PASSPHRASE, $storeId);
+        $value = $this->getStoreValue(self::XML_PATH_PASSPHRASE, $storeId);
+        if ($value === '' || !$this->isEncryptedValue($value)) {
+            return $value;
+        }
+
+        return (string)$this->encryptor->decrypt($value);
+    }
+
+    /**
+     * Whether a stored value is in Magento's encrypted format ("<key version>:<cipher version>:<payload>")
+     *
+     * @param string $value
+     *
+     * @return bool
+     */
+    private function isEncryptedValue(string $value): bool
+    {
+        return (bool)preg_match('/^\d+:\d+:/', $value);
     }
 
     /**
@@ -239,10 +267,11 @@ class Repository implements ConfigRepositoryInterface
         }
 
         try {
-            return $this->json->unserialize($value);
+            $data = $this->json->unserialize($value);
         } catch (\Exception $e) {
             return [];
         }
+        return is_array($data) ? $data : [];
     }
 
     /**

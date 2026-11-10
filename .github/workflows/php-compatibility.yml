@@ -1,0 +1,46 @@
+name: PHP Compatibility
+on:
+  pull_request:
+    paths:
+      - '**/*.php'
+      - '**/*.phtml'
+
+jobs:
+  php-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer
+          coverage: none
+
+      # dev-develop carries the PHP 8.4 to 8.6 sniffs; pinned to a commit until a 10.x release ships them.
+      - name: Install PHPCompatibility
+        run: |
+          mkdir -p "$RUNNER_TEMP/phpcs"
+          cd "$RUNNER_TEMP/phpcs"
+          composer init --no-interaction --name=tmp/phpcs
+          composer config minimum-stability dev
+          composer config prefer-stable true
+          composer config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+          composer require --no-interaction --no-progress \
+            "phpcompatibility/php-compatibility:dev-develop#9937b9fba0505bc29d8d8ef1f52488b3105e0bdb"
+
+      # testVersion: lower bound = composer.json require.php, upper bound = the newest PHP that
+      # PHPCompatibility knows, which runs ahead of the Magento images in the PHPStan matrix so a
+      # deprecation is known before the release that enforces it. 8.6 changes only one thing we meet
+      # everywhere: trim() gains the form feed in its default character set. None of our trims depend
+      # on that, and a finding on every trim() call would drown the ones that matter, so that sniff
+      # is excluded.
+      - name: Run PHPCompatibility
+        run: |
+          "$RUNNER_TEMP/phpcs/vendor/bin/phpcs" \
+            --standard=PHPCompatibility \
+            --runtime-set testVersion 8.2-8.6 \
+            --exclude=PHPCompatibility.ParameterValues.NewTrimCharactersDefault \
+            --extensions=php,phtml \
+            --ignore='*/vendor/*,*/node_modules/*' \
+            -s .

@@ -58,7 +58,7 @@
     <!-- Log Block End -->
 
     <!-- CLI Block Start -->
-    <type name="Magento\Framework\Console\CommandList">
+    <type name="Magento\Framework\Console\CommandListInterface">
         <arguments>
             <argument name="commands" xsi:type="array">
                 <item name="tradetrackerGenerateFeed" xsi:type="object">TradeTracker\Connect\Console\Command\GenerateFeed</item>
@@ -69,6 +69,7 @@
 
     <type name="TradeTracker\Connect\Console\Command\GenerateFeed">
         <arguments>
+            <argument name="configRepository" xsi:type="object">TradeTracker\Connect\Api\Config\RepositoryInterface\Proxy</argument>
             <argument name="feedRepository" xsi:type="object">TradeTracker\Connect\Api\Feed\RepositoryInterface\Proxy</argument>
         </arguments>
     </type>

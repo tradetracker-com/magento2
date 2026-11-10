@@ -1,22 +1,19 @@
 <?php
 /**
- * Copyright © TradeTracker. All rights reserved.
+ * Copyright © Magmodules.eu. All rights reserved.
  * See COPYING.txt for license details.
  */
 declare(strict_types=1);
 
 namespace TradeTracker\Connect\Service\ProductData\AttributeCollector\Data;
 
-use Exception;
-use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\Framework\App\ResourceConnection;
-use Magento\Framework\EntityManager\MetadataPool;
-use Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\UrlInterface;
+use Magento\Store\Api\Data\StoreInterface;
 
 /**
  * Service class for attribute data
  */
-class AttributeMapper
+class AttributeMapper extends AbstractDataCollector
 {
 
     /**
@@ -53,108 +50,34 @@ class AttributeMapper
         'entity_type_code'
     ];
 
-    /**
-     * @var ResourceConnection
-     */
-    private $resource;
-    /**
-     * @var StoreManagerInterface
-     */
-    private $storeManager;
-    /**
-     * Array of attributes to fetch
-     *
-     * @var array[]
-     */
-    private $map = [];
-    /**
-     * Type code for entities like products, customers, etc.
-     * Allowed parameters is eav_entity_type from eav_entity_type table
-     *
-     * @var string
-     */
-    private $entityTypeCode;
-    /**
-     * ID's connected to attribute values
-     *
-     * @var array[]
-     */
-    private $entityIds;
-    /**
-     * Store ID
-     *
-     * @var int|array
-     */
-    private $storeId;
-    /**
-     * Array of attribute values grouped by store and entity ID's
-     *
-     * @var array[]
-     */
-    private $result = [];
-    /**
-     * @var array[]
-     */
-    private $attrOptions = [];
-    /**
-     * @var ?string
-     */
-    private $mediaUrl = null;
-    /**
-     * @var string
-     */
-    private $linkField;
+    private array $map = [];
+    private StoreInterface $store;
+    private string $entityTypeCode;
+    private int $storeId = 0;
+    private array $entityIds;
+    private array $result = [];
+    private array $attrOptions = [];
 
-    /**
-     * AttributeMapper constructor.
-     *
-     * @param ResourceConnection $resource
-     * @param StoreManagerInterface $storeManager
-     * @param MetadataPool $metadataPool
-     * @throws Exception
-     */
-    public function __construct(
-        ResourceConnection $resource,
-        StoreManagerInterface $storeManager,
-        MetadataPool $metadataPool
-    ) {
-        $this->resource = $resource;
-        $this->storeManager = $storeManager;
-        $this->linkField = $metadataPool->getMetadata(ProductInterface::class)->getLinkField();
-    }
-
-    /**
-     * Get attribute value for specified set
-     *
-     * @param array[] $entityIds ID's of entities which attribute values should be fetched
-     * @param array[] $map array of attribute codes
-     * @param string $entityTypeCode allowed parameters is entity_type_code from eav_entity_type table
-     * @param int $storeId fetch attributes for specific store
-     *
-     * @return array[] has form like [%attribute_code%][%entity_id%][%store_id%]
-     */
     public function execute(
-        array $entityIds = [],
+        array $entityIds,
+        StoreInterface $store,
         array $map = [],
-        string $entityTypeCode = '',
-        int $storeId = 0
+        string $entityTypeCode = ''
     ): array {
+        $this->result = [];
+        $this->storeId = (int)$store->getId();
+        $this->store = $store;
         $this->attrOptions = $this->collectAttributeOptions();
-        $this->setData('map', $map);
-        $this->setData('entity_ids', $entityIds);
-        $this->setData('entity_type_code', $entityTypeCode);
-        $this->setData('store_id', $storeId);
+        $this->map = $map;
+        $this->entityIds = $entityIds;
+        $this->entityTypeCode  = $entityTypeCode;
+
         $attributes = $this->getAttributes();
         $this->collectAttributeValues($attributes);
         $this->collectExtraData();
         return $this->result;
     }
 
-    /**
-     * Attribute options collector
-     *
-     * @return array
-     */
     private function collectAttributeOptions(): array
     {
         $attrOptions = [];
@@ -172,39 +95,19 @@ class AttributeMapper
                     'store_id',
                     'value'
                 ]
+            )->where(
+                'store_id IN (?)',
+                [0, $this->storeId]
+            )->order(
+                'store_id ASC'
             );
 
         $options = $this->resource->getConnection()->fetchAll($select);
         foreach ($options as $option) {
-            $attrOptions[$option['attribute_id']][$option['option_id']][$option['store_id']] = $option['value'];
+            $attrOptions[$option['attribute_id']][$option['option_id']] = $option['value'];
         }
 
         return $attrOptions;
-    }
-
-    /**
-     * @param string $type
-     * @param mixed $data
-     */
-    public function setData($type, $data): void
-    {
-        if (!$data) {
-            return;
-        }
-        switch ($type) {
-            case 'store_id':
-                $this->storeId = [0, $data];
-                break;
-            case 'entity_ids':
-                $this->entityIds = $data;
-                break;
-            case 'map':
-                $this->map = $data;
-                break;
-            case 'entity_type_code':
-                $this->entityTypeCode = $data;
-                break;
-        }
     }
 
     /**
@@ -238,10 +141,13 @@ class AttributeMapper
      * Get specific attribute values for selected entities for all existing stores
      *
      * @param array[] $attributes 'attribute_id', 'attribute_code', 'backend_type', 'entity_table'
-     *
      */
     private function collectAttributeValues(array $attributes): void
     {
+        if ($attributes === []) {
+            return;
+        }
+
         $tablesNonStatic = [];
         $attributeIdsNonStatic = [];
         $attributeStaticCode = array_unique(['entity_id', 'type_id', $this->linkField]);
@@ -254,14 +160,16 @@ class AttributeMapper
             }
             $relations[$attribute['attribute_id']] = $attribute['attribute_code'];
             if ($attribute['backend_type'] != 'static') {
-                $tablesNonStatic[] = $attribute['entity_table'] . '_' . $attribute['backend_type'];
-                $attributeIdsNonStatic[] = $attribute['attribute_id'];
+                $table = $attribute['entity_table'] . '_' . $attribute['backend_type'];
+                $tablesNonStatic[] = $table;
+                $attributeIdsNonStatic[$table][] = $attribute['attribute_id'];
             } else {
                 $attributeStaticCode[] = $attribute['attribute_code'];
             }
         }
         $tablesNonStatic = array_unique($tablesNonStatic);
-        $entityTable = reset($attributes)['entity_table'];
+        $first = reset($attributes);
+        $entityTable = $first['entity_table'];
 
         foreach ($tablesNonStatic as $table) {
             $fields = ['attribute_id', 'store_id', 'value', 'entity_id' => $this->linkField];
@@ -275,34 +183,23 @@ class AttributeMapper
                     $this->entityIds
                 )->where(
                     'attribute_id in (?)',
-                    $attributeIdsNonStatic
+                    $attributeIdsNonStatic[$table]
                 )->where(
                     'store_id in (?)',
-                    $this->storeId
+                    [0, $this->storeId]
                 );
+
             $result = $this->resource->getConnection()->fetchAll($select);
             foreach ($result as $item) {
                 if (array_key_exists($item['attribute_id'], $this->attrOptions)) {
-                    $attrValues = explode(',', (string)$item['value']);
-                    $item['value'] = [];
-                    foreach ($attrValues as $attrValue) {
-                        $attributeId = (string)$item['attribute_id'];
-                        try {
-                            $item['value'][] = $this->attrOptions[$attributeId]
-                            [$attrValue]
-                            [$item['store_id']];
-                        } catch (Exception $exception) {
-                            continue;
-                        }
-                    }
-                    $item['value'] = implode(',', $item['value']);
+                    $item['value'] = $this->resolveOptionValue($item);
                 }
                 if (isset($this->result[$relations[$item['attribute_id']]][$item['entity_id']])
                     && $item['store_id'] == 0) {
                     continue;
                 }
                 if (in_array($item['attribute_id'], $withUrl)) {
-                    $item['value'] = $this->getMediaUrl('catalog/product' . $item['value']);
+                    $item['value'] = $this->getMediaUrl($this->store, $item['value']);
                 }
                 $this->result[$relations[$item['attribute_id']]][$item['entity_id']] =
                     str_replace(["\r", "\n"], '', (string)$item['value']);
@@ -318,6 +215,7 @@ class AttributeMapper
             );
         $select->where("{$this->linkField} IN (?)", $this->entityIds);
         $result = $this->resource->getConnection()->fetchAll($select);
+
         foreach ($result as $item) {
             foreach ($attributeStaticCode as $static) {
                 if ($static == 'entity_id') {
@@ -328,24 +226,7 @@ class AttributeMapper
         }
     }
 
-    /**
-     * @param string $path
-     * @return string
-     */
-    private function getMediaUrl($path): string
-    {
-        if ($this->mediaUrl == null) {
-            try {
-                $this->mediaUrl = $this->storeManager->getStore()
-                    ->getBaseUrl(\Magento\Framework\UrlInterface::URL_TYPE_MEDIA);
-            } catch (\Exception $exception) {
-                $this->mediaUrl = '';
-            }
-        }
-        return $this->mediaUrl . $path;
-    }
-
-    private function adjustTaxClassLabels()
+    private function adjustTaxClassLabels(): void
     {
         if (!array_key_exists('tax_class_id', $this->result)) {
             return;
@@ -357,14 +238,42 @@ class AttributeMapper
         );
         $taxClassLabels = $connection->fetchPairs($selectClasses);
         foreach ($this->result['tax_class_id'] as &$taxClassId) {
-            $taxClassId = $taxClassLabels[$taxClassId];
+            $taxClassId = $taxClassLabels[$taxClassId] ?? 0;
         }
+    }
+
+    /**
+     * Resolve option label(s) for an EAV attribute value.
+     * Fast path for single-value attributes (no explode/implode overhead).
+     *
+     * @param array $item Row with 'attribute_id' and 'value' keys.
+     * @return string Resolved label(s), comma-separated for multi-select.
+     */
+    private function resolveOptionValue(array $item): string
+    {
+        $itemValue = (string)$item['value'];
+        $attributeId = (string)$item['attribute_id'];
+
+        if (strpos($itemValue, ',') === false) {
+            return isset($this->attrOptions[$attributeId][$itemValue])
+                ? $this->attrOptions[$attributeId][$itemValue]
+                : $itemValue;
+        }
+
+        $resolved = [];
+        foreach (array_filter(explode(',', $itemValue)) as $attrValue) {
+            if (isset($this->attrOptions[$attributeId][$attrValue])) {
+                $resolved[] = $this->attrOptions[$attributeId][$attrValue];
+            }
+        }
+
+        return implode(',', $resolved);
     }
 
     /**
      * Collect data not related to attributes
      */
-    private function collectExtraData()
+    private function collectExtraData(): void
     {
         $fields = array_unique([$this->linkField, 'type_id', 'created_at', 'updated_at', 'entity_id']);
         $select = $this->resource->getConnection()->select()
@@ -375,46 +284,20 @@ class AttributeMapper
                 $this->linkField . ' IN (?)',
                 $this->entityIds
             );
+
+        // The link field is resolved once per collector and is a column name by then; reading it
+        // into a local says so, and null as an array offset is a fatal on PHP 8.5.
+        $linkField = (string)$this->linkField;
+
         $items = $this->resource->getConnection()->fetchAll($select);
         foreach ($items as $item) {
+            if (!isset($item[$linkField])) {
+                continue;
+            }
+
             foreach ($fields as $field) {
-                $this->result[$field][$item[$this->linkField]] = $item[$field];
+                $this->result[$field][$item[$linkField]] = $item[$field];
             }
         }
-    }
-
-    /**
-     * @param string $type
-     */
-    public function resetData($type = 'all'): void
-    {
-        if ($type == 'all') {
-            unset($this->entityIds);
-            unset($this->map);
-            unset($this->entityTypeCode);
-            unset($this->storeId);
-        }
-        switch ($type) {
-            case 'store_id':
-                unset($this->storeId);
-                break;
-            case 'entity_ids':
-                unset($this->entityIds);
-                break;
-            case 'map':
-                unset($this->map);
-                break;
-            case 'entity_type_code':
-                unset($this->entityTypeCode);
-                break;
-        }
-    }
-
-    /**
-     * @return array
-     */
-    public function getRequiredParameters(): array
-    {
-        return self::REQUIRE;
     }
 }

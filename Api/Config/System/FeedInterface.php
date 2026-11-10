@@ -19,7 +19,7 @@ interface FeedInterface extends RepositoryInterface
     public const XPATH_FEED_ENABELD = 'tradetracker/feed/enable';
     public const XPATH_FEED_FILENAME = 'tradetracker/feed/filename';
     public const XPATH_FEED_RESULT = 'tradetracker/feeds/results';
-    public const XPATH_CRON_FREQUENCY = 'tradetracker/feeds/cron_frequency';
+    public const XPATH_CRON_FREQUENCY = 'tradetracker/feed/cron_frequency';
 
     /** Product Data Group */
     public const XML_PATH_NAME_SOURCE = 'tradetracker/feed/name_attribute';

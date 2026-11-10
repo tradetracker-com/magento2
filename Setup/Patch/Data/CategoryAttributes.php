@@ -3,6 +3,7 @@
  * Copyright © TradeTracker. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
 
 namespace TradeTracker\Connect\Setup\Patch\Data;
 
@@ -52,7 +53,7 @@ class CategoryAttributes implements DataPatchInterface, PatchRevertableInterface
     /**
      * @inheritDoc
      */
-    public function apply()
+    public function apply(): self
     {
         $this->moduleDataSetup->getConnection()->startSetup();
         $this->addExcludeCategoryAttribute();

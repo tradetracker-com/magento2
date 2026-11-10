@@ -1,0 +1,11 @@
+{
+    "description": "Test-only dependencies for the TradeTracker Connect module. Kept out of the module's own composer.json so the shipped package stays dependency-free, and installed separately because Magento's root autoloader excludes **/Test/** from its classmap, which breaks PHPUnit's own class map.",
+    "require-dev": {
+        "bitexpert/phpstan-magento": "^0.44",
+        "justinrainbow/json-schema": "^5.2",
+        "phpunit/phpunit": "^11.0"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
