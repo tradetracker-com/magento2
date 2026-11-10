@@ -13,7 +13,9 @@
 * PHP 8.2 or newer is required. PHP 8.1 and older receive no fix for CVE-2026-109618 and CVE-2026-109619 (remote code execution in PHP core, fixed in 8.2.35, 8.3.36, 8.4.27 and 8.5.12). The compile and PHPStan job runs PHP 8.2 on Magento 2.4.7-p10, 8.3 and 8.4 on 2.4.8-p5 and 8.5 on 2.4.9.
 * The passphrase is stored encrypted with the Magento encryption key. Existing plain-text values are encrypted automatically during `setup:upgrade`; the Check Credentials button tests with the stored passphrase of the selected scope.
 * The feed cron runs in its own cron group (`tradetracker`, separate process), so a long feed run no longer holds up Magento's default group.
-* PHPStan runs at level 8 without a baseline.
+* PHPStan runs at level 8 without a baseline, and every PHP file declares strict types.
+* The code passes the Magento coding standard at severity 6: the DirectLinking cookies are set through Magento's cookie manager, the log viewer reads through the filesystem driver, the feed writer escapes without a discouraged function, and the templates escape every output. CI runs the sniffer and a PHP 8.2 to 8.6 compatibility check on every pull request.
+* The end-to-end suite runs on Magento 2.4.7 and 2.4.9 in CI.
 * Every configuration field offers "Use system value", except the Extra Fields, Shipping Settings and Advanced Filters tables. A select whose first option means something (Yes, Static Values, Include) now has that choice declared as a default, so what the admin shows with the checkbox ticked is what the module reads.
 
 **Bugfixes:**
@@ -30,6 +32,7 @@
 * Fixed a simple that is both a grouped member and a bundle component never reaching the feed. The bundle setting "Only Bundle Product" dropped it whatever the grouped setting said; a child now stays as soon as one of its parent relations asks for simples, and goes only when every parent in the feed says parent only.
 * Fixed the URL rewrites of a previous DirectLinking Url Key staying behind after the key changes. The rewrites this module wrote for the same store view under another key are removed when the new one is saved.
 * Fixed `fromPrice` equalling `price` for a discounted product. The feed published the lowest price twice; `fromPrice` is now the regular price and `price` the selling price.
+* Fixed the transaction status action answering a request without an order id with an exception page; it now returns the error as a result.
 * Removed three defaults from `etc/config.xml` that no field reads (`gtin_attribute`, `condition_type`, `condition_default`).
 
 **Tests:**
@@ -47,6 +50,7 @@
 * `CanRestoreSelectDefaultTest` pins that every select whose first option means something has a default in `config.xml`.
 * `MigrateConfigPathsTest` pins the three configuration migrations of this release and that a store already on the new shape is left alone.
 * `advanced-filters.spec.ts` now removes the filters it set, so the feed of the next spec is not filtered by its leftovers.
+* Added the baseline end-to-end layer: every configuration field of both sections set through the admin form and read back, the same with every switch off, every admin controller answering a bare request without an exception, and the feed still generating in both states.
 * `E2E-TESTS.md` is generated from the Playwright test list.
 
 **Compatibility:**
