@@ -30,7 +30,7 @@ interface RepositoryInterface
      * @param string $type
      * @param mixed $data
      */
-    public function addErrorLog(string $type, $data);
+    public function addErrorLog(string $type, $data): void;
 
     /**
      * Add record to debug log
@@ -38,7 +38,7 @@ interface RepositoryInterface
      * @param string $type
      * @param mixed $data
      */
-    public function addDebugLog(string $type, $data);
+    public function addDebugLog(string $type, $data): void;
 
     /**
      * Returns path of logfile

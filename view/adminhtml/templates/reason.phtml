@@ -4,7 +4,7 @@
  * See COPYING.txt for license details.
  */
 
-/** @var $block TradeTracker\Connect\Block\Adminhtml\Status\Edit */
+/** @var TradeTracker\Connect\Block\Adminhtml\Status\Edit $block */
 ?>
 <div id="mp_edit_transaction_reason" style="display: none">
     <form class="form change-transaction-reason"
@@ -14,7 +14,7 @@
           data-mage-init='{"validation": {"errorClass": "mage-error"}}'>
         <div class="wrapper">
             <p><?= $block->escapeHtml(__('Please select the reason for rejecting this transaction:')) ?></p>
-            <input type="hidden" name="order_id" value="<?= $block->escapeHtml($block->getOrderId()) ?>"/>
+            <input type="hidden" name="order_id" value="<?= $block->escapeHtml((string)$block->getOrderId()) ?>"/>
             <select name="reason" class="admin__control-text reason-select data-grid-search-control">
                 <option value="returned_goods">
                     <?= $block->escapeHtml('Returned goods'); ?>

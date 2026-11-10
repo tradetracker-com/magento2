@@ -31,12 +31,32 @@ class UrlRewrite
         $this->resource = $resource;
     }
 
+    private const ENTITY_TYPE = 'trade_tracker';
+    private const TARGET_PATH = 'tradetracker/redirect';
+
     /**
+     * Save the rewrite for this key and store view, and drop the ones this module wrote for the
+     * same store view under another key, so a changed Url Key does not leave the old one working.
+     *
      * @param array $data
      */
     public function execute(array $data): void
     {
         $this->setRewrite($data);
+        $this->removeOthers((string)$data['request_path'], (int)$data['store_id']);
+    }
+
+    private function removeOthers(string $requestPath, int $storeId): void
+    {
+        $this->resource->getConnection()->delete(
+            $this->resource->getTableName('url_rewrite'),
+            [
+                'entity_type = ?' => self::ENTITY_TYPE,
+                'target_path = ?' => self::TARGET_PATH,
+                'store_id = ?' => $storeId,
+                'request_path != ?' => $requestPath,
+            ]
+        );
     }
 
     /**

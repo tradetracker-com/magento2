@@ -81,7 +81,7 @@ class Changelog extends Action
         $current = $latest = preg_replace('/^v/', '', $this->configRepository->getExtensionVersion());
         $data = $this->json->unserialize($result);
         $logs = [];
-        foreach ($data as $version => $log) {
+        foreach (is_array($data) ? $data : [] as $version => $log) {
             if (version_compare((string)$current, (string)$version) == -1) {
                 $logs[$version] = $log;
             }

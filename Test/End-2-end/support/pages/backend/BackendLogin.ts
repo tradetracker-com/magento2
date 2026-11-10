@@ -3,11 +3,11 @@
  * See COPYING.txt for license details.
  */
 
-import { expect } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
 import { adminUrl } from '../../helpers/AdminUrl';
 
 export default class BackendLogin {
-  async login(page, maxRetries = 3) {
+  async login(page: Page, maxRetries = 3) {
     const username = process.env.MAGENTO_ADMIN_USER || 'exampleuser';
     const password = process.env.MAGENTO_ADMIN_PASS || 'examplepassword123';
 

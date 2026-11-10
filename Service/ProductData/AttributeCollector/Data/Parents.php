@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © TradeTracker. All rights reserved.
+ * Copyright © Magmodules.eu. All rights reserved.
  * See COPYING.txt for license details.
  */
 declare(strict_types=1);
@@ -15,30 +15,30 @@ use Magento\Catalog\Model\Product\Attribute\Source\Status;
 class Parents extends AbstractDataCollector
 {
 
-    /**
-     * @param array $productIds
-     * @param bool $excludeDisabled
-     * @param int $storeId
-     * @return array
-     */
-    public function execute(array $productIds, bool $excludeDisabled, int $storeId): array
-    {
-        return $this->collectParentsData($productIds, $excludeDisabled, $storeId);
+    public function execute(
+        array $productIds,
+        bool $excludeDisabled,
+        int $storeId,
+        bool $allProducts = false
+    ): array {
+        return $this->collectParentsData($productIds, $excludeDisabled, $storeId, $allProducts);
     }
 
     /**
      * Collect parent product data for given child product IDs.
      *
-     * Includes website filtering, visibility filtering (exclude Not Visible Individually parents),
-     * and optional disabled parent filtering.
-     *
      * @param array<int> $productIds List of child product IDs to search for.
      * @param bool $excludeDisabled Whether to exclude disabled parent products.
      * @param int $storeId Store ID used for visibility filtering.
+     * @param bool $allProducts Map the whole catalogue and ignore $productIds.
      * @return array<int, array<int, string>> Mapping of child IDs to parent IDs and their type_id.
      */
-    private function collectParentsData(array $productIds, bool $excludeDisabled, int $storeId): array
-    {
+    private function collectParentsData(
+        array $productIds,
+        bool $excludeDisabled,
+        int $storeId,
+        bool $allProducts = false
+    ): array {
         $result = [];
 
         $connection = $this->resource->getConnection();
@@ -62,7 +62,9 @@ class Parents extends AbstractDataCollector
                 []
             )->where('cpw.website_id = ?', $websiteId);
 
-        if ($productIds !== null) {
+        // A feed run passes the ids it is building; a caller that wants the catalogue-wide parent
+        // map asks for it, rather than an empty list quietly meaning "everything".
+        if (!$allProducts) {
             $select->where('cpr.child_id IN (?)', $productIds);
         }
 

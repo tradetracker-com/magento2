@@ -1,9 +1,29 @@
+includes:
+    - Test/vendor/bitexpert/phpstan-magento/extension.neon
+
 parameters:
-    level: 1
+    level: 8
     reportUnmatchedIgnoredErrors: false
+    # Magento's docblock types are often narrower than what the methods return (false, null); checks on them stay.
+    treatPhpDocTypesAsCertain: false
     ignoreErrors:
+        # Docblock completeness is not what level 8 is here for; argument and return types are.
+        - identifier: missingType.iterableValue
+        - identifier: missingType.parameter
+        - identifier: missingType.return
+        # Templates echo block getters whose types Magento does not declare; the escaper calls around them stay checked.
+        - identifier: echo.nonString
         - '#Variable \$block might not be defined.#'
         - '#Undefined variable: \$block#'
+        # Magento returns these interfaces but always hands out the concrete class, whose extra methods the module relies on.
+        - '#Call to an undefined method Magento\\Store\\Api\\Data\\StoreInterface::#'
+        - '#Call to an undefined method Magento\\Framework\\App\\Config\\ValueInterface::#'
+        - '#Call to an undefined method Magento\\Catalog\\Api\\Data\\ProductAttributeInterface::#'
+        - '#Call to an undefined method Magento\\Framework\\View\\Element\\BlockInterface::#'
+        # Magento's collection and select docblocks are narrower than what the methods accept.
+        - '#::addFieldToFilter\(\) expects #'
+        - '#::addFieldToSelect\(\) expects string, array#'
+        - '#Select::where\(\) expects array\|int\|string\|null, Magento\\Framework\\DB\\Select given#'
     fileExtensions:
         - php
         - phtml

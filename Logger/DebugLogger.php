@@ -33,9 +33,9 @@ class DebugLogger
     public function addLog(string $type, $data): void
     {
         if (is_array($data) || is_object($data)) {
-            $this->logger->info( $type . ': ' . $this->json->serialize($data));
+            $this->logger->info($type . ': ' . $this->json->serialize(is_object($data) ? (array)$data : $data));
         } else {
-            $this->logger->info( $type . ': ' . $data);
+            $this->logger->info($type . ': ' . $data);
         }
     }
 }

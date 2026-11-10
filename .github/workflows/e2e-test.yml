@@ -1,28 +1,69 @@
-name: End-2-end Tests
+name: E2E Tests
+
 on:
-  push:
-    tags:
-      - '*'
   pull_request:
-    types:
-      - opened
-      - synchronize
-      - labeled
+    types: [opened, synchronize, labeled]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
   workflow_dispatch:
 
+# A superseded run would otherwise keep a runner for its full hour while the push that replaced it
+# waits in the queue. The older run's result is worthless by then, so drop it.
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  e2e-tests:
-    if: ${{ github.event.label.name == 'run_e2e_tests' || github.event.action != 'labeled' }}
+  remove-label:
+    if: >-
+      github.event.label.name == 'run_e2e_tests' ||
+      contains(github.event.pull_request.labels.*.name, 'run_e2e_tests')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove run_e2e_tests label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // A label that is already gone is not a failure: the run is triggered by both the
+            // label and the push, so whichever job gets there second finds nothing to remove.
+            try {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: 'run_e2e_tests'
+              });
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+              core.info('Label run_e2e_tests was already removed.');
+            }
+
+  e2e:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.label.name == 'run_e2e_tests' ||
+      contains(github.event.pull_request.labels.*.name, 'run_e2e_tests') ||
+      (github.event_name == 'pull_request' && github.event.action != 'labeled' && startsWith(github.head_ref, 'release/'))
     strategy:
       fail-fast: false
       matrix:
         include:
           - PHP_VERSION: php83-fpm
             MAGENTO_VERSION: 2.4.7-p3
-    runs-on: ubuntu-latest
+          - PHP_VERSION: php85-fpm
+            MAGENTO_VERSION: 2.4.9
+    # Pinned on purpose: ubuntu-latest moved to a release Playwright has no Chromium build for.
+    runs-on: ubuntu-24.04
+    # A full suite takes about an hour on a GitHub runner; at 45 the job was cancelled mid-suite and
+    # printed no summary at all.
+    timeout-minutes: 90
     env:
       PHP_VERSION: ${{ matrix.PHP_VERSION }}
       MAGENTO_VERSION: ${{ matrix.MAGENTO_VERSION }}
+
     steps:
       - uses: actions/checkout@v4
 
@@ -44,10 +85,7 @@ jobs:
         run: |
           docker exec magento-project-community-edition ./retry "php bin/magento module:enable TradeTracker_Connect"
           docker exec magento-project-community-edition ./retry "php bin/magento setup:upgrade --keep-generated --no-interaction"
-
-      - name: Configure TradeTracker
-        run: |
-          docker exec magento-project-community-edition /bin/bash /data/configure-tradetracker.sh
+          docker exec magento-project-community-edition ./retry "php bin/magento cache:flush"
 
       - name: Prepare Magento
         run: |
@@ -60,6 +98,73 @@ jobs:
           docker exec magento-project-community-edition ./retry "php bin/magento setup:di:compile"
           docker exec magento-project-community-edition ./retry "php bin/magento setup:static-content:deploy -f"
           docker exec magento-project-community-edition ./retry "php bin/magento indexer:reindex"
+          docker exec magento-project-community-edition ./retry "php bin/magento cache:flush"
+
+      # The image ships MySQL defaults: a 128 MB buffer pool and an fsync on every commit. On a
+      # machine that runs nothing else that is survivable; on a shared host it is the whole run's
+      # bottleneck (91% idle CPU, everything waiting on disk). A throwaway test database does not
+      # need durability, so trade it for speed.
+      - name: Tune the test database for throughput
+        run: |
+          docker exec magento-project-community-edition mysql -uroot -proot -e "
+            SET GLOBAL innodb_flush_log_at_trx_commit = 2;
+            SET GLOBAL innodb_buffer_pool_size = 2147483648;
+            SET GLOBAL sync_binlog = 0;
+          " || echo "could not tune MySQL; continuing"
+          # SET GLOBAL resizes the buffer pool in chunks and quietly rounds to a multiple of
+          # innodb_buffer_pool_chunk_size, so the value asked for is not necessarily the value set.
+          docker exec magento-project-community-edition mysql -uroot -proot -e "
+            SHOW VARIABLES WHERE Variable_name IN
+              ('innodb_buffer_pool_size','innodb_buffer_pool_chunk_size','innodb_flush_log_at_trx_commit','sync_binlog','version');
+          " || true
+
+      # The image ships PHP defaults, which means no opcode cache for the CLI at all. The suite makes
+      # well over a hundred `bin/magento` calls and every one of them recompiles Magento's bootstrap
+      # from source. Applied at runtime so no image has to be rebuilt.
+      - name: Give PHP an opcode cache
+        run: |
+          docker exec magento-project-community-edition bash -c '
+            V=$(php -r "echo PHP_MAJOR_VERSION . chr(46) . PHP_MINOR_VERSION;")
+            for SAPI in cli fpm; do
+              D=/etc/php/$V/$SAPI/conf.d
+              [ -d "$D" ] || continue
+              # The CLI stats every file (a run regenerates code between invocations); FPM may
+              # trust its cache for a minute.
+              [ "$SAPI" = cli ] && FREQ=0 || FREQ=60
+              printf "%s\n" \
+                "opcache.enable=1" \
+                "opcache.enable_cli=1" \
+                "opcache.memory_consumption=256" \
+                "opcache.interned_strings_buffer=16" \
+                "opcache.max_accelerated_files=30000" \
+                "opcache.validate_timestamps=1" \
+                "opcache.revalidate_freq=$FREQ" \
+                "opcache.jit_buffer_size=128M" \
+                "opcache.jit=1255" > "$D/99-opcache.ini"
+            done
+            supervisorctl restart php-fpm || kill -USR2 "$(cat /run/php/php*-fpm.pid)" || true
+            php -r "echo \"opcache.enable_cli=\", ini_get(\"opcache.enable_cli\"), chr(10);"
+          ' || echo "could not configure opcache; continuing"
+
+      # The image runs Redis but Magento is not pointed at it, so the cache falls back to files in
+      # var/cache. Those files sit on overlay2 inside docker-in-docker, two stacked layers deep, and
+      # every bin/magento bootstrap reads thousands of them. Only switch when Redis actually answers:
+      # an env.php aimed at a Redis that is not there takes the whole shop down.
+      - name: Put the cache on Redis
+        run: |
+          if ! docker exec magento-project-community-edition redis-cli -h 127.0.0.1 ping | grep -q PONG; then
+            echo "Redis does not answer; leaving the cache on files"
+            exit 0
+          fi
+          docker exec magento-project-community-edition ./retry "bin/magento setup:config:set -n \
+            --cache-backend=redis --cache-backend-redis-server=127.0.0.1 --cache-backend-redis-db=0"
+          docker exec magento-project-community-edition ./retry "bin/magento setup:config:set -n \
+            --page-cache=redis --page-cache-redis-server=127.0.0.1 --page-cache-redis-db=1"
+          docker exec magento-project-community-edition ./retry "bin/magento cache:flush"
+
+      - name: Configure the module
+        run: |
+          docker exec magento-project-community-edition /bin/bash /data/configure-tradetracker.sh
 
       - name: Check if we can reach the Magento frontend
         run: |
@@ -69,13 +174,18 @@ jobs:
         run: |
           curl --fail-with-body -k -v -w "%{http_code}" https://magento.test/admin/
 
-      - name: Install Playwright dependencies
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright
         run: |
           cd Test/End-2-end
           npm install
           npx playwright install --with-deps chromium
 
-      - name: Run Playwright tests
+      - name: Run E2E tests
         run: |
           cd Test/End-2-end
           BASE_URL="https://magento.test/" \
@@ -88,14 +198,14 @@ jobs:
         run: |
           docker compose -f .github/workflows/templates/docker-compose.yml logs magento > magento.log
 
-      - name: Upload playwright logs
+      - name: Upload report
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           name: E2E logs - ${{ matrix.PHP_VERSION }} - ${{ matrix.MAGENTO_VERSION }}
-          retention-days: 3
+          retention-days: 14
           path: |
             Test/End-2-end/playwright-report
             Test/End-2-end/test-results
-            magento-logs
+            magento.log
             magento.log

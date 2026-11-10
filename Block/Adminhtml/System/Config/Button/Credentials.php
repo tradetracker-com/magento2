@@ -25,8 +25,19 @@ class Credentials extends Field
         return $this->_toHtml();
     }
 
+    /**
+     * AJAX url for the credentials check, carrying the scope currently selected in the configuration.
+     *
+     * @return string
+     */
     public function getApiCheckUrl(): string
     {
-        return $this->getUrl('tradetracker/credentials/check');
+        $params = [];
+        foreach (['store', 'website'] as $scope) {
+            if ($scopeId = (int)$this->getRequest()->getParam($scope)) {
+                $params[$scope] = $scopeId;
+            }
+        }
+        return $this->getUrl('tradetracker/credentials/check', $params);
     }
 }

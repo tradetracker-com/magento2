@@ -38,7 +38,7 @@ class PixelRepository extends ConfigRepository implements PixelInterface
     public function getCustomCurrencyCode(?int $storeId = null): ?string
     {
         $customCurrencyCode = $this->getStoreValue(self::XML_PATH_NON_DEFAULT_CURRENCY, $storeId);
-        if (empty($customCurrencyCode) || $this->isSetFlag(self::XML_PATH_OVERWRITE_CURRENCY, $storeId)) {
+        if (empty($customCurrencyCode) || !$this->isSetFlag(self::XML_PATH_OVERWRITE_CURRENCY, $storeId)) {
             return null;
         }
 

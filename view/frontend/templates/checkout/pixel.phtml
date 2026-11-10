@@ -47,16 +47,11 @@ $viewModel = $block->getViewModel();
 
             <?php
             // @phpstan-ignore-next-line
-            if (isset($secureRenderer)) {
-                echo /* @noEscape */ $secureRenderer->renderTag('script', ['type' => 'text/javascript'], $script, false);
-            }
+            $scriptTag = isset($secureRenderer)
+                ? $secureRenderer->renderTag('script', ['type' => 'text/javascript'], $script, false)
+                : '<script type="text/javascript">' . $script . '</script>';
             ?>
-            <?php
-            // @phpstan-ignore-next-line
-            if (!isset($secureRenderer)) {
-                echo /* @noEscape */ '<script type="text/javascript">' . $script . '</script>';
-            }
-            ?>
+            <?= /* @noEscape */ $scriptTag ?>
 
             <?php
             // Build noscript pixel
@@ -98,47 +93,35 @@ $viewModel = $block->getViewModel();
 
             <?php
             // @phpstan-ignore-next-line
-            if (isset($secureRenderer)) {
-                echo $secureRenderer->renderTag('noscript', [], $noscriptHtml, false);
-            }
+            $noscriptTag = isset($secureRenderer)
+                ? $secureRenderer->renderTag('noscript', [], $noscriptHtml, false)
+                : '<noscript>' . $noscriptHtml . '</noscript>';
             ?>
-            <?php
-            // @phpstan-ignore-next-line
-            if (!isset($secureRenderer)) {
-                echo '<noscript>' . $noscriptHtml . '</noscript>';
-            }
-            ?>
+            <?= /* @noEscape */ $noscriptTag ?>
         <?php endforeach; ?>
 
         <?php
         $loader = <<<JS
-(function (ttConversionOptions) {
-    var campaignID = 'campaignID' in ttConversionOptions
-        ? ttConversionOptions.campaignID
-        : ('length' in ttConversionOptions && ttConversionOptions.length
-            ? ttConversionOptions[0].campaignID : null);
-    var tt = document.createElement('script');
-    tt.type = 'text/javascript';
-    tt.async = true;
-    tt.src = '//tm.tradetracker.net/conversion?s=' + encodeURIComponent(campaignID) + '&t=m';
-    var s = document.getElementsByTagName('script');
-    s = s[s.length - 1];
-    s.parentNode.insertBefore(tt, s);
-})(ttConversionOptions);
-JS;
-?>
-        <?php
+            (function (ttConversionOptions) {
+                var campaignID = 'campaignID' in ttConversionOptions
+                    ? ttConversionOptions.campaignID
+                    : ('length' in ttConversionOptions && ttConversionOptions.length
+                        ? ttConversionOptions[0].campaignID : null);
+                var tt = document.createElement('script');
+                tt.type = 'text/javascript';
+                tt.async = true;
+                tt.src = '//tm.tradetracker.net/conversion?s=' + encodeURIComponent(campaignID) + '&t=m';
+                var s = document.getElementsByTagName('script');
+                s = s[s.length - 1];
+                s.parentNode.insertBefore(tt, s);
+            })(ttConversionOptions);
+            JS;
         // @phpstan-ignore-next-line
-        if (isset($secureRenderer)) {
-            echo $secureRenderer->renderTag('script', ['type' => 'text/javascript'], $loader, false);
-        }
+        $loaderTag = isset($secureRenderer)
+            ? $secureRenderer->renderTag('script', ['type' => 'text/javascript'], $loader, false)
+            : '<script type="text/javascript">' . $loader . '</script>';
         ?>
-        <?php
-        // @phpstan-ignore-next-line
-        if (!isset($secureRenderer)) {
-            echo '<script type="text/javascript">' . $loader . '</script>';
-        }
-        ?>
+        <?= /* @noEscape */ $loaderTag ?>
     <?php endif; ?>
 <?php endif; ?>
 <!-- END TRADETRACKER PIXEL -->

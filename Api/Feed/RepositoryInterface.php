@@ -20,6 +20,8 @@ interface RepositoryInterface
     public const PREVIEW_URL = 'tradetracker/feed/preview';
     public const DOWNLOAD_URL = 'tradetracker/feed/download';
     public const GENERATE_URL = 'tradetracker/feed/generate';
+    public const AJAX_GENERATE_URL = 'tradetracker/feed/ajaxGenerate';
+    public const PROGRESS_URL = 'tradetracker/feed/progress';
 
     /**
      * Returns feed configuration data array for all stores
@@ -32,10 +34,10 @@ interface RepositoryInterface
      * Returns feed location data array for store
      *
      * @param int $storeId
-     * @param null $type
+     * @param string|null $type
      * @return array
      */
-    public function getFeedLocation(int $storeId, $type = null): array;
+    public function getFeedLocation(int $storeId, ?string $type = null): array;
 
     /**
      * Generate feed and write to file

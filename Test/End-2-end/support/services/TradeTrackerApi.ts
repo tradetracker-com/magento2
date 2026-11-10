@@ -21,6 +21,11 @@ export interface ParsedFeed {
 }
 
 export default class TradeTrackerApi extends BaseApi {
+  /** The configuration path prefix of this module, for the generic layer. */
+  protected modulePrefix(): string {
+    return 'tradetracker';
+  }
+
   /**
    * Generate the TradeTracker feed via CLI.
    */

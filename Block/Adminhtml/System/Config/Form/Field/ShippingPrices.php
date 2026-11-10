@@ -3,6 +3,7 @@
  * Copyright © TradeTracker. All rights reserved.
  * See COPYING.txt for license details.
  */
+declare(strict_types=1);
 
 namespace TradeTracker\Connect\Block\Adminhtml\System\Config\Form\Field;
 
@@ -29,6 +30,6 @@ class ShippingPrices extends AbstractFieldArray
             'label' => __('Price'),
         ]);
         $this->_addAfter = false;
-        $this->_addButtonLabel = __('Add');
+        $this->_addButtonLabel = (string)__('Add');
     }
 }

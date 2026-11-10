@@ -1,151 +1,122 @@
 <?php
 /**
- * Copyright © TradeTracker. All rights reserved.
+ * Copyright © Magmodules.eu. All rights reserved.
  * See COPYING.txt for license details.
  */
 declare(strict_types=1);
 
 namespace TradeTracker\Connect\Service\ProductData\AttributeCollector\Data;
 
-use Exception;
-use Magento\Catalog\Api\Data\ProductInterface;
-use Magento\Framework\App\ResourceConnection;
-use Magento\Framework\EntityManager\MetadataPool;
-use Magento\Framework\Module\Manager as ModuleManager;
-use Magento\Store\Api\StoreRepositoryInterface;
+use Magento\Store\Api\Data\StoreInterface;
 
-/**
- * Service class for stock data
- */
-class Stock
+class Stock extends AbstractDataCollector
 {
 
-    public const REQUIRE = [
-        'entity_ids'
-    ];
+    private array $entityIds;
+    private StoreInterface $store;
 
-    /**
-     * @var ResourceConnection
-     */
-    private $resource;
-    /**
-     * @var array[]
-     */
-    private $entityIds;
-    /**
-     * @var ModuleManager
-     */
-    private $moduleManager;
-    /**
-     * @var string
-     */
-    private $linkField;
-    /**
-     * @var StoreRepositoryInterface
-     */
-    private $storeRepository;
-
-    /**
-     * Price constructor.
-     *
-     * @param ResourceConnection $resource
-     * @param ModuleManager $moduleManager
-     * @param StoreRepositoryInterface $storeRepository
-     * @param MetadataPool $metadataPool
-     * @throws Exception
-     */
-    public function __construct(
-        ResourceConnection $resource,
-        ModuleManager $moduleManager,
-        StoreRepositoryInterface $storeRepository,
-        MetadataPool $metadataPool
-    ) {
-        $this->resource = $resource;
-        $this->moduleManager = $moduleManager;
-        $this->storeRepository = $storeRepository;
-        $this->linkField = $metadataPool->getMetadata(ProductInterface::class)->getLinkField();
-    }
-
-    /**
-     * Get stock data
-     *
-     * @param array $productIds
-     * @return array[]
-     */
-    public function execute(array $productIds = []): array
+    public function execute(array $productIds, StoreInterface $store, bool $allChannels = false): array
     {
-        $this->setData('entity_ids', $productIds);
+        $this->store = $store;
+        $this->entityIds = $productIds;
+
         return ($this->isMsiEnabled())
-            ? $this->getMsiStock()
+            ? $this->getMsiStock($allChannels)
             : $this->getNoMsiStock();
     }
 
     /**
-     * @param string $type
-     * @param mixed $data
-     */
-    public function setData(string $type, $data)
-    {
-        if (!$data) {
-            return;
-        }
-        if ($type == 'entity_ids') {
-            $this->entityIds = $data;
-        }
-    }
-
-    /**
-     * Check is MSI enabled
+     * Get stock qty for specified products if MSI enabled.
      *
-     * @return bool
-     */
-    private function isMsiEnabled(): bool
-    {
-        return $this->moduleManager->isEnabled('Magento_Inventory');
-    }
-
-    /**
-     * Get stock qty for specified products if MSI enabled
+     * The top-level figures are those of the sales channel the store belongs to, which is the feed
+     * this run is building. With $allChannels the other channels are reported alongside, so a
+     * caller that sells the same catalogue through several websites can see all of them at once.
      *
-     * Structure of response
      * [product_id] => [
      *      qty
      *      is_in_stock
-     *      reserved
+     *      is_salable
+     *      availability
      *      salable_qty
-     *      ["msi"]=> [
-     *          channel => [
+     *      ["msi"] => [                     // only with $allChannels
+     *          stock_id => [
      *              qty
      *              availability
      *              is_salable
      *              salable_qty
+     *              own_channel              // true for the store's own channel
      *          ]
      *      ]
      * ]
      *
+     * @param bool $allChannels Also report every other sales channel under ["msi"].
      * @return array[]
      */
-    private function getMsiStock(): array
+    private function getMsiStock(bool $allChannels = false): array
     {
-        $channels = $this->getChannels();
-        $stockData = $this->collectMsi($channels);
-        $result = $this->getNoMsiStock(true);
+        $storeId = (int)$this->store->getId();
+        $stockId = $this->getStockId($storeId);
+        $stockData = $this->collectMsi($stockId);
+        $reservations = $this->collectMsiReservations($stockId);
+        $result = $this->getNoMsiStock();
 
         foreach ($stockData as $value) {
-            foreach ($channels as $channel) {
-                if (!array_key_exists($value['product_id'], $result)) {
+            if (!array_key_exists($value['product_id'], $result)) {
+                continue;
+            }
+
+            $quantity = (int)($value['quantity'] ?? 0);
+            // Keep the reservations map intact: assigning the product's own figure back over it
+            // left every product after the first one reading an int offset, so only the first
+            // had its reservations subtracted and the rest published a salable_qty that was too
+            // high by exactly the reserved amount.
+            $reserved = max((int)($reservations[$value['product_id']] ?? 0), 0);
+
+            $result[$value['product_id']]['qty'] = $quantity;
+            $result[$value['product_id']]['is_salable'] = $value['is_salable'] ?? 0;
+            $result[$value['product_id']]['availability'] = $value['is_salable'] ?? 0;
+            $result[$value['product_id']]['is_in_stock'] = $value['is_salable'] ?? 0;
+            $result[$value['product_id']]['salable_qty'] = $quantity - $reserved;
+        }
+
+        if ($allChannels) {
+            $result = $this->addChannelStock($result, $stockId);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Report every website sales channel per product, the store's own included.
+     *
+     * The top-level figures stay the ones of the channel this feed run is for; a caller that needs
+     * to know what the other channels hold reads them here, keyed by stock id, instead of the feed
+     * carrying a column per channel.
+     *
+     * @param array[] $result
+     * @param int $ownStockId
+     * @return array[]
+     */
+    private function addChannelStock(array $result, int $ownStockId): array
+    {
+        foreach ($this->getChannelStockIds() as $stockId) {
+            $reservations = $this->collectMsiReservations($stockId);
+            foreach ($this->collectMsi($stockId) as $value) {
+                $productId = $value['product_id'];
+                if (!array_key_exists($productId, $result)) {
                     continue;
                 }
 
-                $qty = $value[sprintf('quantity_%s', (int)$channel)];
-                $reserved = max($result[$value['product_id']]['reserved'], 0);
-                $salableQty = $qty - $reserved;
+                $quantity = (int)($value['quantity'] ?? 0);
+                $reserved = max((int)($reservations[$productId] ?? 0), 0);
+                $salable = $value['is_salable'] ?? 0;
 
-                $result[$value['product_id']]['msi'][$channel] = [
-                    'qty' => (int)($value[sprintf('quantity_%s', (int)$channel)] ?? 0),
-                    'is_salable' => $value[sprintf('is_salable_%s', (int)$channel)] ?? 0,
-                    'availability' => $value[sprintf('is_salable_%s', (int)$channel)] ?? 0,
-                    'salable_qty' => $salableQty ?: 0
+                $result[$productId]['msi'][$stockId] = [
+                    'qty' => $quantity,
+                    'availability' => $salable,
+                    'is_salable' => $salable,
+                    'salable_qty' => $quantity - $reserved,
+                    'own_channel' => $stockId === $ownStockId,
                 ];
             }
         }
@@ -154,53 +125,129 @@ class Stock
     }
 
     /**
+     * Every stock a website sells from.
+     *
+     * @return array<int, int>
+     */
+    private function getChannelStockIds(): array
+    {
+        try {
+            $select = $this->resource->getConnection()->select()
+                ->from($this->resource->getTableName('inventory_stock_sales_channel'), ['stock_id'])
+                ->where('type = ?', 'website');
+
+            return array_map('intval', array_unique($this->resource->getConnection()->fetchCol($select)));
+        } catch (\Exception $exception) {
+            $this->logRepository->addErrorLog('MSI getChannelStockIds', $exception->getMessage());
+            return [];
+        }
+    }
+
+    /**
      * Get MSI stock channels
      *
-     * @return array[]
+     * @param int $storeId
+     * @return int
      */
-    private function getChannels(): array
+    private function getStockId(int $storeId): int
     {
-        $select = $this->resource->getConnection()->select()
-            ->from($this->resource->getTableName('inventory_stock_sales_channel'), ['stock_id'])
-            ->where('type = ?', 'website');
-        return array_unique($this->resource->getConnection()->fetchCol($select));
+        try {
+            $website = $this->websiteRepository->getById($this->store->getWebsiteId());
+            $select = $this->resource->getConnection()->select()
+                ->from(
+                    $this->resource->getTableName('inventory_stock_sales_channel'),
+                    ['stock_id']
+                )
+                ->where('type = ?', 'website')
+                ->where('code = ?', $website->getCode())
+                ->limit(1);
+            return (int)$this->resource->getConnection()->fetchOne($select);
+        } catch (\Exception $exception) {
+            $this->logRepository->addErrorLog('MSI getStockId', $exception->getMessage());
+            return 1;
+        }
     }
 
     /**
      * Collect MSI stock data
      *
-     * @param array[] $channels
+     * @param int $stockId
      * @return array[]
      */
-    private function collectMsi(array $channels): array
+    private function collectMsi(int $stockId): array
     {
-        $select = $this->resource->getConnection()->select()
+        $connection = $this->resource->getConnection();
+        $stockView = sprintf('inventory_stock_%s', (int)$stockId);
+
+        if ($this->tableExistsAndNotEmpty($stockView)) {
+            $select = $connection->select()
+                ->from(
+                    ['cpe' => $this->resource->getTableName('catalog_product_entity')],
+                    ['product_id' => 'entity_id', $this->linkField]
+                )
+                ->where('cpe.entity_id IN (?)', $this->entityIds)
+                ->joinLeft(
+                    ['inv_stock' => $this->resource->getTableName($stockView)],
+                    'cpe.sku = inv_stock.sku',
+                    ['quantity', 'is_salable']
+                );
+
+            return $connection->fetchAll($select);
+        }
+
+        // Fallback: sum quantity across all sources (legacy)
+        $select = $connection->select()
             ->from(
                 ['cpe' => $this->resource->getTableName('catalog_product_entity')],
-                ['product_id' => 'entity_id', $this->linkField]
+                ['product_id' => 'entity_id', $this->linkField, 'sku']
+            )
+            ->where('cpe.entity_id IN (?)', $this->entityIds)
+            ->joinLeft(
+                ['source_item' => $this->resource->getTableName('inventory_source_item')],
+                'cpe.sku = source_item.sku',
+                [
+                    'quantity' => new \Zend_Db_Expr('SUM(source_item.quantity)'),
+                    'is_salable' => new \Zend_Db_Expr('IF(SUM(source_item.quantity) > 0, 1, 0)')
+                ]
+            )
+            ->group('cpe.entity_id');
+
+        return $connection->fetchAll($select);
+    }
+
+    /**
+     * Collects reservation quantities for given products and stock ID.
+     *
+     * @param int $stockId
+     * @return array<int, float> Keyed by product_id
+     */
+    private function collectMsiReservations(int $stockId): array
+    {
+        $reservationsTable = $this->resource->getTableName('inventory_reservation');
+
+        if (!$this->tableExistsAndNotEmpty($reservationsTable)) {
+            return [];
+        }
+
+        $connection = $this->resource->getConnection();
+        $select = $connection->select()
+            ->from(
+                ['cpe' => $this->resource->getTableName('catalog_product_entity')],
+                ['product_id' => 'entity_id']
             )->where(
                 'cpe.entity_id IN (?)',
                 $this->entityIds
-            );
+            )->joinLeft(
+                ['inv_res' => $reservationsTable],
+                $connection->quoteInto('inv_res.sku = cpe.sku AND inv_res.stock_id = ?', $stockId),
+                ['reserved' => 'SUM(COALESCE(inv_res.quantity, 0))']
+            )->group('cpe.entity_id');
 
-        foreach ($channels as $channel) {
-            $table = sprintf('inventory_stock_%s', (int)$channel);
-            $select->joinLeft(
-                [$table => $this->resource->getTableName($table)],
-                "cpe.sku = {$table}.sku",
-                [
-                    sprintf('quantity_%s', (int)$channel) => "{$table}.quantity",
-                    sprintf('is_salable_%s', (int)$channel) => "{$table}.is_salable"
-                ]
-            );
-        }
-
-        return $this->resource->getConnection()->fetchAll($select);
+        return $connection->fetchPairs($select);
     }
 
     /**
      * Get stock qty for products without MSI
-     *
      * Structure of response
      * [product_id] => [
      *      qty
@@ -212,10 +259,9 @@ class Stock
      *      min_sale_qty
      * ]
      *
-     * @param bool $addMsi
      * @return array[]
      */
-    private function getNoMsiStock(bool $addMsi = false): array
+    private function getNoMsiStock(): array
     {
         $result = [];
         $select = $this->resource->getConnection()
@@ -234,85 +280,29 @@ class Stock
                 ['catalog_product_entity' => $this->resource->getTableName('catalog_product_entity')],
                 "catalog_product_entity.entity_id = cataloginventory_stock_item.product_id",
                 ['sku']
+            )->joinLeft(
+                ['css' => $this->resource->getTableName('cataloginventory_stock_status')],
+                'css.product_id = catalog_product_entity.entity_id',
+                ['stock_status']
+            )->where(
+                'cataloginventory_stock_item.product_id IN (?)',
+                $this->entityIds
+            )->group(
+                'product_id'
             );
-        if ($addMsi) {
-            $select->joinLeft(
-                ['inventory_reservation' => $this->resource->getTableName('inventory_reservation')],
-                'inventory_reservation.sku = catalog_product_entity.sku',
-                ['reserved' => 'SUM(COALESCE(inventory_reservation.quantity, 0))']
-            );
-        }
-        $select->where('cataloginventory_stock_item.product_id IN (?)', $this->entityIds);
-        $select->group('product_id');
         $values = $this->resource->getConnection()->fetchAll($select);
 
         foreach ($values as $value) {
-            $result[$value['product_id']] =
-                [
-                    'qty' => (int)$value['qty'],
-                    'is_in_stock' => (int)$value['is_in_stock'],
-                    'availability' => (int)$value['is_in_stock'],
-                    'manage_stock' => (int)$value['manage_stock'],
-                    'qty_increments' => (int)$value['qty_increments'],
-                    'min_sale_qty' => (int)$value['min_sale_qty']
-                ];
-            if ($addMsi) {
-                $reserved = (int)$value['reserved'] * -1;
-                $result[$value['product_id']] += [
-                    'reserved' => $reserved,
-                    'salable_qty' => (int)($value['qty'] - $reserved)
-                ];
-            }
+            $result[$value['product_id']] = [
+                'qty' => (int)$value['qty'],
+                'is_in_stock' => (int)$value['stock_status'],
+                'availability' => (int)$value['stock_status'],
+                'manage_stock' => (int)$value['manage_stock'],
+                'qty_increments' => (int)$value['qty_increments'],
+                'min_sale_qty' => (int)$value['min_sale_qty']
+            ];
         }
 
         return $result;
-    }
-
-    /**
-     * @param int $storeId
-     * @return string|null
-     */
-    public function getChannelByStoreId(int $storeId): ?string
-    {
-        if (!$this->isMsiEnabled()) {
-            return null;
-        }
-
-        $salesChannelsTable = $this->resource->getTableName('inventory_stock_sales_channel');
-        if (!$this->resource->getConnection()->isTableExists($salesChannelsTable)) {
-            return null;
-        }
-
-        try {
-            $code = $this->storeRepository->getById($storeId)->getWebsite()->getCode();
-            $select = $this->resource->getConnection()->select()
-                ->from($salesChannelsTable, ['stock_id'])
-                ->where('code = ?', $code);
-
-            return $this->resource->getConnection()->fetchOne($select);
-        } catch (Exception $exception) {
-            return null;
-        }
-    }
-
-    /**
-     * @return string[]
-     */
-    public function getRequiredParameters(): array
-    {
-        return self::REQUIRE;
-    }
-
-    /**
-     * @param string $type
-     */
-    public function resetData(string $type = 'all')
-    {
-        if ($type == 'all') {
-            unset($this->entityIds);
-        }
-        if ($type == 'entity_ids') {
-            unset($this->entityIds);
-        }
     }
 }

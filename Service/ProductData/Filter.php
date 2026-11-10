@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © TradeTracker. All rights reserved.
+ * Copyright © Magmodules.eu. All rights reserved.
  * See COPYING.txt for license details.
  */
 declare(strict_types=1);
@@ -17,20 +17,15 @@ use Magento\Store\Model\StoreManagerInterface;
 
 class Filter
 {
-
-    private ResourceConnection $resourceConnection;
-    private StoreManagerInterface $storeManager;
     private string $entityId;
     private ?int $statusAttributeId = null;
     private ?int $visibilityAttributeId = null;
 
     public function __construct(
-        ResourceConnection $resourceConnection,
-        StoreManagerInterface $storeManager,
+        private readonly ResourceConnection $resourceConnection,
+        private readonly StoreManagerInterface $storeManager,
         MetadataPool $metadataPool
     ) {
-        $this->resourceConnection = $resourceConnection;
-        $this->storeManager = $storeManager;
         $this->entityId = $metadataPool->getMetadata(ProductInterface::class)->getLinkField();
     }
 
@@ -46,7 +41,7 @@ class Filter
         $this->prefetchAttributeIds();
 
         $entityIds = $this->filterVisibility($filter, $storeId);
-        $entityIds = $this->filterStatus($entityIds, $storeId);
+        $entityIds = $this->filterStatus($entityIds, $filter['add_disabled_products'], $storeId);
 
         return $this->filterByWebsiteAndCategory(
             $entityIds,
@@ -65,10 +60,6 @@ class Filter
      */
     private function prefetchAttributeIds(): void
     {
-        if ($this->statusAttributeId !== null) {
-            return;
-        }
-
         $connection = $this->resourceConnection->getConnection();
 
         $entityTypeTable = $this->resourceConnection->getTableName('eav_entity_type');
@@ -92,7 +83,6 @@ class Filter
 
     /**
      * Filter entity IDs to exclude products based on visibility.
-     * Uses COALESCE pattern: LEFT JOIN store override, only include if effective value matches.
      *
      * @param array $filter
      * @param int $storeId
@@ -107,16 +97,27 @@ class Filter
         $connection = $this->resourceConnection->getConnection();
         $table = $this->resourceConnection->getTableName('catalog_product_entity_int');
 
-        $visibility = $filter['filter_by_visibility']
-            ? (is_array($filter['visibility']) ? $filter['visibility'] : explode(',', $filter['visibility']))
-            : [
-                Visibility::VISIBILITY_NOT_VISIBLE,
-                Visibility::VISIBILITY_IN_CATALOG,
-                Visibility::VISIBILITY_IN_SEARCH,
-                Visibility::VISIBILITY_BOTH,
-            ];
+        $everyVisibility = [
+            Visibility::VISIBILITY_NOT_VISIBLE,
+            Visibility::VISIBILITY_IN_CATALOG,
+            Visibility::VISIBILITY_IN_SEARCH,
+            Visibility::VISIBILITY_BOTH,
+        ];
 
-        $visibility = array_map('intval', $visibility);
+        $selected = $filter['filter_by_visibility']
+            ? (is_array($filter['visibility']) ? $filter['visibility'] : explode(',', (string)$filter['visibility']))
+            : $everyVisibility;
+
+        // Convert to integers for SQL safety
+        $visibility = array_filter(array_map('intval', $selected));
+
+        // The filter switched on with nothing selected is a restriction to nothing, which is no
+        // restriction at all. It used to build "value IN ()" and the feed died on a SQL syntax
+        // error instead of being generated - reachable from the admin, and from a store-scope row
+        // that is empty while the default scope has a value.
+        if (!$visibility) {
+            $visibility = $everyVisibility;
+        }
 
         $select = $connection->select()
             ->distinct()
@@ -124,7 +125,8 @@ class Filter
             ->joinLeft(
                 ['override' => $table],
                 sprintf(
-                    'base.%1$s = override.%1$s AND base.attribute_id = override.attribute_id AND override.store_id = %2$d',
+                    'base.%1$s = override.%1$s AND base.attribute_id = override.attribute_id'
+                    . ' AND override.store_id = %2$d',
                     $this->entityId,
                     $storeId
                 ),
@@ -142,16 +144,16 @@ class Filter
     }
 
     /**
-     * Filter entity IDs to exclude disabled products using COALESCE store override.
+     * Filter entity IDs to exclude products with status disabled efficiently.
      *
      * @param array $entityIds
      * @param bool $addDisabled
      * @param int $storeId
      * @return array
      */
-    private function filterStatus(array $entityIds, int $storeId = 0): array
+    private function filterStatus(array $entityIds, bool $addDisabled = false, int $storeId = 0): array
     {
-        if (empty($entityIds) || !$this->statusAttributeId) {
+        if (empty($entityIds) || $addDisabled || !$this->statusAttributeId) {
             return $entityIds;
         }
 
@@ -164,7 +166,8 @@ class Filter
             ->joinLeft(
                 ['override' => $table],
                 sprintf(
-                    'base.%1$s = override.%1$s AND base.attribute_id = override.attribute_id AND override.store_id = %2$d',
+                    'base.%1$s = override.%1$s AND base.attribute_id = override.attribute_id'
+                    . ' AND override.store_id = %2$d',
                     $this->entityId,
                     $storeId
                 ),
@@ -195,11 +198,11 @@ class Filter
     }
 
     /**
-     * Filter entity IDs based on website and category restrictions in a single query.
+     * Filter entity IDs based on website and category restrictions
      *
      * @param array $entityIds
-     * @param int|null $websiteId
-     * @param string|null $categoryBehaviour
+     * @param int|null $websiteId A null means no store view to resolve a website from: no filter
+     * @param string|null $categoryBehaviour ('in' to include, 'nin' to exclude)
      * @param array|null $categoryIds
      * @return array
      */
@@ -213,10 +216,6 @@ class Filter
             return [];
         }
 
-        if ($websiteId === null) {
-            return $entityIds;
-        }
-
         $connection = $this->resourceConnection->getConnection();
         $cpeTable = $this->resourceConnection->getTableName('catalog_product_entity');
         $cpwTable = $this->resourceConnection->getTableName('catalog_product_website');
@@ -226,15 +225,23 @@ class Filter
             ->distinct()
             ->from(['cpe' => $cpeTable], [$this->entityId])
             ->join(['cpw' => $cpwTable], 'cpe.entity_id = cpw.product_id', [])
-            ->where('cpw.website_id = ?', $websiteId)
             ->where("cpe.{$this->entityId} IN (?)", $entityIds);
 
+        if ($websiteId !== null) {
+            $select->where('cpw.website_id = ?', $websiteId);
+        }
+
         if (!empty($categoryIds) && $categoryBehaviour !== null) {
-            $select->join(['ccp' => $ccpTable], 'cpe.entity_id = ccp.product_id', []);
+            $inCategories = $connection->select()
+                ->from($ccpTable, ['product_id'])
+                ->where('category_id IN (?)', $categoryIds);
+
             if ($categoryBehaviour === 'in') {
-                $select->where('ccp.category_id IN (?)', $categoryIds);
+                $select->where('cpe.entity_id IN (?)', $inCategories);
             } else {
-                $select->where('ccp.category_id NOT IN (?)', $categoryIds);
+                // Excluded as soon as the product is in one of the categories: a join with
+                // NOT IN kept every product that also sits in another category.
+                $select->where('cpe.entity_id NOT IN (?)', $inCategories);
             }
         }
 

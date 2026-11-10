@@ -10,7 +10,6 @@ namespace TradeTracker\Connect\Model\Feed;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\Exception\FileSystemException;
 use Magento\Framework\Filesystem\Driver\File;
-use Magento\Framework\Serialize\Serializer\Json as SerializerJson;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -19,6 +18,7 @@ use TradeTracker\Connect\Api\Feed\RepositoryInterface as FeedRepository;
 use TradeTracker\Connect\Api\Log\RepositoryInterface as LogRepository;
 use TradeTracker\Connect\Api\ProductData\RepositoryInterface as ProductDataRepository;
 use TradeTracker\Connect\Service\Feed\Create as FeedService;
+use TradeTracker\Connect\Service\Feed\Progress;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -39,10 +39,6 @@ class Repository implements FeedRepository
      * @var DateTime
      */
     private $datetime;
-    /**
-     * @var SerializerJson
-     */
-    private $serializerJson;
     /**
      * @var FeedService
      */
@@ -67,6 +63,7 @@ class Repository implements FeedRepository
      * @var DirectoryList
      */
     private $directoryList;
+    private Progress $progress;
 
     /**
      * Feed constructor.
@@ -74,7 +71,6 @@ class Repository implements FeedRepository
      * @param StoreManagerInterface $storeManager
      * @param DateTime $datetime
      * @param FeedConfigRepository $feedConfigRepository
-     * @param SerializerJson $serializerJson
      * @param FeedService $feedService
      * @param LogRepository $logRepository
      * @param UrlInterface $urlInterface
@@ -86,18 +82,18 @@ class Repository implements FeedRepository
         StoreManagerInterface $storeManager,
         DateTime $datetime,
         FeedConfigRepository $feedConfigRepository,
-        SerializerJson $serializerJson,
         FeedService $feedService,
         LogRepository $logRepository,
         UrlInterface $urlInterface,
         ProductDataRepository $productDataRepository,
         DirectoryList $directoryList,
-        File $fileDriver
+        File $fileDriver,
+        Progress $progress
     ) {
+        $this->progress = $progress;
         $this->feedConfigRepository = $feedConfigRepository;
         $this->datetime = $datetime;
         $this->storeManager = $storeManager;
-        $this->serializerJson = $serializerJson;
         $this->feedService = $feedService;
         $this->logRepository = $logRepository;
         $this->urlInterface = $urlInterface;
@@ -126,6 +122,8 @@ class Repository implements FeedRepository
                         'preview_url' => $this->getUrl(self::PREVIEW_URL, ['store_id' => $storeId]),
                         'generate_url' => $this->getUrl(self::GENERATE_URL, ['store_id' => $storeId]),
                         'download_url' => $this->getUrl(self::DOWNLOAD_URL, ['store_id' => $storeId]),
+                        'ajax_generate_url' => $this->getUrl(self::AJAX_GENERATE_URL, ['store_id' => $storeId]),
+                        'progress_url' => $this->getUrl(self::PROGRESS_URL, ['store_id' => $storeId]),
                     ] + $this->getFeedLocation($storeId);
             } catch (\Exception $e) {
                 $this->logRepository->addErrorLog('LocalizedException', $e->getMessage());
@@ -150,7 +148,7 @@ class Repository implements FeedRepository
     /**
      * {@inheritDoc}
      */
-    public function getFeedLocation(int $storeId, $type = null): array
+    public function getFeedLocation(int $storeId, ?string $type = null): array
     {
         $filename = $this->feedConfigRepository->getFilename((int)$storeId);
         if ($type == 'preview') {
@@ -194,14 +192,16 @@ class Repository implements FeedRepository
     /**
      * @inheritDoc
      */
-    public function generateAndSaveFeed(int $storeId, $type = 'manual'): array
+    public function generateAndSaveFeed(int $storeId, string $type = 'manual'): array
     {
         $timeStart = microtime(true);
 
         if (!$this->feedConfigRepository->isEnabled($storeId)) {
+            $message = (string)__('Product Feed for this StoreId not enabled.');
+            $this->progress->fail($storeId, $message);
             return [
                 'success' => false,
-                'message' => __('Product Feed for this StoreId not enabled.')
+                'message' => $message
             ];
         }
 
@@ -209,16 +209,16 @@ class Repository implements FeedRepository
             $feed = [
                 'productFeed' => $this->productDataRepository->getProductData($storeId, [], $type)
             ];
+            $location = $this->getFeedLocation($storeId, $type);
+            $this->feedService->execute($feed, $storeId, $location['path']);
         } catch (\Exception $e) {
             $this->logRepository->addErrorLog('generateAndSaveFeed', $e->getMessage());
+            $this->progress->fail($storeId, $e->getMessage());
             return [
                 'success' => false,
                 'message' => $e->getMessage()
             ];
         }
-
-        $location = $this->getFeedLocation($storeId, $type);
-        $this->feedService->execute($feed, $storeId, $location['path']);
 
         $resultMsg = sprintf(
             'Products in feed: %s, generated in %s on %s (%s)',
@@ -230,6 +230,7 @@ class Repository implements FeedRepository
 
         $this->feedConfigRepository->setFeedGenerationResult($storeId, $resultMsg);
         $this->logRepository->addDebugLog('FeedGeneration', $resultMsg);
+        $this->progress->finish($storeId, $resultMsg);
 
         return [
             'success' => true,

@@ -10,8 +10,6 @@ namespace TradeTracker\Connect\Block\Adminhtml\Order\View\Tab;
 use Magento\Backend\Block\Template;
 use Magento\Backend\Block\Template\Context;
 use Magento\Backend\Block\Widget\Tab\TabInterface;
-use Magento\Customer\Api\GroupRepositoryInterface;
-use Magento\Directory\Model\CountryFactory;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Registry;
 use Magento\Sales\Model\Order;
@@ -42,21 +40,6 @@ class TransactionDetail extends Template implements TabInterface
     private $coreRegistry;
 
     /**
-     * @var \Magento\Framework\DataObject|null;
-     */
-    private $order = null;
-
-    /**
-     * @var CountryFactory
-     */
-    private $countryFactory;
-
-    /**
-     * @var GroupRepositoryInterface
-     */
-    private $groupRepository;
-
-    /**
      * @var Adapter
      */
     private $adapter;
@@ -73,8 +56,6 @@ class TransactionDetail extends Template implements TabInterface
      * TransactionDetail constructor.
      * @param Context $context
      * @param Registry $coreRegistry
-     * @param CountryFactory $countryFactory
-     * @param GroupRepositoryInterface $groupRepository
      * @param Adapter $adapter
      * @param ConfigRepository $configRepository
      * @param ResourceConnection $resource
@@ -83,16 +64,12 @@ class TransactionDetail extends Template implements TabInterface
     public function __construct(
         Context $context,
         Registry $coreRegistry,
-        CountryFactory $countryFactory,
-        GroupRepositoryInterface $groupRepository,
         Adapter $adapter,
         ConfigRepository $configRepository,
         ResourceConnection $resource,
         array $data = []
     ) {
         $this->coreRegistry = $coreRegistry;
-        $this->countryFactory = $countryFactory;
-        $this->groupRepository = $groupRepository;
         $this->adapter = $adapter;
         $this->configRepository = $configRepository;
         $this->resource = $resource;
@@ -218,7 +195,8 @@ class TransactionDetail extends Template implements TabInterface
      */
     public function getReject(): array
     {
-        if ($this->getOrder()->getCreditmemosCollection()->getSize()
+        $creditmemos = $this->getOrder()->getCreditmemosCollection();
+        if (($creditmemos && $creditmemos->getSize())
             || !$this->getOrder()->getInvoiceCollection()->getSize()
         ) {
             return ['success' => true];

@@ -15,13 +15,13 @@
             <label>Version</label>
             <frontend_model>TradeTracker\Connect\Block\Adminhtml\System\Config\Button\VersionCheck</frontend_model>
         </field>
-        <field id="enable" translate="label comment" type="select" sortOrder="2" showInDefault="1" showInWebsite="0"
+        <field id="enable" canRestore="1" translate="label comment" type="select" sortOrder="2" showInDefault="1" showInWebsite="0"
                showInStore="0">
             <label>Enable</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <config_path>tradetracker/general/enable</config_path>
         </field>
-        <field id="customer_id" translate="label comment" type="text" sortOrder="10" showInDefault="1"
+        <field id="customer_id" canRestore="1" translate="label comment" type="text" sortOrder="10" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Customer ID</label>
             <config_path>tradetracker/general/customer_id</config_path>
@@ -29,10 +29,11 @@
                 <field id="enable">1</field>
             </depends>
         </field>
-        <field id="passphrase" translate="label comment" type="text" sortOrder="20" showInDefault="1"
+        <field id="passphrase" canRestore="1" translate="label comment" type="obscure" sortOrder="20" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Passphrase</label>
             <config_path>tradetracker/general/passphrase</config_path>
+            <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
             <depends>
                 <field id="enable">1</field>
             </depends>

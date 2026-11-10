@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright © TradeTracker. All rights reserved.
+  ~ See COPYING.txt for license details.
+  -->
+<ruleset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="TradeTracker" xsi:noNamespaceSchemaLocation="phpcs.xsd">
+    <description>Magento 2 coding standard for the TradeTracker Connect module.</description>
+
+    <!-- CI helper scripts (E2E fixtures, setup scripts) are not shipped and may echo and exit. -->
+    <exclude-pattern>*/.github/*</exclude-pattern>
+    <exclude-pattern>*/Test/*</exclude-pattern>
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+
+    <rule ref="Magento2">
+        <exclude name="Magento2.Annotation.MethodAnnotationStructure.NoCommentBlock"/>
+    </rule>
+
+    <!-- A plugin that repeats an untyped parent constructor with its own types is how DI learns what to
+         inject (see InjectableConstructorTest in the accounting modules); the sniff reads it as useless. -->
+    <rule ref="Generic.CodeAnalysis.UselessOverridingMethod">
+        <exclude-pattern>*/Plugin/*</exclude-pattern>
+    </rule>
+
+    <rule ref="Generic.PHP.RequireStrictTypes">
+        <severity>9</severity>
+        <exclude-pattern>*.phtml</exclude-pattern>
+        <exclude-pattern>registration.php</exclude-pattern>
+    </rule>
+</ruleset>

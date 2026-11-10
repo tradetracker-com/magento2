@@ -1,5 +1,10 @@
 name: Codesniffer with the Magento Coding standard
-on: [push, pull_request]
+on:
+  pull_request:
+    paths:
+      - '**/*.php'
+      - '**/*.phtml'
+      - '**/*.xml'
 
 jobs:
   build:
@@ -12,4 +17,6 @@ jobs:
           docker run
           --volume $(pwd)/:/app/workdir
           michielgerritsen/magento-coding-standard:latest
+          --standard=/app/workdir/phpcs.xml
           --severity=6
+          -s

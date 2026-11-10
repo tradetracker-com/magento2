@@ -77,8 +77,8 @@ class Index extends Action
         $resultJson = $this->resultJsonFactory->create();
         $result = $this->getVersions();
         $current = $latest = preg_replace('/^v/', '', $this->configRepository->getExtensionVersion());
-        if ($result) {
-            $data = $this->json->unserialize($result);
+        $data = $result ? $this->json->unserialize($result) : null;
+        if (is_array($data) && $data !== []) {
             $versions = array_keys($data);
             $latest = preg_replace('/^v/', '', reset($versions));
         }

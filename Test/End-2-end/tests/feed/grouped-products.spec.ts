@@ -27,6 +27,23 @@ test.describe('Grouped Products', () => {
     expect(items.length).toBeGreaterThan(0);
   });
 
+  test('a grouped member that is also a bundle component stays with grouped=simple', async ({}, testInfo) => {
+    // The yoga straps 24-WG085/086/087 are linked to the grouped 24-WG085_Group and packed into
+    // the bundle 24-WG080. "Only Bundle Product" used to drop them whatever the grouped setting said.
+    const baseURL = testInfo.project.use.baseURL!;
+    const { items } = await api.runFeedCycle(baseURL, {
+      'tradetracker/feed/grouped': 'simple',
+      'tradetracker/feed/bundle': 'parent',
+    });
+
+    const skus = items.map((item: any) => String(item.sku));
+    for (const sku of ['24-WG085', '24-WG086', '24-WG087']) {
+      expect(skus, `${sku} is in the feed`).toContain(sku);
+    }
+    expect(skus, 'the grouped parent is not').not.toContain('24-WG085_Group');
+    expect(skus, 'the bundle itself still is').toContain('24-WG080');
+  });
+
   test('grouped link setting should produce valid feeds', async ({}, testInfo) => {
     const baseURL = testInfo.project.use.baseURL!;
     const { items: parentLink } = await api.runFeedCycle(baseURL, {

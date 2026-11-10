@@ -76,6 +76,7 @@ class Pixel implements ArgumentInterface
             foreach ($order->getAllVisibleItems() as $item) {
                 $categoryIds = $item->getProduct()->getCategoryIds();
                 foreach ($categoryIds as $categoryId) {
+                    /** @var \Magento\Catalog\Model\Category $category */
                     $category = $this->categoryRepository->get($categoryId, $this->storeManager->getStore()->getId());
                     $ttProductId = $category->getData('tradetracker_product_id');
                     if (!empty($ttProductId) && ($ttProductId != $defaultId)) {

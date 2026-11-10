@@ -10,7 +10,7 @@
     <group id="debug" translate="label comment" type="text" sortOrder="100" showInDefault="1" showInWebsite="1"
            showInStore="1">
         <label>Debug</label>
-        <field id="debug" translate="label" type="select" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="1">
+        <field id="debug" canRestore="1" translate="label" type="select" sortOrder="11" showInDefault="1" showInWebsite="1" showInStore="1">
             <label>Debug Mode</label>
             <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
             <config_path>tradetracker/general/debug</config_path>

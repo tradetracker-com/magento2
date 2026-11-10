@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright © TradeTracker. All rights reserved.
+ * Copyright © Magmodules.eu. All rights reserved.
  * See COPYING.txt for license details.
  */
 declare(strict_types=1);
@@ -28,7 +28,11 @@ abstract class AbstractDataCollector
 
     /** @var array<int, string> */
     public array $mediaUrls = [];
-    public ?string $linkField;
+    /**
+     * Always set in the constructor from the metadata pool, which answers with a column name.
+     * Declared nullable it reads as a possible null array key, which PHP 8.5 makes fatal.
+     */
+    public string $linkField;
 
     public ResourceConnection $resource;
     public LogRepository $logRepository;

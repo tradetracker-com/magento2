@@ -9,35 +9,46 @@ namespace TradeTracker\Connect\Model\ProductData;
 
 use TradeTracker\Connect\Api\Config\System\FeedInterface as FeedConfigRepository;
 use TradeTracker\Connect\Api\ProductData\RepositoryInterface as ProductData;
-use TradeTracker\Connect\Service\ProductData\AttributeCollector\Data\Image;
-use TradeTracker\Connect\Service\ProductData\Filter;
 use TradeTracker\Connect\Service\ProductData\Collector;
+use TradeTracker\Connect\Service\ProductData\Filter;
+use TradeTracker\Connect\Service\Feed\Progress;
+use TradeTracker\Connect\Service\ProductData\ImageProcessor;
 
 /**
- * Selftest repository class
+ * Builds the rows of the TradeTracker product feed from the shared ProductData drop-in.
+ *
+ * The drop-in collects and filters; what is TradeTracker's own stays here: the feed field names,
+ * the conditional static fields (shipping price per price band, delivery time per stock state),
+ * the category name a merchant sets per category, and the formatting the TradeTracker feed wants.
  */
 class Repository implements ProductData
 {
+    private const IMAGE_SOURCE_ALL = 'all';
+    private const EXCLUDE_ATTRIBUTE = 'tradetracker_exclude';
+    private const CATEGORY_EXCLUDE_ATTRIBUTE = 'tradetracker_disable_export';
+    private const CATEGORY_NAME_ATTRIBUTE = 'tradetracker_category';
 
     /**
-     * Base attributes map to pull from product
-     *
-     * @var array
+     * How many rows to build between progress reports. Reporting every row would turn a catalogue
+     * run into as many cache writes as there are products.
      */
-    private $attributeMap = [
+    private const PROGRESS_INTERVAL = 100;
+
+    /**
+     * Attributes every row needs, result key => Magento attribute
+     */
+    private const BASE_ATTRIBUTE_MAP = [
         'product_id' => 'entity_id',
         'sku' => 'sku',
         'visibility' => 'visibility',
         'type_id' => 'type_id',
-        'tradetracker_exclude' => 'tradetracker_exclude'
+        self::EXCLUDE_ATTRIBUTE => self::EXCLUDE_ATTRIBUTE,
     ];
 
     /**
-     * Base map of feed structure data. Values as magento data, keys as data for feed
-     *
-     * @var array
+     * Feed structure, feed field => collected key
      */
-    private $resultMap = [
+    private const BASE_RESULT_MAP = [
         'ID' => 'product_id',
         'sku' => 'sku',
         'name' => 'name',
@@ -46,7 +57,7 @@ class Repository implements ProductData
         'productURL' => 'url',
         'imageURL' => 'image',
         'additionalImages' => 'additional_images',
-        'fromPrice' => 'min_price',
+        'fromPrice' => 'price',
         'price' => 'final_price',
         'discount' => 'discount_perc',
         'EAN' => 'ean',
@@ -63,55 +74,20 @@ class Repository implements ProductData
         'subcategories' => 'subcategories',
         'subsubcategories' => 'subsubcategories',
         'extra_info' => 'extra_info',
-        'vat_pct' => 'vat_pct'
+        'vat_pct' => 'vat_pct',
     ];
 
-    /**
-     * @var FeedConfigRepository
-     */
-    private $feedConfigRepository;
-    /**
-     * @var array
-     */
-    private $entityIds;
-    /**
-     * @var Collector
-     */
-    private $collector;
-    /**
-     * @var Filter
-     */
-    private $filter;
-    /**
-     * @var Image
-     */
-    private $image;
-    /**
-     * @var array
-     */
-    private $staticFields;
-    /**
-     * @var array
-     */
-    private $imageData;
+    private array $attributeMap = [];
+    private array $resultMap = [];
+    private array $staticFields = [];
 
-    /**
-     * Repository constructor.
-     * @param FeedConfigRepository $feedConfigRepository
-     * @param Filter $filter
-     * @param Collector $collector
-     * @param Image $image
-     */
     public function __construct(
-        FeedConfigRepository $feedConfigRepository,
-        Filter $filter,
-        Collector $collector,
-        Image $image
+        private readonly FeedConfigRepository $feedConfigRepository,
+        private readonly Filter $filter,
+        private readonly Collector $collector,
+        private readonly ImageProcessor $imageProcessor,
+        private readonly Progress $progress
     ) {
-        $this->feedConfigRepository = $feedConfigRepository;
-        $this->filter = $filter;
-        $this->collector = $collector;
-        $this->image = $image;
     }
 
     /**
@@ -119,282 +95,263 @@ class Repository implements ProductData
      */
     public function getProductData(int $storeId = 0, array $entityIds = [], $type = 'manual'): array
     {
-        $this->collectIds($storeId, $entityIds);
         $this->collectAttributes($storeId);
         $this->staticFields = $this->feedConfigRepository->getStaticFields($storeId);
 
-        if ($type === 'preview') {
-            $this->entityIds = array_slice(
-                $this->entityIds,
-                0,
-                $this->feedConfigRepository->getPreviewSize()
-            );
+        $ids = $this->collectIds($storeId, $entityIds, $type === 'preview');
+        // A preview is not a run the configuration page waits for.
+        $report = $type !== 'preview';
+        if ($report) {
+            $this->progress->start($storeId, count($ids));
         }
-
-        $this->imageData = $this->image->execute($this->entityIds, $storeId);
+        [$imageSource, $imageMain] = $this->getImageSelection($storeId);
+        $excludeOutOfStock = $this->feedConfigRepository->excludeOutOfStock($storeId);
+        $extraParameters = $this->getExtraParameters($storeId);
 
         $result = [];
-        $batchSize = $this->feedConfigRepository->getBatchSize();
+        foreach (array_chunk($ids, max(1, $this->feedConfigRepository->getBatchSize())) as $batchIds) {
+            $data = $this->collector->execute($batchIds, $this->attributeMap, $extraParameters, $storeId);
+            foreach ($data as $entityId => $productData) {
+                if (empty($productData['product_id']) || !empty($productData[self::EXCLUDE_ATTRIBUTE])) {
+                    continue;
+                }
 
-        foreach (array_chunk($this->entityIds, $batchSize) as $batchIds) {
-            $this->processBatch($storeId, $batchIds, $result);
-        }
+                $this->imageProcessor->addImageData(
+                    $storeId,
+                    $productData,
+                    $imageSource,
+                    $imageMain,
+                    self::IMAGE_SOURCE_ALL
+                );
+                $this->addStaticFields($productData);
+                $this->addCategoryData($productData);
 
-        if ($this->feedConfigRepository->excludeOutOfStock($storeId)) {
-            foreach ($result as $id => &$datum) {
-                if ($datum['availability'] == 'out of stock') {
-                    unset($result[$id]);
+                $row = [];
+                foreach ($this->resultMap as $index => $attribute) {
+                    $row[$index] = $this->prepareAttribute($attribute, $productData);
+                }
+
+                if ($excludeOutOfStock && $row['availability'] === 'out of stock') {
+                    continue;
+                }
+
+                $result[$entityId] = $row;
+                if ($report && count($result) % self::PROGRESS_INTERVAL === 0) {
+                    $this->progress->advance($storeId, count($result));
                 }
             }
         }
+
+        if ($report) {
+            $this->progress->advance($storeId, count($result));
+        }
+
         return $result;
     }
 
-    private function processBatch(int $storeId, array $batchIds, array &$result): void
+    /**
+     * @inheritDoc
+     */
+    public function getProductAttributes(int $storeId = 0): array
     {
-        $extraParameters = [
-            'filters' => [
-                'custom' => $this->feedConfigRepository->getFilters($storeId)['advanced_filters'],
-                'exclude_attribute' => 'tradetracker_exclude',
-                'exclude_disabled' => true
-            ],
-            'stock' => [
-                'inventory' => true,
-            ],
-            'category' => [
-                'exclude_attribute' => ['code' => 'tradetracker_disable_export', 'value' => 1],
-                'replace_attribute' => 'tradetracker_category',
-                'include_anchor' => true
-            ],
-            'behaviour' => [
-                'configurable' => $this->feedConfigRepository->getConfigProductsBehaviour($storeId),
-                'bundle' => $this->feedConfigRepository->getBundleProductsBehaviour($storeId),
-                'grouped' => $this->feedConfigRepository->getGroupedProductsBehaviour($storeId)
-            ]
-        ];
-
-        $data = $this->collector->execute(
-            $batchIds,
-            $this->attributeMap,
-            $extraParameters,
-            $storeId
-        );
-
-        foreach ($data as $entityId => $productData) {
-            if (isset($productData['tradetracker_exclude']) && $productData['tradetracker_exclude']) {
-                continue;
-            }
-            if (empty($productData['product_id'])) {
-                continue;
-            }
-            $productId = (int)$productData['product_id'];
-            $this->addImageData($storeId, $entityId, $productData);
-            $this->addStaticFields($productData);
-            $this->addCategoryData($productData);
-            $result[$productId]['row_id'] = $entityId;
-            foreach ($this->resultMap as $index => $attr) {
-                $result[$entityId][$index] = $this->prepareAttribute($attr, $productData);
-            }
-        }
+        $this->collectAttributes($storeId);
+        return $this->attributeMap;
     }
 
     /**
-     * Collect all entity ids for collection
-     *
-     * @param int $storeId
-     * @param array $entityIds
+     * Entity ids the feed covers: the configured filters, narrowed to the requested ids and the
+     * preview size.
      */
-    private function collectIds(int $storeId, array $entityIds = []): void
+    private function collectIds(int $storeId, array $entityIds, bool $preview): array
     {
-        $this->entityIds = $this->filter->execute(
-            $this->feedConfigRepository->getFilters($storeId),
-            $storeId
-        );
-        if ($entityIds) {
-            $this->entityIds = array_intersect($entityIds, $this->entityIds);
-        }
-    }
-
-    /**
-     * Collect all attributes needed for product collection
-     *
-     * @param int $storeId
-     */
-    private function collectAttributes(int $storeId = 0): void
-    {
-        $this->attributeMap += $this->feedConfigRepository->getAttributes($storeId);
-        $extraFields = $this->feedConfigRepository->getExtraFields($storeId);
-        foreach ($extraFields as $field) {
-            $this->attributeMap[$field['name']] = $field['attribute'];
-            $this->resultMap[$field['name']] = $field['attribute'];
-        }
-
         $filters = $this->feedConfigRepository->getFilters($storeId);
-        $advancedFilters = $filters['advanced_filters'] ?? [];
-        foreach ($advancedFilters as $filter) {
-            $this->attributeMap[] = $filter['attribute'];
+        // The drop-in reads this key; the TradeTracker feed never carries disabled products.
+        $filters['add_disabled_products'] = false;
+
+        $ids = $this->filter->execute($filters, $storeId);
+        if ($entityIds) {
+            $ids = array_values(array_intersect($entityIds, $ids));
+        }
+        if ($preview) {
+            $ids = array_slice($ids, 0, $this->feedConfigRepository->getPreviewSize());
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Attributes to collect and the feed fields they land in. The drop-in keys collected values by
+     * the attribute map key, so an extra field is read back under its own name.
+     */
+    private function collectAttributes(int $storeId): void
+    {
+        $this->attributeMap = self::BASE_ATTRIBUTE_MAP + $this->feedConfigRepository->getAttributes($storeId);
+        $this->resultMap = self::BASE_RESULT_MAP;
+
+        foreach ($this->feedConfigRepository->getExtraFields($storeId) as $field) {
+            if (empty($field['name']) || empty($field['attribute'])) {
+                continue;
+            }
+            $this->attributeMap[$field['name']] = $field['attribute'];
+            $this->resultMap[$field['name']] = $field['name'];
+        }
+
+        $advancedFilters = $this->feedConfigRepository->getFilters($storeId)['advanced_filters'] ?? [];
+        foreach ($advancedFilters as $advancedFilter) {
+            if (!empty($advancedFilter['attribute'])) {
+                $this->attributeMap[$advancedFilter['attribute']] = $advancedFilter['attribute'];
+            }
         }
 
         $this->attributeMap = array_filter($this->attributeMap);
     }
 
     /**
-     * Add image data to productData array
+     * Image source and main image as the drop-in's image processor expects them: a single image
+     * type, or all images with the configured main image ('' for the first, 'last', or a type).
      *
-     * @param int $storeId
-     * @param int $entityId
-     * @param array $productData
+     * @return array{0: string, 1: string}
      */
-    private function addImageData(int $storeId, int $entityId, array &$productData): void
+    private function getImageSelection(int $storeId): array
     {
-        $imageData = $this->imageData[$entityId] ?? null;
-
-        if (!empty($productData['parent_id']) && !empty($productData['image_logic'])) {
-            $parentImageData = $this->imageData[$productData['parent_id']] ?? null;
-            switch ($productData['image_logic']) {
-                case 1:
-                    $imageData = $parentImageData;
-                    break;
-                case 2:
-                    $imageData = $imageData ?? $parentImageData;
-                    break;
-                case 3:
-                case 4:
-                    if ($parentImageData) {
-                        foreach ($parentImageData as $storeId => $parentImageDataStore) {
-                            $imageData[$storeId] += $parentImageDataStore;
-                        }
-                    }
-                    break;
-            }
-        }
-
-        if ($imageData === null) {
-            return;
-        }
-
         $imageConfig = $this->feedConfigRepository->getImageAttributes($storeId);
-        if (!isset($imageData[$storeId])) {
-            $storeId = 0;
+        if (count($imageConfig) === 1) {
+            return [(string)reset($imageConfig), ''];
         }
 
-        ksort($imageData[$storeId]);
-        if (count($imageConfig) == 1) {
-            foreach ($imageData[$storeId] as $image) {
-                if (in_array($imageConfig['image'], $image['types'])) {
-                    $productData['image'] = $image['file'];
-                }
-            }
-        } else {
-            $productData['image'] = null;
-            foreach ($imageData[$storeId] as $index => $image) {
-                if ($productData['image'] === null) {
-                    $productData['image'] = $image['file'];
-                } else {
-                    $productData['additional_images'][] = $image['file'];
-                }
-            }
-        }
+        return [self::IMAGE_SOURCE_ALL, (string)($imageConfig['main_image'] ?? '')];
+    }
+
+    private function getExtraParameters(int $storeId): array
+    {
+        $filters = $this->feedConfigRepository->getFilters($storeId);
+
+        return [
+            'filters' => [
+                'exclude_attribute' => null,
+                'exclude_disabled' => true,
+                'custom' => $filters['advanced_filters'] ?? [],
+            ],
+            'stock' => [
+                'inventory' => true,
+                'inventory_fields' => ['qty', 'is_in_stock', 'salable_qty'],
+            ],
+            'category' => [
+                'exclude_attribute' => ['code' => self::CATEGORY_EXCLUDE_ATTRIBUTE, 'value' => 1],
+                'custom' => self::CATEGORY_NAME_ATTRIBUTE,
+                'include_anchor' => true,
+            ],
+            'behaviour' => [
+                'configurable' => $this->feedConfigRepository->getConfigProductsBehaviour($storeId),
+                'bundle' => $this->feedConfigRepository->getBundleProductsBehaviour($storeId),
+                'grouped' => $this->feedConfigRepository->getGroupedProductsBehaviour($storeId),
+            ],
+            'images' => [
+                'include_hidden' => false,
+            ],
+        ];
     }
 
     /**
-     * Add category data to productData array
-     *
-     * @param array $productData
+     * Static fields are either a plain value or a list of conditions ("attribute op value" => value):
+     * the shipping price per price band, the delivery time per stock state.
      */
     private function addStaticFields(array &$productData): void
     {
-        foreach ($this->staticFields as $k => $v) {
-            if (!is_array($v)) {
-                $productData[$k] = $v;
+        foreach ($this->staticFields as $field => $value) {
+            if (!is_array($value)) {
+                $productData[$field] = $value;
                 continue;
             }
 
-            foreach ($v as $kk => $vv) {
-                list($attribute, $condition, $value) = explode(' ', $kk);
-                if (isset($productData[$attribute])) {
-                    $attributeValue = $productData[$attribute];
-                    switch ($condition) {
-                        case '==':
-                            $value = ($attributeValue == $value) ? $vv : null;
-                            break;
-                        case '!=':
-                            $value = ($attributeValue != $value) ? $vv : null;
-                            break;
-                        case '>=':
-                            $value = ($attributeValue >= $value) ? $vv : null;
-                            break;
-                        case '>':
-                            $value = ($attributeValue > $value) ? $vv : null;
-                            break;
-                        case '<=':
-                            $value = ($attributeValue <= $value) ? $vv : null;
-                            break;
-                        case '<':
-                            $value = ($attributeValue < $value) ? $vv : null;
-                            break;
-                        case 'between':
-                            list($from, $to) = explode('/', $value);
-                            $value = ($attributeValue >= $from && $attributeValue <= $to) ? $vv : null;
-                            break;
-                    }
-                    if ($value !== null) {
-                        $productData[$k] = $value;
-                    }
+            foreach ($value as $condition => $conditionalValue) {
+                $resolved = $this->resolveCondition($condition, $conditionalValue, $productData);
+                if ($resolved !== null) {
+                    $productData[$field] = $resolved;
                 }
             }
         }
     }
 
     /**
-     * Add category data to productData array
-     *
-     * @param array $productData
+     * @return mixed|null the conditional value when the condition holds, null otherwise
+     */
+    private function resolveCondition(string $condition, $conditionalValue, array $productData)
+    {
+        $parts = explode(' ', $condition, 3);
+        if (count($parts) !== 3) {
+            return null;
+        }
+        [$attribute, $operator, $expected] = $parts;
+        if (!isset($productData[$attribute])) {
+            return null;
+        }
+        $actual = $productData[$attribute];
+
+        switch ($operator) {
+            case '==':
+                return $actual == $expected ? $conditionalValue : null;
+            case '!=':
+                return $actual != $expected ? $conditionalValue : null;
+            case '>=':
+                return $actual >= $expected ? $conditionalValue : null;
+            case '>':
+                return $actual > $expected ? $conditionalValue : null;
+            case '<=':
+                return $actual <= $expected ? $conditionalValue : null;
+            case '<':
+                return $actual < $expected ? $conditionalValue : null;
+            case 'between':
+                [$from, $to] = array_pad(explode('/', $expected, 2), 2, null);
+                return $actual >= $from && $actual <= $to ? $conditionalValue : null;
+        }
+
+        return null;
+    }
+
+    /**
+     * The category path: the custom source when configured, otherwise the deepest category the
+     * product sits in, with the per-category "Category Name for Feed" replacing names where set.
      */
     private function addCategoryData(array &$productData): void
     {
         if (isset($productData['category_custom'])) {
             $path = $productData['category_custom'];
         } else {
-            $categories = $productData['category'] ?? [];
-            array_multisort(array_column($categories, 'level'), SORT_DESC, $categories);
-            $category = reset($categories);
-            $path = $category['path'] ?? null;
+            $category = $productData['category'][0] ?? [];
+            $path = $category['custom_path'] ?? $category['path'] ?? null;
         }
 
         if (empty($path)) {
             return;
         }
 
-        $pathExploded = explode(' > ', $path);
-        $categoryData = [
+        $segments = explode(' > ', $path);
+        $productData += [
             'categoryPath' => $path,
-            'categories' => $pathExploded[0] ?? null,
-            'subcategories' => $pathExploded[1] ?? null,
-            'subsubcategories' => $pathExploded[2] ?? null,
+            'categories' => $segments[0] ?? null,
+            'subcategories' => $segments[1] ?? null,
+            'subsubcategories' => $segments[2] ?? null,
         ];
-
-        $productData += $categoryData;
     }
 
     /**
-     * Attribute data preperation
+     * Formatting the TradeTracker feed wants for a collected value.
      *
-     * @param string $attribute
-     * @param array $productData
-     * @return mixed|string|null
+     * @return mixed
      */
     private function prepareAttribute(string $attribute, array $productData)
     {
         $value = $productData[$attribute] ?? null;
         $currency = $productData['currency'] ?? null;
+
         switch ($attribute) {
             case 'status':
-                return ($value) ? 'Enabled' : 'Disabled';
+                return $value ? 'Enabled' : 'Disabled';
             case 'is_in_stock':
-                return ($value) ? 'in stock' : 'out of stock';
+                return $value ? 'in stock' : 'out of stock';
             case 'manage_stock':
-                return ($value) ? 'true' : 'false';
+                return $value ? 'true' : 'false';
             case 'url':
                 if (!isset($productData['url'])) {
                     return '';
@@ -411,12 +368,9 @@ class Repository implements ProductData
             case 'min_price':
             case 'max_price':
             case 'sales_price':
-                if ($value !== null) {
-                    return number_format((float)$value, 2, '.', '') . ' ' . $currency;
-                }
-            // no break
+                return $value === null ? null : number_format((float)$value, 2, '.', '') . ' ' . $currency;
             case 'visibility':
-                switch ($value) {
+                switch ((int)$value) {
                     case 1:
                         return 'Not Visible Individually';
                     case 2:
@@ -426,16 +380,9 @@ class Repository implements ProductData
                     case 4:
                         return 'Catalog, Search';
                 }
+                return $value;
         }
-        return $value;
-    }
 
-    /**
-     * @inheritDoc
-     */
-    public function getProductAttributes(int $storeId = 0): array
-    {
-        $this->collectAttributes($storeId);
-        return $this->attributeMap;
+        return $value;
     }
 }

@@ -10,11 +10,9 @@ namespace TradeTracker\Connect\Controller\Adminhtml\Transaction;
 use Exception;
 use Magento\Backend\App\Action;
 use Magento\Backend\App\Action\Context;
-use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Sales\Api\OrderRepositoryInterface as OrderRepository;
-use Magento\Sales\Model\Order\Status\HistoryFactory;
 use TradeTracker\Connect\Api\Config\System\PixelInterface as ConfigRepository;
 use TradeTracker\Connect\Service\Api\Adapter;
 
@@ -31,17 +29,9 @@ class Status extends Action
     public const ADMIN_RESOURCE = 'TradeTracker_Connect::config';
 
     /**
-     * @var ResourceConnection
-     */
-    private $resource;
-    /**
      * @var OrderRepository
      */
     private $orderRepository;
-    /**
-     * @var HistoryFactory
-     */
-    private $orderHistoryFactory;
     /**
      * @var JsonFactory
      */
@@ -58,25 +48,19 @@ class Status extends Action
     /**
      * Status constructor.
      * @param Context $context
-     * @param ResourceConnection $resource
      * @param OrderRepository $orderRepository
-     * @param HistoryFactory $orderHistoryFactory
      * @param JsonFactory $resultJsonFactory
      * @param Adapter $adapter
      * @param ConfigRepository $configRepository
      */
     public function __construct(
         Context $context,
-        ResourceConnection $resource,
         OrderRepository $orderRepository,
-        HistoryFactory $orderHistoryFactory,
         JsonFactory $resultJsonFactory,
         Adapter $adapter,
         ConfigRepository $configRepository
     ) {
-        $this->resource = $resource;
         $this->orderRepository = $orderRepository;
-        $this->orderHistoryFactory = $orderHistoryFactory;
         $this->resultJsonFactory = $resultJsonFactory;
         $this->adapter = $adapter;
         $this->configRepository = $configRepository;
@@ -89,12 +73,21 @@ class Status extends Action
      */
     public function execute()
     {
-        $orderId = $this->getRequest()->getParam('id');
+        $orderId = (int)$this->getRequest()->getParam('id');
         $reason = $this->getRequest()->getParam('reason');
-        $order = $this->orderRepository->get((int)$orderId);
+        $resultJson = $this->resultJsonFactory->create();
+
+        try {
+            $order = $this->orderRepository->get($orderId);
+        } catch (\Magento\Framework\Exception\LocalizedException $exception) {
+            return $resultJson->setData([
+                'status' => ['success' => false, 'error' => (string)__('Order %1 was not found.', $orderId)]
+            ]);
+        }
+
         $incrementId = $order->getIncrementId();
         $storeId = (int)$order->getStoreId();
-        $campaignID = $this->configRepository->getCampaingId($storeId);
+        $campaignID = $this->configRepository->getCampaignId($storeId);
         $data = $this->configRepository->getApiCredentials($storeId);
         $result = $this->adapter->execute($data);
         $id = 0;
@@ -119,7 +112,6 @@ class Status extends Action
                 ];
             }
         }
-        $resultJson = $this->resultJsonFactory->create();
         return $resultJson->setData(['status' => $result]);
     }
 }

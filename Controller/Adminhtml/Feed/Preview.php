@@ -60,7 +60,7 @@ class Preview extends Action
     }
 
     /**
-     * @return ResponseInterface|ResultInterface|void
+     * @return ResultInterface
      */
     public function execute()
     {
@@ -77,9 +77,10 @@ class Preview extends Action
         }
 
         try {
-            $this->getResponse()->setHeader('Content-type', 'text/xml');
-            $this->getResponse()->setBody($this->fileDriver->fileGetContents($result['path']));
-            return;
+            /** @var \Magento\Framework\Controller\Result\Raw $raw */
+            $raw = $this->resultFactory->create(ResultFactory::TYPE_RAW);
+            $raw->setHeader('Content-type', 'text/xml');
+            return $raw->setContents($this->fileDriver->fileGetContents($result['path']));
         } catch (FileSystemException $exception) {
             $this->messageManager->addErrorMessage($exception->getMessage());
             $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);

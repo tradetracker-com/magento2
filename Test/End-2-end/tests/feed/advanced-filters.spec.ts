@@ -29,6 +29,10 @@ const SKU_FILTER = JSON.stringify({
 });
 
 test.describe('Advanced Filters', () => {
+  test.afterAll(() => {
+    api.resetConfig('tradetracker/feed/custom_filters%');
+  });
+
   test('price filter should only include products above threshold', async ({}, testInfo) => {
     const baseURL = testInfo.project.use.baseURL!;
     const { items } = await api.runFeedCycle(baseURL, {
@@ -46,6 +50,10 @@ test.describe('Advanced Filters', () => {
 
 test.describe('Advanced Filters - unfiltered baseline', () => {
   let baselineItems: any[];
+
+  test.afterAll(() => {
+    api.resetConfig('tradetracker/feed/custom_filters%');
+  });
 
   test.beforeAll(async ({}, testInfo) => {
     const baseURL = testInfo.project.use.baseURL!;

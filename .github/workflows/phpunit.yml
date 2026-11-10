@@ -1,0 +1,66 @@
+name: Unit Tests
+
+on:
+  pull_request:
+    paths:
+      - '**/*.php'
+      - 'phpunit.xml.dist'
+      - 'Test/**'
+      - 'composer.json'
+  workflow_dispatch:
+
+jobs:
+  phpunit:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - PHP_VERSION: php82-fpm
+            MAGENTO_VERSION: 2.4.7-p10
+          - PHP_VERSION: php83-fpm
+            MAGENTO_VERSION: 2.4.8-p5
+          - PHP_VERSION: php84-fpm
+            MAGENTO_VERSION: 2.4.8-p5
+          - PHP_VERSION: php85-fpm
+            MAGENTO_VERSION: 2.4.9
+
+    name: PHPUnit ${{ matrix.PHP_VERSION }} Magento ${{ matrix.MAGENTO_VERSION }}
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve package and module directory
+        run: |
+          echo "COMPOSER_NAME=$(jq -r .name composer.json)" >> "$GITHUB_ENV"
+          echo "MODULE_DIR=$(basename "$PWD")" >> "$GITHUB_ENV"
+          echo "MODULE_NAME=$(grep -oE "'[A-Za-z0-9]+_[A-Za-z0-9]+'" registration.php | head -1 | tr -d "'")" >> "$GITHUB_ENV"
+
+      - name: Start Docker
+        run: docker run --detach --name magento-project-community-edition michielgerritsen/magento-project-community-edition:${{ matrix.PHP_VERSION }}-magento${{ matrix.MAGENTO_VERSION }}
+
+      - name: Remove version from composer.json
+        run: sed -i '/version/d' ./composer.json
+
+      - name: Upload our code into the docker container
+        run: docker cp $(pwd) magento-project-community-edition:/data/extensions/
+
+      - name: Install the extension in Magento
+        run: docker exec magento-project-community-edition ./install-composer-package $COMPOSER_NAME:@dev
+
+      # install-composer-package only puts the code in place; the module stays disabled and its
+      # etc/ is never read. Enabling it runs the data patches, so a broken patch fails here too.
+      # Same command the Upgrade/Compile job uses, minus di:compile.
+      - name: Activate the extension
+        run: docker exec magento-project-community-edition ./retry "php bin/magento module:enable $MODULE_NAME && php bin/magento setup:upgrade --keep-generated"
+
+      # PHPUnit lives in Test/vendor rather than the module's own composer.json: Magento's root
+      # autoloader excludes **/Test/** from its class map, which breaks the PHPUnit copy that ships
+      # with Magento itself.
+      - name: Install the test dependencies
+        run: docker exec magento-project-community-edition /bin/bash -c "cd /data/extensions/$MODULE_DIR/Test && composer install --no-interaction --prefer-dist --no-progress"
+
+      - name: Run PHPUnit
+        run: docker exec magento-project-community-edition /bin/bash -c "cd /data/extensions/$MODULE_DIR && Test/vendor/bin/phpunit -c phpunit.xml.dist --testsuite 'TradeTracker Connect Unit Tests'"
