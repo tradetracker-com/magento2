@@ -13,7 +13,7 @@
 * The passphrase is stored encrypted with the Magento encryption key. Existing plain-text values are encrypted automatically during `setup:upgrade`; the Check Credentials button tests with the stored passphrase of the selected scope.
 * The feed cron runs in its own cron group (`tradetracker`, separate process), so a long feed run no longer holds up Magento's default group.
 * PHPStan runs at level 8 without a baseline.
-* Every configuration field offers "Use system value".
+* Every configuration field offers "Use system value", except the Extra Fields, Shipping Settings and Advanced Filters tables. A select whose first option means something (Yes, Static Values, Include) now has that choice declared as a default, so what the admin shows with the checkbox ticked is what the module reads.
 
 **Bugfixes:**
 * Fixed the feed cron never generating a feed. The job read its frequency from `tradetracker/feeds/cron_frequency` while the setting lives under `tradetracker/feed/cron_frequency`, so the check "is a frequency set" always failed and the job returned before generating anything. The schedule is now read from the Frequency field itself, "Custom" resolves to the custom expression on save, and an expression the select does not offer shows as "Custom" instead of falling back to the first option. A stored "Custom" from an earlier release is replaced by its custom expression during `setup:upgrade`, because the scheduler rejects the word itself.
@@ -23,6 +23,8 @@
 * Fixed a product without a price of its own (an unsalable configurable, for one) being published with the price of the product that came before it in the batch.
 * Fixed the extra fields reading the wrong key: an extra field was looked up under its attribute code while the collector keys values by field name, so it was empty unless the two happened to match.
 * Fixed HTML entities in catalogue values reaching the feed as text. The Luma sample data has "LumaTech&trade; V-Tee"; the writer escaped the entity a second time and TradeTracker showed "&trade;" instead of "™". Named and numeric entities now become the character they stand for, and characters XML does not allow are dropped.
+* Fixed DirectLinking giving a 404 when the Url Key is left on "Use system value". Saving the section on Default Config wrote one URL rewrite for store 0, which no request matches; it now writes a rewrite for every store view, with the key that store view inherits.
+* Fixed `fromPrice` equalling `price` for a discounted product. The feed published the lowest price twice; `fromPrice` is now the regular price and `price` the selling price.
 * Removed three defaults from `etc/config.xml` that no field reads (`gtin_attribute`, `condition_type`, `condition_default`).
 
 **Tests:**
@@ -30,6 +32,9 @@
 * `Test/Unit/Service/ProductData` covers the collectors: price carry-over, rule prices, MSI reservations, configurable keys, category paths and the visibility filter.
 * `Service\Feed\CreateTest` pins the entity decoding and the XML escaping of the writer.
 * `PixelRepositoryTest` pins that a custom currency is sent exactly when the toggle is on and a code is set.
+* `SaveRewriteTest` pins the DirectLinking rewrite per store view for an inherited and an explicit key, on Default Config and on a store view.
+* `Model\ProductData\RepositoryTest` pins the from price, the selling price and the static delivery time of a feed row.
+* `CanRestoreSelectDefaultTest` pins that every select whose first option means something has a default in `config.xml`.
 * `MigrateConfigPathsTest` pins the three configuration migrations of this release and that a store already on the new shape is left alone.
 * `advanced-filters.spec.ts` now removes the filters it set, so the feed of the next spec is not filtered by its leftovers.
 * `E2E-TESTS.md` is generated from the Playwright test list.
