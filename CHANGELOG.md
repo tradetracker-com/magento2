@@ -7,6 +7,7 @@
 * The main image for "All Images" now follows the Main Image setting (first, last or an image type); it was always the first image.
 * Added a unit test suite (`Test/Unit`, 146 tests) covering the ProductData collectors and a set of architecture gates. It runs in CI on PHP 8.2 to 8.5.
 * Added `docs/CLI_COMMANDS.md` for `bin/magento tradetracker:feed:create`.
+* The Generate action on the feed overview now runs the feed without leaving the configuration page and shows how far it is: the row reports the products written against the total while the run goes, holds the finished bar for a moment, and the page then reloads with the result. A browser without JavaScript keeps the old link.
 
 **Improvements:**
 * PHP 8.2 or newer is required. PHP 8.1 and older receive no fix for CVE-2026-109618 and CVE-2026-109619 (remote code execution in PHP core, fixed in 8.2.35, 8.3.36, 8.4.27 and 8.5.12). The compile and PHPStan job runs PHP 8.2 on Magento 2.4.7-p10, 8.3 and 8.4 on 2.4.8-p5 and 8.5 on 2.4.9.
@@ -32,6 +33,8 @@
 * `Test/Unit/Service/ProductData` covers the collectors: price carry-over, rule prices, MSI reservations, configurable keys, category paths and the visibility filter.
 * `Service\Feed\CreateTest` pins the entity decoding and the XML escaping of the writer.
 * `PixelRepositoryTest` pins that a custom currency is sent exactly when the toggle is on and a code is set.
+* `ProgressTest` pins the progress record of a run: start, advance, finish, failure, and that store views do not share state.
+* `feed-progress.spec.ts` generates the feed from the configuration page and checks that the row reports the run, the page stays, and the progress endpoint answers for the store it ran for.
 * `SaveRewriteTest` pins the DirectLinking rewrite per store view for an inherited and an explicit key, on Default Config and on a store view.
 * `Model\ProductData\RepositoryTest` pins the from price, the selling price and the static delivery time of a feed row.
 * `CanRestoreSelectDefaultTest` pins that every select whose first option means something has a default in `config.xml`.

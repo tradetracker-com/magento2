@@ -29,9 +29,11 @@ class AdminResourceTest extends TestCase
      */
     private const EXPECTED = [
         'Credentials\Check' => self::CONFIG,
+        'Feed\AjaxGenerate' => self::CONFIG,
         'Feed\Download' => self::CONFIG,
         'Feed\Generate' => self::CONFIG,
         'Feed\Preview' => self::CONFIG,
+        'Feed\Progress' => self::CONFIG,
         'Log\Stream' => self::CONFIG,
         'Transaction\Status' => self::CONFIG,
         'VersionCheck\Changelog' => self::CONFIG,

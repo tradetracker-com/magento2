@@ -11,6 +11,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use TradeTracker\Connect\Api\Config\System\FeedInterface;
 use TradeTracker\Connect\Model\ProductData\Repository;
+use TradeTracker\Connect\Service\Feed\Progress;
 use TradeTracker\Connect\Service\ProductData\Collector;
 use TradeTracker\Connect\Service\ProductData\Filter;
 use TradeTracker\Connect\Service\ProductData\ImageProcessor;
@@ -37,6 +38,24 @@ class RepositoryTest extends TestCase
         self::assertSame('5-7 days', $this->row(['is_in_stock' => 0])['deliveryTime']);
     }
 
+    public function testTheRunReportsItsTotalAndItsFinalCount(): void
+    {
+        $progress = $this->createMock(Progress::class);
+        $progress->expects(self::once())->method('start')->with(1, 1);
+        $progress->expects(self::once())->method('advance')->with(1, 1);
+
+        $this->row(['is_in_stock' => 1], $progress);
+    }
+
+    public function testAPreviewReportsNoProgress(): void
+    {
+        $progress = $this->createMock(Progress::class);
+        $progress->expects(self::never())->method('start');
+        $progress->expects(self::never())->method('advance');
+
+        $this->row(['is_in_stock' => 1], $progress, 'preview');
+    }
+
     public function testTheAvailabilityFollowsTheStockState(): void
     {
         self::assertSame('in stock', $this->row(['is_in_stock' => 1])['availability']);
@@ -47,7 +66,7 @@ class RepositoryTest extends TestCase
      * @param array<string, mixed> $collected what the collector returns for the one product
      * @return array<string, mixed> the feed row
      */
-    private function row(array $collected): array
+    private function row(array $collected, ?Progress $progress = null, string $type = 'manual'): array
     {
         $config = $this->createMock(FeedInterface::class);
         $config->method('getAttributes')->willReturn(['name' => 'name']);
@@ -58,6 +77,7 @@ class RepositoryTest extends TestCase
         $config->method('getBundleProductsBehaviour')->willReturn([]);
         $config->method('getGroupedProductsBehaviour')->willReturn([]);
         $config->method('getBatchSize')->willReturn(100);
+        $config->method('getPreviewSize')->willReturn(10);
         $config->method('excludeOutOfStock')->willReturn(false);
         $config->method('getStaticFields')->willReturn([
             'currency' => 'EUR',
@@ -70,8 +90,14 @@ class RepositoryTest extends TestCase
         $collector = $this->createMock(Collector::class);
         $collector->method('execute')->willReturn([7 => $collected + ['product_id' => 7, 'sku' => 'S']]);
 
-        $repository = new Repository($config, $filter, $collector, $this->createMock(ImageProcessor::class));
-        $rows = $repository->getProductData(1);
+        $repository = new Repository(
+            $config,
+            $filter,
+            $collector,
+            $this->createMock(ImageProcessor::class),
+            $progress ?? $this->createMock(Progress::class)
+        );
+        $rows = $repository->getProductData(1, [], $type);
 
         self::assertArrayHasKey(7, $rows);
         return $rows[7];

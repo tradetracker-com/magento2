@@ -301,6 +301,45 @@
   line-height: 2em;
 }
 
+//
+//  Feed generation progress
+//  ---------------------------------------------
+
+.tt-feed-progress {
+  margin: 4px 0 8px;
+  font-size: 12px;
+  min-width: 180px;
+}
+
+.tt-feed-progress__track {
+  height: 6px;
+  margin-top: 4px;
+  background-color: rgba(81, 73, 67, 0.15);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.tt-feed-progress__bar {
+  height: 100%;
+  width: 0;
+  background-color: #EB5202;
+  transition: width .3s;
+}
+
+// Held for a moment after the run, so a generation that takes a second still reports itself
+// where the merchant is looking instead of only at the top of the page.
+.tt-feed-progress.done [data-role="tt-feed-progress-label"] {
+  color: #185B00;
+  font-weight: 600;
+}
+
+.block-tradetracker-feeds-table tr.running a.generate,
+.block-tradetracker-feeds-table tr.running a.preview,
+.block-tradetracker-feeds-table tr.running a.download {
+  pointer-events: none;
+  opacity: .5;
+}
+
 .block-tradetracker-feeds-table a.generate:before {
   content: '\e610';
   font-family: 'Admin Icons';

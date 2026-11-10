@@ -20,6 +20,8 @@ interface RepositoryInterface
     public const PREVIEW_URL = 'tradetracker/feed/preview';
     public const DOWNLOAD_URL = 'tradetracker/feed/download';
     public const GENERATE_URL = 'tradetracker/feed/generate';
+    public const AJAX_GENERATE_URL = 'tradetracker/feed/ajaxGenerate';
+    public const PROGRESS_URL = 'tradetracker/feed/progress';
 
     /**
      * Returns feed configuration data array for all stores

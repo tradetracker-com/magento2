@@ -18,6 +18,7 @@ use TradeTracker\Connect\Api\Feed\RepositoryInterface as FeedRepository;
 use TradeTracker\Connect\Api\Log\RepositoryInterface as LogRepository;
 use TradeTracker\Connect\Api\ProductData\RepositoryInterface as ProductDataRepository;
 use TradeTracker\Connect\Service\Feed\Create as FeedService;
+use TradeTracker\Connect\Service\Feed\Progress;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -62,6 +63,7 @@ class Repository implements FeedRepository
      * @var DirectoryList
      */
     private $directoryList;
+    private Progress $progress;
 
     /**
      * Feed constructor.
@@ -85,8 +87,10 @@ class Repository implements FeedRepository
         UrlInterface $urlInterface,
         ProductDataRepository $productDataRepository,
         DirectoryList $directoryList,
-        File $fileDriver
+        File $fileDriver,
+        Progress $progress
     ) {
+        $this->progress = $progress;
         $this->feedConfigRepository = $feedConfigRepository;
         $this->datetime = $datetime;
         $this->storeManager = $storeManager;
@@ -118,6 +122,8 @@ class Repository implements FeedRepository
                         'preview_url' => $this->getUrl(self::PREVIEW_URL, ['store_id' => $storeId]),
                         'generate_url' => $this->getUrl(self::GENERATE_URL, ['store_id' => $storeId]),
                         'download_url' => $this->getUrl(self::DOWNLOAD_URL, ['store_id' => $storeId]),
+                        'ajax_generate_url' => $this->getUrl(self::AJAX_GENERATE_URL, ['store_id' => $storeId]),
+                        'progress_url' => $this->getUrl(self::PROGRESS_URL, ['store_id' => $storeId]),
                     ] + $this->getFeedLocation($storeId);
             } catch (\Exception $e) {
                 $this->logRepository->addErrorLog('LocalizedException', $e->getMessage());
@@ -191,9 +197,11 @@ class Repository implements FeedRepository
         $timeStart = microtime(true);
 
         if (!$this->feedConfigRepository->isEnabled($storeId)) {
+            $message = (string)__('Product Feed for this StoreId not enabled.');
+            $this->progress->fail($storeId, $message);
             return [
                 'success' => false,
-                'message' => __('Product Feed for this StoreId not enabled.')
+                'message' => $message
             ];
         }
 
@@ -201,16 +209,16 @@ class Repository implements FeedRepository
             $feed = [
                 'productFeed' => $this->productDataRepository->getProductData($storeId, [], $type)
             ];
+            $location = $this->getFeedLocation($storeId, $type);
+            $this->feedService->execute($feed, $storeId, $location['path']);
         } catch (\Exception $e) {
             $this->logRepository->addErrorLog('generateAndSaveFeed', $e->getMessage());
+            $this->progress->fail($storeId, $e->getMessage());
             return [
                 'success' => false,
                 'message' => $e->getMessage()
             ];
         }
-
-        $location = $this->getFeedLocation($storeId, $type);
-        $this->feedService->execute($feed, $storeId, $location['path']);
 
         $resultMsg = sprintf(
             'Products in feed: %s, generated in %s on %s (%s)',
@@ -222,6 +230,7 @@ class Repository implements FeedRepository
 
         $this->feedConfigRepository->setFeedGenerationResult($storeId, $resultMsg);
         $this->logRepository->addDebugLog('FeedGeneration', $resultMsg);
+        $this->progress->finish($storeId, $resultMsg);
 
         return [
             'success' => true,

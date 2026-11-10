@@ -11,6 +11,7 @@ use TradeTracker\Connect\Api\Config\System\FeedInterface as FeedConfigRepository
 use TradeTracker\Connect\Api\ProductData\RepositoryInterface as ProductData;
 use TradeTracker\Connect\Service\ProductData\Collector;
 use TradeTracker\Connect\Service\ProductData\Filter;
+use TradeTracker\Connect\Service\Feed\Progress;
 use TradeTracker\Connect\Service\ProductData\ImageProcessor;
 
 /**
@@ -26,6 +27,12 @@ class Repository implements ProductData
     private const EXCLUDE_ATTRIBUTE = 'tradetracker_exclude';
     private const CATEGORY_EXCLUDE_ATTRIBUTE = 'tradetracker_disable_export';
     private const CATEGORY_NAME_ATTRIBUTE = 'tradetracker_category';
+
+    /**
+     * How many rows to build between progress reports. Reporting every row would turn a catalogue
+     * run into as many cache writes as there are products.
+     */
+    private const PROGRESS_INTERVAL = 100;
 
     /**
      * Attributes every row needs, result key => Magento attribute
@@ -78,7 +85,8 @@ class Repository implements ProductData
         private readonly FeedConfigRepository $feedConfigRepository,
         private readonly Filter $filter,
         private readonly Collector $collector,
-        private readonly ImageProcessor $imageProcessor
+        private readonly ImageProcessor $imageProcessor,
+        private readonly Progress $progress
     ) {
     }
 
@@ -91,6 +99,11 @@ class Repository implements ProductData
         $this->staticFields = $this->feedConfigRepository->getStaticFields($storeId);
 
         $ids = $this->collectIds($storeId, $entityIds, $type === 'preview');
+        // A preview is not a run the configuration page waits for.
+        $report = $type !== 'preview';
+        if ($report) {
+            $this->progress->start($storeId, count($ids));
+        }
         [$imageSource, $imageMain] = $this->getImageSelection($storeId);
         $excludeOutOfStock = $this->feedConfigRepository->excludeOutOfStock($storeId);
         $extraParameters = $this->getExtraParameters($storeId);
@@ -123,7 +136,14 @@ class Repository implements ProductData
                 }
 
                 $result[$entityId] = $row;
+                if ($report && count($result) % self::PROGRESS_INTERVAL === 0) {
+                    $this->progress->advance($storeId, count($result));
+                }
             }
+        }
+
+        if ($report) {
+            $this->progress->advance($storeId, count($result));
         }
 
         return $result;

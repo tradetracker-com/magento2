@@ -16,7 +16,8 @@
         <table class="block-tradetracker-feeds-table">
             <tbody>
             <?php foreach ($feedData as $data): ?>
-                <tr>
+                <tr data-role="tt-feed-row"
+                    data-progress-url="<?= $block->escapeUrl($data['progress_url']); ?>">
                     <td>
                         <p><?= $block->escapeHtml($data['name']); ?></p>
                         <p>
@@ -48,8 +49,15 @@
                         <?php if (!empty($data['status'])): ?>
                             <p>
                                 <a class="generate"
-                                   href="<?= $block->escapeUrl($data['generate_url']); ?>">Generate</a>
+                                   href="<?= $block->escapeUrl($data['generate_url']); ?>"
+                                   data-ajax-url="<?= $block->escapeUrl($data['ajax_generate_url']); ?>">Generate</a>
                             </p>
+                            <div class="tt-feed-progress" data-role="tt-feed-progress" style="display: none;">
+                                <span data-role="tt-feed-progress-label"></span>
+                                <div class="tt-feed-progress__track">
+                                    <div class="tt-feed-progress__bar" data-role="tt-feed-progress-bar"></div>
+                                </div>
+                            </div>
                             <p>
                                 <a class="preview"
                                    href="<?= $block->escapeUrl($data['preview_url']); ?>"
@@ -76,4 +84,13 @@
             </tbody>
         </table>
     </div>
+    <script type="text/x-magento-init">
+        {
+            ".block-tradetracker-feeds-table": {
+                "TradeTracker_Connect/js/feed-progress": {
+                    "formKey": "<?= $block->escapeJs($block->getFormKey()); ?>"
+                }
+            }
+        }
+    </script>
 <?php endif; ?>
