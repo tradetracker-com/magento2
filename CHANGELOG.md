@@ -25,6 +25,8 @@
 * Fixed the extra fields reading the wrong key: an extra field was looked up under its attribute code while the collector keys values by field name, so it was empty unless the two happened to match.
 * Fixed HTML entities in catalogue values reaching the feed as text. The Luma sample data has "LumaTech&trade; V-Tee"; the writer escaped the entity a second time and TradeTracker showed "&trade;" instead of "™". Named and numeric entities now become the character they stand for, and characters XML does not allow are dropped.
 * Fixed DirectLinking giving a 404 when the Url Key is left on "Use system value". Saving the section on Default Config wrote one URL rewrite for store 0, which no request matches; it now writes a rewrite for every store view, with the key that store view inherits.
+* Fixed a simple that is both a grouped member and a bundle component never reaching the feed. The bundle setting "Only Bundle Product" dropped it whatever the grouped setting said; a child now stays as soon as one of its parent relations asks for simples, and goes only when every parent in the feed says parent only.
+* Fixed the URL rewrites of a previous DirectLinking Url Key staying behind after the key changes. The rewrites this module wrote for the same store view under another key are removed when the new one is saved.
 * Fixed `fromPrice` equalling `price` for a discounted product. The feed published the lowest price twice; `fromPrice` is now the regular price and `price` the selling price.
 * Removed three defaults from `etc/config.xml` that no field reads (`gtin_attribute`, `condition_type`, `condition_default`).
 
@@ -35,6 +37,8 @@
 * `PixelRepositoryTest` pins that a custom currency is sent exactly when the toggle is on and a code is set.
 * `ProgressTest` pins the progress record of a run: start, advance, finish, failure, and that store views do not share state.
 * `feed-progress.spec.ts` generates the feed from the configuration page and checks that the row reports the run, the page stays, and the progress endpoint answers for the store it ran for.
+* `ChildSelectionTest` pins which parents and children leave the feed when a child has parents of more than one type.
+* `grouped-products.spec.ts` checks that the yoga straps, grouped members and bundle components at once, are in the feed with "Only Linked Simple Products" and "Only Bundle Product".
 * `SaveRewriteTest` pins the DirectLinking rewrite per store view for an inherited and an explicit key, on Default Config and on a store view.
 * `Model\ProductData\RepositoryTest` pins the from price, the selling price and the static delivery time of a feed row.
 * `CanRestoreSelectDefaultTest` pins that every select whose first option means something has a default in `config.xml`.
