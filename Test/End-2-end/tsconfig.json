@@ -6,6 +6,13 @@
       "Helpers/*": ["support/helpers/*"],
       "Pages/*": ["support/pages/*"],
       "Fixtures/*": ["support/fixtures/*"]
-    }
+    },
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["node"]
   }
 }

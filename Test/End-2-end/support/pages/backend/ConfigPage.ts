@@ -15,7 +15,15 @@ export default class ConfigPage {
   async open(section: string): Promise<void> {
     await this.page.goto(adminConfigUrl(section));
     await this.page.waitForLoadState('networkidle');
-    await expect(this.page.locator('#config-edit-form')).toBeVisible();
+    const form = this.page.locator('#config-edit-form');
+    await form.waitFor({ state: 'visible', timeout: 30_000 }).catch(() => undefined);
+    if (await form.count() === 0) {
+      // "element not found" says nothing about why: the dashboard after a secret-key redirect, the
+      // login page after a lost session and an error page all look the same. Report where the
+      // browser ended up and what it was shown.
+      const body = (await this.page.locator('body').innerText().catch(() => '')).slice(0, 400).replace(/\s+/g, ' ');
+      throw new Error(`No configuration form for section ${section}.\nURL: ${this.page.url()}\nTitle: ${await this.page.title()}\nBody: ${body}`);
+    }
     await expect(this.page.locator('body')).not.toContainText('Exception');
   }
 
