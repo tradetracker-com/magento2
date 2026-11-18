@@ -25,7 +25,8 @@ class ConfigurableKey extends AbstractDataCollector
      * This method queries product relations, super attributes, and attribute values
      * to generate a mapping of super attribute selections per child–parent–store combination.
      * The SQL joins performed are:
-     *   - Joins catalog_product_relation to catalog_product_super_attribute on parent_id
+     *   - Joins catalog_product_relation to catalog_product_entity for the parent's entity_id
+     *     (cpr.parent_id is its row_id) and to catalog_product_super_attribute on parent_id
      *   - Joins to catalog_product_entity for child link field
      *   - Joins to catalog_product_entity_int for attribute values per store
      * The result is formatted as a nested array mapping:
@@ -47,7 +48,12 @@ class ConfigurableKey extends AbstractDataCollector
         $notVisibleIds = $this->getNotVisibleProductIds($storeId);
 
         $select = $connection->select()
-            ->from(['cpr' => $cprTable], ['child_id' => 'cpr.child_id', 'parent_id'])
+            ->from(['cpr' => $cprTable], ['child_id' => 'cpr.child_id'])
+            ->join(
+                ['pcpe' => $cpeTable],
+                'pcpe.' . $this->linkField . ' = cpr.parent_id',
+                ['parent_id' => 'pcpe.entity_id']
+            )
             ->joinLeft(
                 ['cpsa' => $cpsaTable],
                 'cpsa.product_id = cpr.parent_id',

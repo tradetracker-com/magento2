@@ -34,25 +34,14 @@ abstract class AbstractDataCollector
      */
     public string $linkField;
 
-    public ResourceConnection $resource;
-    public LogRepository $logRepository;
-    public WebsiteRepositoryInterface $websiteRepository;
-    public StoreRepositoryInterface $storeRepository;
-    private ModuleManager $moduleManager;
-
     public function __construct(
-        ResourceConnection $resource,
-        ModuleManager $moduleManager,
-        WebsiteRepositoryInterface $websiteRepository,
-        StoreRepositoryInterface $storeRepository,
-        LogRepository $logRepository,
+        public ResourceConnection $resource,
+        private ModuleManager $moduleManager,
+        public WebsiteRepositoryInterface $websiteRepository,
+        public StoreRepositoryInterface $storeRepository,
+        public LogRepository $logRepository,
         MetadataPool $metadataPool
     ) {
-        $this->websiteRepository = $websiteRepository;
-        $this->storeRepository = $storeRepository;
-        $this->resource = $resource;
-        $this->logRepository = $logRepository;
-        $this->moduleManager = $moduleManager;
         $this->linkField = $metadataPool->getMetadata(ProductInterface::class)->getLinkField();
     }
 

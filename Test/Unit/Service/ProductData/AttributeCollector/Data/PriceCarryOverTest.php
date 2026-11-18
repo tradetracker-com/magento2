@@ -141,7 +141,7 @@ class PriceCarryOverTest extends TestCase
             ->disableOriginalConstructor()
             ->onlyMethods([
                 'addFieldToSelect', 'addFieldToFilter', 'addStoreFilter',
-                'setStoreId', 'getSelect', 'getTable', 'getIterator',
+                'setStoreId', 'getSelect', 'getTable', 'getIterator', 'getConnection', 'getProductEntityMetadata',
             ])
             ->getMock();
         foreach (['addFieldToSelect', 'addFieldToFilter', 'addStoreFilter', 'setStoreId'] as $method) {
@@ -150,6 +150,19 @@ class PriceCarryOverTest extends TestCase
         $collection->method('getSelect')->willReturn($select);
         $collection->method('getTable')->willReturnArgument(0);
         $collection->method('getIterator')->willReturn(new \ArrayIterator([$product]));
+
+        // The variant-price query of the batch: no configurable has a buyable variant here.
+        $variantSelect = $this->createMock(\Magento\Framework\DB\Select::class);
+        foreach (['from', 'join', 'where', 'group'] as $method) {
+            $variantSelect->method($method)->willReturnSelf();
+        }
+        $connection = $this->createMock(\Magento\Framework\DB\Adapter\AdapterInterface::class);
+        $connection->method('select')->willReturn($variantSelect);
+        $connection->method('fetchPairs')->willReturn([]);
+        $collection->method('getConnection')->willReturn($connection);
+        $metadata = $this->createMock(\Magento\Framework\EntityManager\EntityMetadataInterface::class);
+        $metadata->method('getLinkField')->willReturn('entity_id');
+        $collection->method('getProductEntityMetadata')->willReturn($metadata);
 
         $factory = $this->createMock(CollectionFactory::class);
         $factory->method('create')->willReturn($collection);

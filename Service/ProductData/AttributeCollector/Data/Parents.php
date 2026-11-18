@@ -31,7 +31,9 @@ class Parents extends AbstractDataCollector
      * @param bool $excludeDisabled Whether to exclude disabled parent products.
      * @param int $storeId Store ID used for visibility filtering.
      * @param bool $allProducts Map the whole catalogue and ignore $productIds.
-     * @return array<int, array<int, string>> Mapping of child IDs to parent IDs and their type_id.
+     * @return array<int, array<int, string>> Mapping of child entity IDs to parent entity IDs and their type_id.
+     *     cpr.parent_id is the parent's row_id, which Commerce staging moves away from its entity_id; the
+     *     parent's entity_id comes from the entity table.
      */
     private function collectParentsData(
         array $productIds,
@@ -51,14 +53,17 @@ class Parents extends AbstractDataCollector
         $notVisibleIds = $this->getNotVisibleProductIds($storeId);
 
         $select = $connection->select()
-            ->from(['cpr' => $cprTable], ['child_id' => 'cpr.child_id', 'parent_id'])
+            ->from(['cpr' => $cprTable], ['child_id' => 'cpr.child_id'])
             ->join(
                 ['cpe' => $cpeTable],
                 "cpe.{$this->linkField} = cpr.parent_id",
-                ['type_id' => new \Zend_Db_Expr("COALESCE(cpe.type_id, 'simple')")]
+                [
+                    'parent_id' => 'cpe.entity_id',
+                    'type_id' => new \Zend_Db_Expr("COALESCE(cpe.type_id, 'simple')"),
+                ]
             )->join(
                 ['cpw' => $cpwTable],
-                "cpw.product_id = cpe.{$this->linkField}",
+                "cpw.product_id = cpe.entity_id",
                 []
             )->where('cpw.website_id = ?', $websiteId);
 

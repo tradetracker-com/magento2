@@ -55,12 +55,39 @@ class ConfigurableKeyTest extends TestCase
         self::assertSame([], $this->keysFor([]));
     }
 
-    private function keysFor(array $rows): array
+    /**
+     * The keys are looked up by parent entity id in the collector; cpr.parent_id is a row id, which
+     * is a different number on Commerce once the parent has had a scheduled update.
+     */
+    public function testKeysAreHandedOutByTheParentsEntityId(): void
+    {
+        $this->joinCalls = [];
+        $this->keysFor([], 'row_id');
+
+        $parentJoin = null;
+        foreach ($this->joinCalls as $call) {
+            if (($call[0]['pcpe'] ?? null) === 'catalog_product_entity') {
+                $parentJoin = $call;
+            }
+        }
+        self::assertNotNull($parentJoin, 'the parent entity is not joined');
+        self::assertSame('pcpe.row_id = cpr.parent_id', $parentJoin[1]);
+        self::assertSame(['parent_id' => 'pcpe.entity_id'], $parentJoin[2]);
+    }
+
+    /** @var array<int, array<int, mixed>> */
+    private array $joinCalls = [];
+
+    private function keysFor(array $rows, string $linkField = 'entity_id'): array
     {
         $select = $this->createMock(Select::class);
-        foreach (['from', 'joinLeft', 'where', 'join', 'columns'] as $method) {
+        foreach (['from', 'joinLeft', 'where', 'columns'] as $method) {
             $select->method($method)->willReturnSelf();
         }
+        $select->method('join')->willReturnCallback(function (...$arguments) use ($select) {
+            $this->joinCalls[] = $arguments;
+            return $select;
+        });
 
         $connection = $this->createMock(AdapterInterface::class);
         $connection->method('select')->willReturn($select);
@@ -73,7 +100,7 @@ class ConfigurableKeyTest extends TestCase
         $resource->method('getTableName')->willReturnArgument(0);
 
         $metadata = $this->createMock(EntityMetadataInterface::class);
-        $metadata->method('getLinkField')->willReturn('entity_id');
+        $metadata->method('getLinkField')->willReturn($linkField);
         $metadataPool = $this->createMock(MetadataPool::class);
         $metadataPool->method('getMetadata')->with(ProductInterface::class)->willReturn($metadata);
 

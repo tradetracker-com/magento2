@@ -10,6 +10,7 @@ namespace TradeTracker\Connect\Service\ProductData;
 use Magento\Catalog\Api\Data\CategoryInterface;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\EntityManager\MetadataPool;
+use TradeTracker\Connect\Api\Log\RepositoryInterface as LogRepository;
 
 class Collector
 {
@@ -18,26 +19,16 @@ class Collector
     private const PARENT_TYPES = ['configurable', 'bundle', 'grouped'];
     private string $linkField;
 
-    private Data $data;
-    private AttributeCollector\Data\ConfigurableKey $configurableKey;
-    private AttributeCollector\Data\Parents $parents;
-    private ResourceConnection $resourceConnection;
-    private ChildSelection $childSelection;
-
     public function __construct(
-        Data $data,
-        AttributeCollector\Data\ConfigurableKey $configurableKey,
-        AttributeCollector\Data\Parents $parents,
-        ResourceConnection $resourceConnection,
+        private readonly Data $data,
+        private readonly AttributeCollector\Data\ConfigurableKey $configurableKey,
+        private readonly AttributeCollector\Data\Parents $parents,
+        private readonly ResourceConnection $resourceConnection,
         MetadataPool $metadataPool,
-        ChildSelection $childSelection
+        private readonly ChildSelection $childSelection,
+        private readonly LogRepository $logRepository
     ) {
-        $this->data = $data;
-        $this->configurableKey = $configurableKey;
-        $this->parents = $parents;
-        $this->resourceConnection = $resourceConnection;
         $this->linkField = $metadataPool->getMetadata(CategoryInterface::class)->getLinkField();
-        $this->childSelection = $childSelection;
     }
 
     /**
@@ -46,9 +37,13 @@ class Collector
      *
      * @param int[] $entityIds List of product entity IDs.
      * @param array $attributeMap Mapping of attributes to retrieve.
-     * @param array $extraParameters Additional parameters including behavior and filters.
+     * @param array $extraParameters Additional parameters including behavior and filters; whether a parent
+     *     "is in the feed" is read from filters.feed_entity_ids, the whole feed, and from $entityIds when
+     *     the caller passes no such set.
      * @param int $storeId Store ID context for data retrieval.
-     * @return array<int, array<string, mixed>> Processed product data keyed by product entity ID.
+     * @return array<int, array<string, mixed>> Processed product data keyed by product entity ID. A parent
+     *     loaded for a child's inheritance only is not part of it: its own batch writes it, or a filter
+     *     kept it out of the feed altogether.
      */
     public function execute(
         array $entityIds,
@@ -60,17 +55,17 @@ class Collector
             return [];
         }
 
-        $rowIds = $this->getRowsIds($entityIds);
-        $productIds = array_flip($rowIds);
         $excludeDisabled = $extraParameters['filters']['exclude_disabled'];
-        $parents = $this->parents->execute($productIds, $excludeDisabled, $storeId);
+        $parents = $this->childSelection->orderParents(
+            $this->parents->execute($entityIds, $excludeDisabled, $storeId)
+        );
 
         $toUnset = [];
         $parentAttributeToUse = [];
         $extraProductsToLoad = [];
 
         $parentAttributes = $this->getParentAttributes($extraParameters);
-        foreach ($productIds as $productId) {
+        foreach ($entityIds as $productId) {
             if (!isset($parents[$productId])) {
                 continue;
             }
@@ -82,7 +77,7 @@ class Collector
 
                 $this->handleParentUsage(
                     (int)$productId,
-                    $parentEntityId,
+                    (int)$parentEntityId,
                     $parentType,
                     $extraParameters,
                     $parentAttributes,
@@ -93,8 +88,10 @@ class Collector
             }
         }
 
-        $selection = $this->childSelection->resolve($parents, $extraParameters['behaviour'] ?? [], $entityIds);
+        $feedIds = $extraParameters['filters']['feed_entity_ids'] ?? $entityIds;
+        $selection = $this->childSelection->resolve($parents, $extraParameters['behaviour'] ?? [], $feedIds);
         $toUnset = array_merge($toUnset, $selection['parents'], $selection['children']);
+        $this->logLeftOutChildren($selection['children'], $parents);
 
         $allIds = array_merge($entityIds, $extraProductsToLoad);
         $rowIds = $this->getRowsIds($allIds);
@@ -107,7 +104,7 @@ class Collector
             $rowIds
         );
 
-        $configKeys = $this->configurableKey->execute($productIds, $excludeDisabled, $storeId);
+        $configKeys = $this->configurableKey->execute($entityIds, $excludeDisabled, $storeId);
         $this->processData(
             $data,
             $parents,
@@ -115,13 +112,45 @@ class Collector
             $configKeys,
             $extraParameters,
             $storeId,
-            $toUnset,
-            $rowIds
+            $toUnset
         );
 
         $this->unsetReplacedParentTypes($toUnset, $allIds, $extraParameters);
 
-        return array_diff_key($data, array_flip($toUnset));
+        return array_diff_key($data, array_flip($toUnset), array_flip(array_diff($extraProductsToLoad, $entityIds)));
+    }
+
+    /**
+     * Name, in the debug log, every child the parent settings left out and the parents that did it.
+     * The feed itself gives no trace of the product, so this is the only place a merchant can see
+     * why a variant is missing.
+     *
+     * @param int[] $children
+     * @param array<int, array<int, string>> $parents child id => [parent id => parent type]
+     */
+    private function logLeftOutChildren(array $children, array $parents): void
+    {
+        if (empty($children)) {
+            return;
+        }
+
+        $lines = [];
+        foreach ($children as $childId) {
+            $relations = [];
+            foreach ($parents[$childId] ?? [] as $parentId => $parentType) {
+                $relations[] = $parentId . ' ' . $parentType;
+            }
+            $lines[] = $childId . ' (' . implode(', ', $relations) . ')';
+        }
+
+        $this->logRepository->addDebugLog(
+            'ProductData',
+            sprintf(
+                '%d children left out: every parent of theirs in the feed is set to "Only Parent Product": %s',
+                count($children),
+                implode('; ', $lines)
+            )
+        );
     }
 
     /**
@@ -148,12 +177,12 @@ class Collector
         $connection = $this->resourceConnection->getConnection();
         $cpeTable = $this->resourceConnection->getTableName('catalog_product_entity');
         $select = $connection->select()
-            ->from($cpeTable, [$this->linkField])
-            ->where("{$this->linkField} IN (?)", $allIds)
+            ->from($cpeTable, ['entity_id'])
+            ->where('entity_id IN (?)', $allIds)
             ->where('type_id IN (?)', $typesToReplace);
 
-        foreach ($connection->fetchCol($select) as $linkId) {
-            $toUnset[] = (int)$linkId;
+        foreach ($connection->fetchCol($select) as $entityId) {
+            $toUnset[] = (int)$entityId;
         }
     }
 
@@ -170,7 +199,7 @@ class Collector
 
         $select = $connection->select()
             ->from($table, ['entity_id', $this->linkField])
-            ->where("{$this->linkField} IN (?)", $entityIds);
+            ->where('entity_id IN (?)', $entityIds);
 
         return $connection->fetchPairs($select);
     }
@@ -237,7 +266,7 @@ class Collector
 
         if (!empty($parentAttributes[$parentType])) {
             foreach ($parentAttributes[$parentType] as $parentAttribute) {
-                $parentAttributeToUse[$entityId][$parentAttribute] = $parentId;
+                $parentAttributeToUse[$entityId][$parentAttribute] ??= $parentId;
             }
         }
 
@@ -265,26 +294,23 @@ class Collector
         array $configKeys,
         array $extraParameters,
         int $storeId,
-        array &$toUnset,
-        array $rowIds
+        array &$toUnset
     ): void {
-        $productIds = array_flip($rowIds);
         foreach ($data as $productId => $productData) {
             if (!$this->checkExtraFilters($extraParameters['filters']['custom'], $productData)) {
                 $toUnset[] = $productId;
             }
 
             if (isset($parents[$productId])) {
-                $parentRowId = key($parents[$productId]);
-                if ($parentRowId !== null && $parentId = $productIds[$parentRowId] ?? null) {
+                $parentId = key($parents[$productId]);
+                if ($parentId !== null && isset($data[$parentId])) {
                     $data[$productId]['parent_id'] = $parentId;
                     $data[$productId]['parent_title'] = $data[$parentId]['title'] ?? null;
                 }
             }
 
             if (isset($parentAttributeToUse[$productId])) {
-                foreach ($parentAttributeToUse[$productId] as $parentAttribute => $rowId) {
-                    $parentId = $productIds[$rowId];
+                foreach ($parentAttributeToUse[$productId] as $parentAttribute => $parentId) {
                     if (!isset($data[$parentId][$parentAttribute])) {
                         continue;
                     }
@@ -298,8 +324,7 @@ class Collector
                             $parentId,
                             $configKeys,
                             $extraParameters,
-                            $storeId,
-                            $rowId
+                            $storeId
                         );
                     }
                 }
@@ -418,12 +443,11 @@ class Collector
         int $parentId,
         array $configKeys,
         array $extraParameters,
-        int $storeId,
-        int $rowId
+        int $storeId
     ): void {
         $parentType = $data[$parentId]['type_id'] ?? '';
         if (($extraParameters['behaviour'][$parentType]['use_parent_url'] ?? 0) == 1) {
-            $suffix = $this->getConfigKeySuffix($configKeys, $productId, $rowId, $storeId);
+            $suffix = $this->getConfigKeySuffix($configKeys, $productId, $parentId, $storeId);
             if ($suffix !== null) {
                 $data[$productId][self::ATTR_URL] .= $suffix;
             }

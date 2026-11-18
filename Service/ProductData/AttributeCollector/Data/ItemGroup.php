@@ -64,7 +64,7 @@ class ItemGroup extends AbstractDataCollector
             ->where('cpe.type_id = ?', 'configurable')
             ->join(
                 ['cpw' => $cpwTable],
-                "cpw.product_id = cpe.{$this->linkField}",
+                "cpw.product_id = cpe.entity_id",
                 []
             )->where('cpw.website_id = ?', $websiteId);
 
