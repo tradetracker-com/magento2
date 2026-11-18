@@ -45,8 +45,8 @@ class Comment implements CommentInterface
      */
     public function getCommentText($elementValue)
     {
-        $storeId = $this->request->getParam('store');
-        $store = $this->configRepository->getStore($storeId);
+        $storeId = (int)$this->request->getParam('store');
+        $store = $this->configRepository->getStore($storeId > 0 ? $storeId : null);
         $url = $store->getBaseUrl() . $elementValue;
         return (string)__(
             'Set a Url Key to be used for Direct Linking. Current saved value: "%1". <br/>Result: "%2"',
