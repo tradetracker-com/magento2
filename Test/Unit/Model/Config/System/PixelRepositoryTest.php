@@ -62,6 +62,19 @@ class PixelRepositoryTest extends TestCase
         self::assertSame('USD', $this->build($scopeConfig)->getCustomCurrencyCode(self::STORE_ID));
     }
 
+    public function testThePixelSwitchAndTheOrderTabSwitchAreReadFromTheirOwnPaths(): void
+    {
+        $scopeConfig = $this->createMock(ScopeConfigInterface::class);
+        $scopeConfig->method('isSetFlag')->willReturnCallback(
+            static fn (string $path, string $scope, $storeId) => $storeId === self::STORE_ID
+                && $path === PixelInterface::XML_PATH_ORDER_TAB
+        );
+
+        self::assertTrue($this->build($scopeConfig)->isOrderTabEnabled(self::STORE_ID));
+        self::assertFalse($this->build($scopeConfig)->isPixelEnabled(self::STORE_ID));
+        self::assertFalse($this->build($scopeConfig)->isEnabled(self::STORE_ID));
+    }
+
     private function repository(bool $overwrite, string $code): PixelRepository
     {
         $scopeConfig = $this->createMock(ScopeConfigInterface::class);

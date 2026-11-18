@@ -44,6 +44,16 @@
                 <field id="enable">1</field>
             </depends>
         </field>
+        <field id="order_tab" canRestore="1" translate="label comment" type="select" sortOrder="13" showInDefault="1"
+               showInWebsite="1" showInStore="1">
+            <label>Conversion Tab on Orders</label>
+            <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+            <config_path>tradetracker/pixel/order_tab</config_path>
+            <comment>Shows a "TradeTracker Conversion" tab on the order page in the admin. The transaction is fetched from TradeTracker when the tab is opened, never while the order page loads. The status column in the order grid is kept up to date by the nightly sync regardless of this setting.</comment>
+            <depends>
+                <field id="enable">1</field>
+            </depends>
+        </field>
         <field id="heading_currency" translate="label comment" type="text" sortOrder="20" showInDefault="1"
                showInWebsite="1" showInStore="1">
             <label>Advanced Settings</label>

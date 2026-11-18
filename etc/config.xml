@@ -28,6 +28,7 @@
             </advanced>
             <pixel>
                 <enable>0</enable>
+                <order_tab>1</order_tab>
                 <overwrite_currency>0</overwrite_currency>
             </pixel>
             <feed>

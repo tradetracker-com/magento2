@@ -10,69 +10,28 @@ namespace TradeTracker\Connect\Block\Adminhtml\Order\View\Tab;
 use Magento\Backend\Block\Template;
 use Magento\Backend\Block\Template\Context;
 use Magento\Backend\Block\Widget\Tab\TabInterface;
-use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Registry;
 use Magento\Sales\Model\Order;
-use TradeTracker\Connect\Api\Config\System\PixelInterface as ConfigRepository;
-use TradeTracker\Connect\Service\Api\Adapter;
+use TradeTracker\Connect\Api\Config\System\PixelInterface;
 
 /**
- * Class TransactionDetail
- * To add tab to sales order view
+ * The "TradeTracker Conversion" tab on the order page.
+ *
+ * An AJAX tab: the order page renders only its title, and the tab's content comes from
+ * tradetracker/transaction/tab when the admin opens it. Nothing here calls TradeTracker.
  *
  * @api
  */
 class TransactionDetail extends Template implements TabInterface
 {
+    public const VIEW_RESOURCE = 'Magento_Sales::actions_view';
 
-    /**
-     * Template
-     *
-     * @var string
-     */
-    protected $_template = 'TradeTracker_Connect::order/view/tab/transaction_detail.phtml';
-
-    /**
-     * Core registry
-     *
-     * @var Registry
-     */
-    private $coreRegistry;
-
-    /**
-     * @var Adapter
-     */
-    private $adapter;
-    /**
-     * @var ConfigRepository
-     */
-    private $configRepository;
-    /**
-     * @var ResourceConnection
-     */
-    private $resource;
-
-    /**
-     * TransactionDetail constructor.
-     * @param Context $context
-     * @param Registry $coreRegistry
-     * @param Adapter $adapter
-     * @param ConfigRepository $configRepository
-     * @param ResourceConnection $resource
-     * @param array $data
-     */
     public function __construct(
         Context $context,
-        Registry $coreRegistry,
-        Adapter $adapter,
-        ConfigRepository $configRepository,
-        ResourceConnection $resource,
+        private readonly Registry $coreRegistry,
+        private readonly PixelInterface $config,
         array $data = []
     ) {
-        $this->coreRegistry = $coreRegistry;
-        $this->adapter = $adapter;
-        $this->configRepository = $configRepository;
-        $this->resource = $resource;
         parent::__construct($context, $data);
     }
 
@@ -97,7 +56,16 @@ class TransactionDetail extends Template implements TabInterface
      */
     public function canShowTab(): bool
     {
-        return true;
+        $order = $this->getOrder();
+        if ($order === null) {
+            return false;
+        }
+        $storeId = (int)$order->getStoreId();
+
+        return $this->config->isEnabled()
+            && $this->config->isPixelEnabled($storeId)
+            && $this->config->isOrderTabEnabled($storeId)
+            && $this->_authorization->isAllowed(self::VIEW_RESOURCE);
     }
 
     /**
@@ -109,101 +77,30 @@ class TransactionDetail extends Template implements TabInterface
     }
 
     /**
-     * @return array
+     * Marks the tab as loaded over AJAX, from getTabUrl(), when it is opened.
      */
-    public function getTransaction()
+    public function getTabClass(): string
     {
-        $order = $this->getOrder();
-        $storeId = (int)$order->getStoreId();
-        $campaignID = $this->configRepository->getCampaignId($storeId);
-        $data = $this->configRepository->getApiCredentials($storeId);
-        $result = $this->adapter->execute($data);
-        if ($result['success']) {
-            $client = $result['client'];
-            try {
-                $result = $client->getConversionTransactions(
-                    $campaignID,
-                    ['Characteristics' => $order->getIncrementId()]
-                );
-            } catch (\Exception $exception) {
-                return [
-                    'success' => false,
-                    'error' => $exception->getMessage()
-                ];
-            }
-            if (empty($result)) {
-                return [
-                    'success' => false,
-                    'error' => 'No transaction found for current order'
-                ];
-            }
-            $trans = [];
-            foreach ($result as $transaction) {
-                if ($transaction->characteristic == $order->getIncrementId()) {
-                    $connection = $this->resource->getConnection();
-                    $connection->update(
-                        $this->resource->getTableName('sales_order'),
-                        ['tt_status' => $transaction->transactionStatus],
-                        ['increment_id = ?' => $transaction->characteristic]
-                    );
-                    $connection->update(
-                        $this->resource->getTableName('sales_order_grid'),
-                        ['tt_status' => $transaction->transactionStatus],
-                        ['increment_id = ?' => $transaction->characteristic]
-                    );
-                    $trans = $transaction;
-                }
-            }
-            if (empty($trans)) {
-                $connection = $this->resource->getConnection();
-                $connection->update(
-                    $this->resource->getTableName('sales_order'),
-                    ['tt_status' => 'No transaction'],
-                    ['increment_id = ?' => $order->getIncrementId()]
-                );
-                $connection->update(
-                    $this->resource->getTableName('sales_order_grid'),
-                    ['tt_status' => 'No transaction'],
-                    ['increment_id = ?' => $order->getIncrementId()]
-                );
-                return [
-                    'success' => false,
-                    'error' => 'No transaction found for current order'
-                ];
-            }
-            return [
-                'success' => true,
-                'data' => $trans
-            ];
-        } else {
-            return $result;
-        }
+        return 'ajax only';
+    }
+
+    public function getTabUrl(): string
+    {
+        return $this->getUrl('tradetracker/transaction/tab', ['order_id' => $this->getOrder()?->getId()]);
+    }
+
+    public function getOrder(): ?Order
+    {
+        $order = $this->coreRegistry->registry('current_order');
+
+        return $order instanceof Order ? $order : null;
     }
 
     /**
-     * Retrieves order model instance
-     *
-     * @return Order
+     * The tab has no body of its own on the order page.
      */
-    public function getOrder(): Order
+    protected function _toHtml(): string
     {
-        return $this->coreRegistry->registry('current_order');
-    }
-
-    /**
-     * @return array
-     */
-    public function getReject(): array
-    {
-        $creditmemos = $this->getOrder()->getCreditmemosCollection();
-        if (($creditmemos && $creditmemos->getSize())
-            || !$this->getOrder()->getInvoiceCollection()->getSize()
-        ) {
-            return ['success' => true];
-        }
-        return [
-            'success' => false,
-            'data' => 'Transaction not allowed to reject, as creditmemo is missing.'
-        ];
+        return '';
     }
 }

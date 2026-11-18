@@ -4,74 +4,44 @@
  * See COPYING.txt for license details.
  */
 
-use TradeTracker\Connect\Block\Adminhtml\Order\View\Tab\TransactionDetail;
+use Magento\Framework\Escaper;
+use TradeTracker\Connect\Block\Adminhtml\Order\View\Transaction;
 
-/** @var TransactionDetail $block */
+/** @var Transaction $block */
+/** @var Escaper $escaper */
 
 $transaction = $block->getTransaction();
+$rows = [];
+if (isset($transaction['data'])) {
+    $data = $transaction['data'];
+    $rows = [
+        'Conversion Date' => (string)($data->registrationDate ?? ''),
+        'Campaign ID' => (string)($data->campaign->ID ?? ''),
+        'Transaction ID' => (string)($data->ID ?? ''),
+        'Transaction Amount' => (string)($data->orderAmount ?? ''),
+        'Currency' => (string)($data->currency ?? ''),
+        'Status' => (string)($data->transactionStatus ?? ''),
+    ];
+}
 ?>
-<div class="fieldset-wrapper customer-information">
+<div class="fieldset-wrapper customer-information tradetracker-transaction">
     <div class="admin__page-section-title">
-        <span class="title">TradeTracker Conversion</span>
+        <span class="title"><?= $escaper->escapeHtml(__('TradeTracker Conversion')) ?></span>
     </div>
     <div>
-        <?php if ($transaction['success']): ?>
-            <table style="width: 500px;" cellpadding="15">
+        <?php if ($rows !== []): ?>
+            <table class="admin__table-secondary" style="width: 500px;">
                 <tbody>
+                <?php foreach ($rows as $label => $value): ?>
                     <tr>
-                        <td style="width: 200px;padding: 10px;font-weight: bold;">
-                            <?= $block->escapeHtml('Conversion Date'); ?>
-                        </td>
-                        <td>
-                            <?= $block->escapeHtml($transaction['data']->registrationDate) ?>
-                        </td>
+                        <th style="width: 200px;"><?= $escaper->escapeHtml(__($label)) ?></th>
+                        <td><?= $escaper->escapeHtml($value) ?></td>
                     </tr>
-                    <tr>
-                        <td style="width: 200px;padding: 10px;font-weight: bold;">
-                            <?= $block->escapeHtml('Campaign ID'); ?>
-                        </td>
-                        <td>
-                            <?= $block->escapeHtml($transaction['data']->campaign->ID) ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="width: 200px;padding: 10px;font-weight: bold;">
-                            <?= $block->escapeHtml('Transaction ID'); ?>
-                        </td>
-                        <td>
-                            <?= $block->escapeHtml($transaction['data']->ID) ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="width: 200px;padding: 10px;font-weight: bold;">
-                            <?= $block->escapeHtml('Transaction Amount'); ?>
-                        </td>
-                        <td>
-                            <?= $block->escapeHtml($transaction['data']->orderAmount) ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="width: 200px;padding: 10px;font-weight: bold;">
-                            <?= $block->escapeHtml('Currency'); ?>
-                        </td>
-                        <td>
-                            <?= $block->escapeHtml($transaction['data']->currency) ?>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="width: 200px;padding: 10px;font-weight: bold;">
-                            <?= $block->escapeHtml('Status'); ?>
-                        </td>
-                        <td>
-                            <?= $block->escapeHtml($transaction['data']->transactionStatus) ?>
-                        </td>
-                    </tr>
+                <?php endforeach; ?>
                 </tbody>
             </table>
         <?php else: ?>
-            <p><?= $block->escapeHtml($transaction['error']) ?></p>
+            <p class="tradetracker-transaction-message"><?= $escaper->escapeHtml($transaction['error'] ?? '') ?></p>
         <?php endif; ?>
     </div>
 </div>
-
-
