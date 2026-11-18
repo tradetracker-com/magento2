@@ -14,6 +14,7 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use TradeTracker\Connect\Api\Config\RepositoryInterface as ConfigRepository;
 use TradeTracker\Connect\Api\Feed\RepositoryInterface as FeedRepository;
+use TradeTracker\Connect\Exception\ApiException;
 use TradeTracker\Connect\Service\Api\Adapter;
 
 /**
@@ -72,9 +73,9 @@ class Generate extends Action
     public function execute()
     {
         $storeId = (int)$this->getRequest()->getParam('store_id');
-        $apiCredentials = $this->configRepository->getApiCredentials($storeId);
-        $result = $this->adapter->execute($apiCredentials);
-        if (!$result['success']) {
+        try {
+            $this->adapter->authenticate($this->configRepository->getApiCredentials($storeId));
+        } catch (ApiException $exception) {
             $this->messageManager->addErrorMessage(
                 'Please fill in a valid customer ID & Passphrase in the general section to create an XML feed.'
             );

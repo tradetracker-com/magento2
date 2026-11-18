@@ -31,4 +31,14 @@ class AdvancedRepository extends ConfigRepository implements AdvancedInterface
     {
         return $this->getStoreValue(self::TGI_VALUE);
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function getApiTimeout(): int
+    {
+        $timeout = (int)$this->getStoreValue(self::API_TIMEOUT);
+
+        return $timeout > 0 ? $timeout : self::DEFAULT_API_TIMEOUT;
+    }
 }

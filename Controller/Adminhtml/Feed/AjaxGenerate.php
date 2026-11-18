@@ -15,6 +15,7 @@ use Magento\Framework\Controller\ResultInterface;
 use TradeTracker\Connect\Api\Config\RepositoryInterface as ConfigRepository;
 use TradeTracker\Connect\Api\Feed\RepositoryInterface as FeedRepository;
 use TradeTracker\Connect\Api\Log\RepositoryInterface as LogRepository;
+use TradeTracker\Connect\Exception\ApiException;
 use TradeTracker\Connect\Service\Api\Adapter;
 use TradeTracker\Connect\Service\Feed\Progress as FeedProgress;
 
@@ -57,8 +58,9 @@ class AjaxGenerate extends Action
             ]);
         }
 
-        $credentials = $this->adapter->execute($this->configRepository->getApiCredentials($storeId));
-        if (!$credentials['success']) {
+        try {
+            $this->adapter->authenticate($this->configRepository->getApiCredentials($storeId));
+        } catch (ApiException $exception) {
             return $result->setData([
                 'success' => false,
                 'error' => (string)__(

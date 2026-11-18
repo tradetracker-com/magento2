@@ -24,6 +24,7 @@
             </feeds>
             <advanced>
                 <enable_multi_country>0</enable_multi_country>
+                <api_timeout>10</api_timeout>
             </advanced>
             <pixel>
                 <enable>0</enable>
