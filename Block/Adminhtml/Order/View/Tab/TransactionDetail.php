@@ -65,6 +65,7 @@ class TransactionDetail extends Template implements TabInterface
         return $this->config->isEnabled()
             && $this->config->isPixelEnabled($storeId)
             && $this->config->isOrderTabEnabled($storeId)
+            && $this->config->getCampaignId($storeId) !== ''
             && $this->_authorization->isAllowed(self::VIEW_RESOURCE);
     }
 

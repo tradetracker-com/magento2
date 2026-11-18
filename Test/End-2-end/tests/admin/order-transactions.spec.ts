@@ -128,6 +128,16 @@ test.describe('TradeTracker Conversion on the order page', () => {
     await configure({});
   });
 
+  test('the tab stays off the order page without a Campaign ID', async ({ page }) => {
+    const order = await placeOrder();
+    await configure({ 'tradetracker/pixel/campaign_id': '' });
+
+    await openOrder(page, order);
+
+    await expect(page.locator(TAB_LINK)).toHaveCount(0);
+    await configure({});
+  });
+
   test('cancelling an order queues one rejection and sends nothing', async ({ page }) => {
     const order = await placeOrder();
     await openOrder(page, order);

@@ -62,6 +62,11 @@ class TransactionDetailTest extends TestCase
         self::assertFalse($this->block(true, true, false, true)->canShowTab());
     }
 
+    public function testAStoreViewWithoutACampaignHidesTheTab(): void
+    {
+        self::assertFalse($this->block(true, true, true, true, true, '')->canShowTab());
+    }
+
     public function testAnAdminWithoutOrderAccessDoesNotSeeTheTab(): void
     {
         self::assertFalse($this->block(true, true, true, false)->canShowTab());
@@ -81,7 +86,7 @@ class TransactionDetailTest extends TestCase
         self::assertSame('', $block->toHtml());
     }
 
-    private function block(bool $enabled, bool $pixel, bool $tab, bool $allowed, bool $withOrder = true): TransactionDetail
+    private function block(bool $enabled, bool $pixel, bool $tab, bool $allowed, bool $withOrder = true, string $campaign = '1234'): TransactionDetail
     {
         $authorization = $this->createMock(AuthorizationInterface::class);
         $authorization->method('isAllowed')->with('Magento_Sales::actions_view')->willReturn($allowed);
@@ -99,6 +104,7 @@ class TransactionDetailTest extends TestCase
         $config->method('isEnabled')->willReturn($enabled);
         $config->method('isPixelEnabled')->with(2)->willReturn($pixel);
         $config->method('isOrderTabEnabled')->with(2)->willReturn($tab);
+        $config->method('getCampaignId')->with(2)->willReturn($campaign);
 
         $registry = new Registry();
         if ($withOrder) {
