@@ -35,7 +35,6 @@ class AdminResourceTest extends TestCase
         'Feed\Preview' => self::CONFIG,
         'Feed\Progress' => self::CONFIG,
         'Log\Stream' => self::CONFIG,
-        'Transaction\Status' => self::CONFIG,
         'VersionCheck\Changelog' => self::CONFIG,
         'VersionCheck\Index' => self::CONFIG,
     ];

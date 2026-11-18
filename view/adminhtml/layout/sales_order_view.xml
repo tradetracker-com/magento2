@@ -20,9 +20,5 @@
                name="tradetracker_details"
         />
         <move element="tradetracker_details" destination="order_additional_info" before="-"/>
-        <referenceContainer name="content">
-            <block class="TradeTracker\Connect\Block\Adminhtml\Status\Edit" name="tradetracker_reason_edit"
-                   template="TradeTracker_Connect::reason.phtml"/>
-        </referenceContainer>
     </body>
 </page>
