@@ -47,7 +47,7 @@ class Wsdl
         $directory = $this->filesystem->getDirectoryWrite(DirectoryList::VAR_DIR);
         if (!$this->isFresh($directory)) {
             try {
-                $content = $this->transport->get(self::URL, $timeout);
+                $content = $this->transport->get(self::URL, $timeout)->body;
                 if (!str_contains($content, 'definitions')) {
                     throw new ApiUnavailableException('The WSDL answer is not a WSDL document');
                 }

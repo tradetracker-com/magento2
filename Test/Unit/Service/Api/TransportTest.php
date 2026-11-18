@@ -12,6 +12,7 @@ use Magento\Framework\HTTP\Client\CurlFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use TradeTracker\Connect\Exception\ApiUnavailableException;
+use TradeTracker\Connect\Service\Api\Response;
 use TradeTracker\Connect\Service\Api\Transport;
 
 /**
@@ -35,7 +36,18 @@ class TransportTest extends TestCase
         $curl->expects(self::once())->method('setHeaders')->with(['SOAPAction' => '"x"']);
         $curl->expects(self::once())->method('post')->with('http://ws/', '<req/>');
 
-        self::assertSame('<Envelope/>', $this->transport($curl)->post('http://ws/', '<req/>', ['SOAPAction' => '"x"'], 3));
+        self::assertSame('<Envelope/>', $this->transport($curl)->post('http://ws/', '<req/>', ['SOAPAction' => '"x"'], 3)->body);
+    }
+
+    public function testCookiesGoOutWithTheRequestAndComeBackFromTheAnswer(): void
+    {
+        $curl = $this->curl(200, '<Envelope/>', ['PHPSESSID' => 'abc123', 'other' => 'x']);
+        $curl->expects(self::once())->method('setCookies')->with(['PHPSESSID' => 'abc123']);
+
+        $response = $this->transport($curl)->post('http://ws/', '<req/>', [], 3, ['PHPSESSID' => 'abc123']);
+
+        self::assertInstanceOf(Response::class, $response);
+        self::assertSame(['PHPSESSID' => 'abc123', 'other' => 'x'], $response->cookies);
     }
 
     public function testTheConnectTimeoutStaysAtFiveSecondsForALongerTotal(): void
@@ -60,7 +72,7 @@ class TransportTest extends TestCase
 
     public function testASoapFaultOnHttp400IsHandedToTheSoapClient(): void
     {
-        self::assertSame(self::FAULT, $this->transport($this->curl(400, self::FAULT))->post('http://ws/', '', [], 3));
+        self::assertSame(self::FAULT, $this->transport($this->curl(400, self::FAULT))->post('http://ws/', '', [], 3)->body);
     }
 
     public function testAGatewayPageInsteadOfXmlIsUnavailable(): void
@@ -76,14 +88,18 @@ class TransportTest extends TestCase
         $curl->expects(self::once())->method('get')->with('http://ws/?wsdl');
         $curl->expects(self::never())->method('post');
 
-        self::assertSame('<definitions/>', $this->transport($curl)->get('http://ws/?wsdl', 3));
+        self::assertSame('<definitions/>', $this->transport($curl)->get('http://ws/?wsdl', 3)->body);
     }
 
-    private function curl(int $status, string $body): Curl&\PHPUnit\Framework\MockObject\MockObject
+    /**
+     * @param array<string, string> $cookies what the answer sets
+     */
+    private function curl(int $status, string $body, array $cookies = []): Curl&\PHPUnit\Framework\MockObject\MockObject
     {
         $curl = $this->createMock(Curl::class);
         $curl->method('getStatus')->willReturn($status);
         $curl->method('getBody')->willReturn($body);
+        $curl->method('getCookies')->willReturn($cookies);
 
         return $curl;
     }

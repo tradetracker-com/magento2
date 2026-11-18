@@ -29,35 +29,44 @@ class Transport
     }
 
     /**
-     * POST a request body and return the response body.
+     * POST a request body and return the response.
      *
      * A 4xx with an XML body is returned as it is: TradeTracker answers a SOAP fault with HTTP 400,
      * and the SOAP client turns that body into the fault the caller needs to see.
      *
      * @param array<string, string> $headers
+     * @param array<string, string> $cookies the session TradeTracker handed out with authenticate()
      * @throws ApiUnavailableException when nothing usable came back within the timeout
      */
-    public function post(string $url, string $body, array $headers, int $timeout): string
+    public function post(string $url, string $body, array $headers, int $timeout, array $cookies = []): Response
     {
-        return $this->request('POST', $url, $body, $headers, $timeout);
+        return $this->request('POST', $url, $body, $headers, $timeout, $cookies);
     }
 
     /**
      * @throws ApiUnavailableException
      */
-    public function get(string $url, int $timeout): string
+    public function get(string $url, int $timeout): Response
     {
-        return $this->request('GET', $url, null, [], $timeout);
+        return $this->request('GET', $url, null, [], $timeout, []);
     }
 
     /**
      * @param array<string, string> $headers
+     * @param array<string, string> $cookies
      * @throws ApiUnavailableException
      */
-    private function request(string $method, string $url, ?string $body, array $headers, int $timeout): string
-    {
+    private function request(
+        string $method,
+        string $url,
+        ?string $body,
+        array $headers,
+        int $timeout,
+        array $cookies
+    ): Response {
         $curl = $this->curlFactory->create();
         $curl->setTimeout($timeout);
+        $curl->setCookies($cookies);
         $curl->setOptions([
             CURLOPT_CONNECTTIMEOUT => min(self::CONNECT_TIMEOUT, $timeout),
             // Accept every encoding curl knows and let it decompress; this replaces the gzip
@@ -87,7 +96,7 @@ class Transport
             );
         }
 
-        return $response;
+        return new Response($response, $curl->getCookies());
     }
 
     /**

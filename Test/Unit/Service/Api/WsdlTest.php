@@ -16,6 +16,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TradeTracker\Connect\Api\Log\RepositoryInterface as LogRepository;
 use TradeTracker\Connect\Exception\ApiUnavailableException;
+use TradeTracker\Connect\Service\Api\Response;
 use TradeTracker\Connect\Service\Api\Transport;
 use TradeTracker\Connect\Service\Api\Wsdl;
 
@@ -53,7 +54,7 @@ class WsdlTest extends TestCase
     public function testAStaleCopyIsRefreshedWithTheTimeout(): void
     {
         $this->copy(self::NOW - Wsdl::TTL - 1);
-        $this->transport->expects(self::once())->method('get')->with(Wsdl::URL, 3)->willReturn('<wsdl:definitions/>');
+        $this->transport->expects(self::once())->method('get')->with(Wsdl::URL, 3)->willReturn(new Response('<wsdl:definitions/>'));
         $this->directory->expects(self::once())->method('writeFile')->with(Wsdl::FILE, '<wsdl:definitions/>');
 
         self::assertSame('/var/tradetracker/merchant.wsdl', $this->wsdl()->path(3));
@@ -72,7 +73,7 @@ class WsdlTest extends TestCase
     public function testAnAnswerThatIsNotAWsdlIsNotCached(): void
     {
         $this->copy(self::NOW - Wsdl::TTL - 1);
-        $this->transport->method('get')->willReturn('<html>maintenance</html>');
+        $this->transport->method('get')->willReturn(new Response('<html>maintenance</html>'));
         $this->directory->expects(self::never())->method('writeFile');
 
         self::assertSame('/var/tradetracker/merchant.wsdl', $this->wsdl()->path(3));
@@ -91,7 +92,7 @@ class WsdlTest extends TestCase
     public function testTheFirstCopyIsFetchedAndWritten(): void
     {
         $this->directory->method('isFile')->willReturn(false);
-        $this->transport->method('get')->willReturn('<definitions/>');
+        $this->transport->method('get')->willReturn(new Response('<definitions/>'));
         $this->directory->expects(self::once())->method('writeFile')->with(Wsdl::FILE, '<definitions/>');
 
         self::assertSame('/var/tradetracker/merchant.wsdl', $this->wsdl()->path(3));
