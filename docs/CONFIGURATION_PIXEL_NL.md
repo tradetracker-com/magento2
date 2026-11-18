@@ -61,6 +61,18 @@ Activeer conversion pixel tracking op de order success pagina van je winkel.
 
 **Waar vind je deze waarden:** Log in op je TradeTracker account en navigeer naar je campagne instellingen.
 
+### Conversion Tab op Orders
+
+Toont op elke orderpagina in de admin een tab **TradeTracker Conversion** met de transactie die TradeTracker voor die order heeft vastgelegd: datum, campagne, transactie-ID, bedrag, valuta en status.
+
+De tab haalt de transactie pas op als je hem opent, nooit tijdens het laden van de orderpagina, en geeft het op na de API Timeout. Zet dit op **Nee** als niemand de tab gebruikt; de statuskolom in het ordergrid wordt sowieso elke nacht bijgewerkt door de cronjob `tradetracker_sync_transactions`.
+
+**Standaard:** Ja.
+
+### Annuleringen en Creditnota's
+
+Het annuleren van een order zet een afwijzing van de transactie in de wachtrij (reden `order_canceled`). Een creditnota zet de bijpassende beoordeling klaar: een volledige terugbetaling wijst de transactie af, een gedeeltelijke accepteert haar voor het bedrag dat de klant heeft gehouden. Tijdens het opslaan van de order wordt niets verstuurd; de cronjob `tradetracker_process_transaction_queue` verstuurt de wachtrij elke vijf minuten, en `bin/magento tradetracker:transaction:process-queue` doet hetzelfde handmatig. Alleen transacties met status pending worden beoordeeld, en alleen voor store views met de pixel aan en een Campaign ID.
+
 ### Product ID Overschrijven
 
 Je kunt verschillende Product IDs instellen op categorie of product niveau voor verschillende commissiestructuren:
@@ -124,6 +136,12 @@ Extra tracking opties voor multi-country campagnes.
 Schakel dit in als je campagnes over meerdere landen voert en uniforme tracking nodig hebt.
 
 **Wanneer inschakelen:** Alleen wanneer je TradeTracker accountmanager een tracking groep heeft ingesteld voor je multi-country campagnes.
+
+### API Timeout
+
+Aantal seconden dat op een antwoord van de TradeTracker API wordt gewacht. Geldt voor alles wat met TradeTracker praat: de credentialcheck, de conversion tab op de orderpagina, de transactiewachtrij en de nachtelijke statussync. Een verzoek dat langer duurt wordt afgebroken en gemeld, zodat een trage of onbereikbare TradeTracker de admin nooit ophoudt.
+
+**Standaard:** 10. Een lege of niet-positieve waarde valt terug op de standaard.
 
 ### Tracking Group ID (TGI)
 

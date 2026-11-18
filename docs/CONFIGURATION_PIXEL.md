@@ -61,6 +61,18 @@ Activate conversion pixel tracking on your store's order success page.
 
 **Where to find these values:** Log in to your TradeTracker account and navigate to your campaign settings.
 
+### Conversion Tab on Orders
+
+Shows a **TradeTracker Conversion** tab on every order page in the admin, with the transaction TradeTracker recorded for that order: date, campaign, transaction ID, amount, currency and status.
+
+The tab fetches the transaction when you open it, never while the order page loads, and it gives up after the API Timeout. Set this to **No** if nobody uses the tab; the status column in the order grid is kept up to date by the nightly `tradetracker_sync_transactions` cron job regardless.
+
+**Default:** Yes.
+
+### Cancellations and Credit Memos
+
+Cancelling an order queues a rejection of its transaction (reason `order_canceled`). A credit memo queues the matching assessment: a full refund rejects the transaction, a partial refund accepts it for the amount the customer kept. Nothing is sent while the order is being saved; the cron job `tradetracker_process_transaction_queue` sends the queue every five minutes, and `bin/magento tradetracker:transaction:process-queue` does the same by hand. Only pending transactions are assessed, and only for store views with the pixel enabled and a Campaign ID.
+
 ### Overriding Product ID
 
 You can set different Product IDs at category or product level for different commission structures:
@@ -130,6 +142,12 @@ Enable this if you run campaigns across multiple countries and need unified trac
 The numeric Tracking Group ID provided by TradeTracker.
 
 **Note:** This field only appears when Multi-country Tracking Group is enabled. Enter the exact TGI number provided by your account manager.
+
+### API Timeout
+
+Seconds to wait for an answer from the TradeTracker API. It applies to everything that talks to TradeTracker: the credentials check, the conversion tab on the order page, the transaction queue and the nightly status sync. A request that takes longer is cancelled and reported, so a slow or unreachable TradeTracker never holds up the admin.
+
+**Default:** 10. An empty or non-positive value falls back to the default.
 
 ---
 
