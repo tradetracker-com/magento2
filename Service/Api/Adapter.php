@@ -8,13 +8,15 @@ declare(strict_types=1);
 namespace TradeTracker\Connect\Service\Api;
 
 use TradeTracker\Connect\Api\Config\System\AdvancedInterface;
+use TradeTracker\Connect\Exception\ApiAuthenticationException;
 use TradeTracker\Connect\Exception\ApiException;
 
 /**
  * The one way into the merchant API: authenticated, with the configured timeout on every request.
  *
  * Callers never see the SOAP client. An answer from TradeTracker that is a refusal arrives as an
- * ApiException; no answer at all as an ApiUnavailableException, straight from the Transport.
+ * ApiException; no answer at all as an ApiUnavailableException, straight from the Transport; refused
+ * credentials as an ApiAuthenticationException, which the queue treats like no answer.
  */
 class Adapter
 {
@@ -93,7 +95,7 @@ class Adapter
                 $credentials['demo'],
             ]);
         } catch (\SoapFault $e) {
-            throw new ApiException('authenticate: ' . $e->getMessage(), 0, $e);
+            throw new ApiAuthenticationException('authenticate: ' . $e->getMessage(), 0, $e);
         }
 
         return $this->clients[$key] = $client;

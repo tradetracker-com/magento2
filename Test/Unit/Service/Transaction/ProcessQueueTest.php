@@ -11,6 +11,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TradeTracker\Connect\Api\Log\RepositoryInterface as LogRepository;
+use TradeTracker\Connect\Exception\ApiAuthenticationException;
 use TradeTracker\Connect\Exception\ApiException;
 use TradeTracker\Connect\Exception\ApiUnavailableException;
 use TradeTracker\Connect\Service\Transaction\Assess;
@@ -71,6 +72,18 @@ class ProcessQueueTest extends TestCase
         $this->queue->expects(self::once())->method('postpone')->with(1, 'No answer within 3 seconds');
         $this->queue->expects(self::never())->method('refused');
         $this->queue->expects(self::never())->method('finish');
+
+        self::assertSame(['processed' => 1, 'done' => 0, 'refused' => 0, 'failed' => 0, 'postponed' => 1], $this->process()->execute());
+    }
+
+    public function testRefusedCredentialsPostponeTheRowInsteadOfCountingAgainstIt(): void
+    {
+        // Wrong credentials are the shop's configuration, not TradeTracker's verdict on the row:
+        // counted as refusals they used a row's five attempts up in twenty minutes of cron.
+        $this->queue->method('pending')->willReturn([$this->row(1, 0), $this->row(2, 0)]);
+        $this->assess->expects(self::once())->method('execute')->willThrowException(new ApiAuthenticationException('authenticate: Failed to authenticate.'));
+        $this->queue->expects(self::once())->method('postpone')->with(1, 'authenticate: Failed to authenticate.');
+        $this->queue->expects(self::never())->method('refused');
 
         self::assertSame(['processed' => 1, 'done' => 0, 'refused' => 0, 'failed' => 0, 'postponed' => 1], $this->process()->execute());
     }

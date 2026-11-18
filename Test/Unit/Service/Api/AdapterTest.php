@@ -11,6 +11,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TradeTracker\Connect\Api\Config\System\AdvancedInterface;
+use TradeTracker\Connect\Exception\ApiAuthenticationException;
 use TradeTracker\Connect\Exception\ApiException;
 use TradeTracker\Connect\Exception\ApiUnavailableException;
 use TradeTracker\Connect\Service\Api\Adapter;
@@ -88,11 +89,11 @@ class AdapterTest extends TestCase
         self::assertCount(2, $this->created);
     }
 
-    public function testRefusedCredentialsAreAnApiException(): void
+    public function testRefusedCredentialsAreAnAuthenticationFailureWhichTheQueueKeepsWaitingOn(): void
     {
         $this->client->method('__soapCall')->willThrowException(new \SoapFault('Client', 'Failed to authenticate.'));
 
-        $this->expectException(ApiException::class);
+        $this->expectException(ApiAuthenticationException::class);
         $this->expectExceptionMessage('authenticate: Failed to authenticate.');
         $this->adapter()->authenticate(self::CREDENTIALS);
     }

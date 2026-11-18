@@ -179,6 +179,9 @@ test.describe('TradeTracker Conversion on the order page', () => {
   });
 
   test('the queue command sends the rows within the timeout and keeps a refused row for a retry', async ({}) => {
+    // Refused credentials end a run at the first row, so the rows the earlier tests queued would
+    // stand in front of this one; the run has to meet this order's row first.
+    api.deleteQueueRows(placed.map((placedOrder) => placedOrder.orderId));
     const order = await placeOrder();
     await api.refundOrder(baseURL, order, 1, 0);
     expect(api.queueRows(order.orderId)).toHaveLength(1);
@@ -196,7 +199,9 @@ test.describe('TradeTracker Conversion on the order page', () => {
     const [row] = api.queueRows(order.orderId);
     expect(row.status, 'the row waits for the next run').toBe('pending');
     expect(row.message ?? '').toMatch(TAB_OUTCOME);
-    expect(row.attempts, 'a refusal counts, an outage does not').toBeLessThanOrEqual(1);
+    // Refused credentials and no answer at all leave the attempts alone; only TradeTracker's own
+    // refusal of the assessment counts one.
+    expect(row.attempts, 'a refusal counts, a login failure or an outage does not').toBeLessThanOrEqual(1);
   });
 
   test('with the module off a cancellation queues nothing', async ({ page }) => {

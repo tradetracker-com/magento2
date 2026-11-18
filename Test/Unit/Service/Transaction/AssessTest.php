@@ -11,6 +11,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use TradeTracker\Connect\Api\Config\System\PixelInterface;
+use TradeTracker\Connect\Exception\ApiException;
+use TradeTracker\Connect\Exception\ApiUnavailableException;
 use TradeTracker\Connect\Service\Api\Adapter;
 use TradeTracker\Connect\Service\Transaction\Assess;
 use TradeTracker\Connect\Service\Transaction\Lookup;
@@ -75,6 +77,28 @@ class AssessTest extends TestCase
         $this->adapter->expects(self::never())->method('call');
 
         self::assertSame('No transaction found for order 100000002', $this->assess()->execute(3, '100000002', Assess::REJECTED, 'order_canceled'));
+    }
+
+    public function testALookupTradeTrackerRefusesIsNotAVerdictOnTheRow(): void
+    {
+        // A campaign the account may not use is the shop's configuration, like wrong credentials;
+        // counted as refusals such rows were dropped after five cron runs.
+        $this->lookup->method('find')->willThrowException(new ApiException('getConversionTransactions: Not permitted to use this campaign.'));
+        $this->adapter->expects(self::never())->method('call');
+
+        $this->expectException(ApiUnavailableException::class);
+        $this->expectExceptionMessage('Not permitted to use this campaign.');
+        $this->assess()->execute(3, '100000002', Assess::REJECTED, 'order_canceled');
+    }
+
+    public function testARefusedAssessmentIsTradeTrackersVerdict(): void
+    {
+        $this->lookup->method('find')->willReturn($this->transaction('pending'));
+        $this->adapter->method('call')->willThrowException(new ApiException('assessConversionTransaction: Invalid reason'));
+
+        $this->expectException(ApiException::class);
+        $this->expectExceptionMessage('Invalid reason');
+        $this->assess()->execute(3, '100000002', Assess::REJECTED, 'bogus');
     }
 
     private function transaction(string $status): \stdClass

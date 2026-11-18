@@ -9,6 +9,7 @@ namespace TradeTracker\Connect\Service\Transaction;
 
 use TradeTracker\Connect\Api\Config\System\PixelInterface;
 use TradeTracker\Connect\Exception\ApiException;
+use TradeTracker\Connect\Exception\ApiUnavailableException;
 use TradeTracker\Connect\Service\Api\Adapter;
 
 /**
@@ -16,6 +17,10 @@ use TradeTracker\Connect\Service\Api\Adapter;
  *
  * Only a pending transaction can be assessed. The outcome is a sentence for the log and the queue;
  * an answer TradeTracker refuses, or no answer at all, is an exception for the caller to decide on.
+ *
+ * Only a refusal of the assessment itself is TradeTracker's verdict on the row. A lookup that fails
+ * (wrong credentials, a campaign the account may not use) is the shop's configuration, so it is
+ * reported as "unavailable" and the queue keeps the row until the configuration is right.
  */
 class Assess
 {
@@ -44,7 +49,13 @@ class Assess
         ?string $reason = null,
         ?float $amount = null
     ): string {
-        $transaction = $this->lookup->find($storeId, $incrementId);
+        try {
+            $transaction = $this->lookup->find($storeId, $incrementId);
+        } catch (ApiUnavailableException $e) {
+            throw $e;
+        } catch (ApiException $e) {
+            throw new ApiUnavailableException($e->getMessage(), 0, $e);
+        }
         if ($transaction === null) {
             return sprintf('No transaction found for order %s', $incrementId);
         }
