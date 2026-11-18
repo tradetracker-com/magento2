@@ -17,7 +17,7 @@
     </rule>
 
     <!-- A plugin that repeats an untyped parent constructor with its own types is how DI learns what to
-         inject (see InjectableConstructorTest in the accounting modules); the sniff reads it as useless. -->
+         inject; the sniff reads that as a useless override. -->
     <rule ref="Generic.CodeAnalysis.UselessOverridingMethod">
         <exclude-pattern>*/Plugin/*</exclude-pattern>
     </rule>
