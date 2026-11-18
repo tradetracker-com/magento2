@@ -14,7 +14,7 @@ Baseline for every admin route the module has: a bare request (no parameters, no
 6. admin routes › /admin/tradetracker/feed/preview/ answers a bare request without an exception
 7. admin routes › /admin/tradetracker/feed/progress/ answers a bare request without an exception
 8. admin routes › /admin/tradetracker/log/stream/ answers a bare request without an exception
-9. admin routes › /admin/tradetracker/transaction/status/ answers a bare request without an exception
+9. admin routes › /admin/tradetracker/transaction/tab/ answers a bare request without an exception
 10. admin routes › /admin/tradetracker/versionCheck/changelog/ answers a bare request without an exception
 11. admin routes › /admin/tradetracker/versionCheck/index/ answers a bare request without an exception
 
@@ -49,80 +49,93 @@ Generating a feed from the configuration page used to navigate to the Generate a
 21. Feed generation from the configuration page › generating keeps the page and reports the run in the row
 22. Feed generation from the configuration page › the progress endpoint answers for the store it is asked about
 
+## Order Transactions (`admin/order-transactions.spec.ts`)
+
+The tab's content once loaded. jQuery UI puts a remote tab's answer in a panel it creates itself, not in the empty `_content` div the tabs template renders, so the content is found by its own class.
+
+23. TradeTracker Conversion on the order page › the order page shows the tab without asking TradeTracker, and fills it when it is opened
+24. TradeTracker Conversion on the order page › the tab stays off the order page when the setting is off
+25. TradeTracker Conversion on the order page › the tab stays off the order page when the pixel is off
+26. TradeTracker Conversion on the order page › cancelling an order queues one rejection and sends nothing
+27. TradeTracker Conversion on the order page › a partial credit memo queues an acceptance for the amount that stands
+28. TradeTracker Conversion on the order page › a full credit memo queues a rejection
+29. TradeTracker Conversion on the order page › the queue command sends the rows within the timeout and keeps a refused row for a retry
+30. TradeTracker Conversion on the order page › with the module off a cancellation queues nothing
+
 ## Advanced Filters (`feed/advanced-filters.spec.ts`)
 
-23. Advanced Filters › price filter should only include products above threshold
-24. Advanced Filters - unfiltered baseline › disabled advanced filters should include all products
-25. Advanced Filters - unfiltered baseline › SKU filter should limit feed to matching products
+31. Advanced Filters › price filter should only include products above threshold
+32. Advanced Filters - unfiltered baseline › disabled advanced filters should include all products
+33. Advanced Filters - unfiltered baseline › SKU filter should limit feed to matching products
 
 ## Bundle Products (`feed/bundle-products.spec.ts`)
 
-26. Bundle Products › bundle=parent should include bundle products as parent items
-27. Bundle Products › bundle link setting should produce valid feeds
-28. Bundle Products › bundle image setting should produce valid feeds
+34. Bundle Products › bundle=parent should include bundle products as parent items
+35. Bundle Products › bundle link setting should produce valid feeds
+36. Bundle Products › bundle image setting should produce valid feeds
 
 ## Category Filters (`feed/category-filters.spec.ts`)
 
-29. Category Filters › category filter disabled should include all categories
-30. Category Filters › category filter enabled with include type should limit products
-31. Category Filters › category filter with exclude type should produce a valid feed
+37. Category Filters › category filter disabled should include all categories
+38. Category Filters › category filter enabled with include type should limit products
+39. Category Filters › category filter with exclude type should produce a valid feed
 
 ## Configurable Inheritance (`feed/configurable-inheritance.spec.ts`)
 
-32. Configurable Inheritance › configurable_link settings should produce valid feeds
-33. Configurable Inheritance › configurable_image settings should produce valid feeds
-34. Configurable Inheritance › configurable_parent_atts should inherit specified attributes from parent
-35. Configurable Inheritance › configurable_nonvisible should control NVI product inclusion
+40. Configurable Inheritance › configurable_link settings should produce valid feeds
+41. Configurable Inheritance › configurable_image settings should produce valid feeds
+42. Configurable Inheritance › configurable_parent_atts should inherit specified attributes from parent
+43. Configurable Inheritance › configurable_nonvisible should control NVI product inclusion
 
 ## Configurable Products (`feed/configurable-products.spec.ts`)
 
-36. Configurable Products › configurable=simple should output child items
-37. Configurable Products › configurable=parent should output parent items
-38. Configurable Products › configurable=both should include more items than parent-only
-39. Configurable Products › configurable=simple should produce different count than parent
+44. Configurable Products › configurable=simple should output child items
+45. Configurable Products › configurable=parent should output parent items
+46. Configurable Products › configurable=both should include more items than parent-only
+47. Configurable Products › configurable=simple should produce different count than parent
 
 ## Disabled Products (`feed/disabled-products.spec.ts`)
 
-40. Disabled Products › disabled simple products should not appear in the feed
-41. Disabled Products › disabled configurable parent should not leak into feed (parent mode)
-42. Disabled Products › disabled configurable parent should not leak into feed (simple mode)
+48. Disabled Products › disabled simple products should not appear in the feed
+49. Disabled Products › disabled configurable parent should not leak into feed (parent mode)
+50. Disabled Products › disabled configurable parent should not leak into feed (simple mode)
 
 ## Feed File (`feed/feed-file.spec.ts`)
 
-43. Feed File Output › custom filename should be reflected in feed URL
-44. Feed File - default config › feed should be valid XML with correct encoding declaration
-45. Feed File - default config › feed should contain productFeed root element
-46. Feed File - default config › feed should contain at least one item
-47. Feed File - default config › every item should have required fields
-48. Feed File - default config › every item price should be a valid number
+51. Feed File Output › custom filename should be reflected in feed URL
+52. Feed File - default config › feed should be valid XML with correct encoding declaration
+53. Feed File - default config › feed should contain productFeed root element
+54. Feed File - default config › feed should contain at least one item
+55. Feed File - default config › every item should have required fields
+56. Feed File - default config › every item price should be a valid number
 
 ## Feed Structure (`feed/feed-structure.spec.ts`)
 
-49. Feed Structure › should produce valid parseable XML
-50. Feed Structure › should have productFeed root element with items
-51. Feed Structure › should contain at least one item
-52. Feed Structure › every item should have an ID field
-53. Feed Structure › every item should have a name field
-54. Feed Structure › most items should have a productURL field
-55. Feed Structure › every item should have a valid price
-56. Feed Structure › every item should have availability field
-57. Feed Structure › item IDs should be unique
+57. Feed Structure › should produce valid parseable XML
+58. Feed Structure › should have productFeed root element with items
+59. Feed Structure › should contain at least one item
+60. Feed Structure › every item should have an ID field
+61. Feed Structure › every item should have a name field
+62. Feed Structure › most items should have a productURL field
+63. Feed Structure › every item should have a valid price
+64. Feed Structure › every item should have availability field
+65. Feed Structure › item IDs should be unique
 
 ## Filters (`feed/filters.spec.ts`)
 
-58. Filters › stock filter enabled should exclude out-of-stock items
-59. Filters › stock filter disabled should include out-of-stock items
+66. Filters › stock filter enabled should exclude out-of-stock items
+67. Filters › stock filter disabled should include out-of-stock items
 
 ## Grouped Products (`feed/grouped-products.spec.ts`)
 
-60. Grouped Products › grouped=parent should include grouped products as parent items
-61. Grouped Products › grouped=simple should output child items of grouped products
-62. Grouped Products › a grouped member that is also a bundle component stays with grouped=simple
-63. Grouped Products › grouped link setting should produce valid feeds
-64. Grouped Products › grouped image setting should produce valid feeds
+68. Grouped Products › grouped=parent should include grouped products as parent items
+69. Grouped Products › grouped=simple should output child items of grouped products
+70. Grouped Products › a grouped member that is also a bundle component stays with grouped=simple
+71. Grouped Products › grouped link setting should produce valid feeds
+72. Grouped Products › grouped image setting should produce valid feeds
 
 ## Visibility Filters (`feed/visibility-filters.spec.ts`)
 
-65. Visibility Filters - catalog+search › visibility filter enabled with catalog+search should include visible products
-66. Visibility Filters - catalog+search › visibility filter disabled should include more or equal products
-67. Visibility Filters - not visible individually › visibility filter with not-visible-individually should produce a result
+73. Visibility Filters - catalog+search › visibility filter enabled with catalog+search should include visible products
+74. Visibility Filters - catalog+search › visibility filter disabled should include more or equal products
+75. Visibility Filters - not visible individually › visibility filter with not-visible-individually should produce a result
