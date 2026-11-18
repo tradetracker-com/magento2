@@ -62,6 +62,7 @@
         <arguments>
             <argument name="commands" xsi:type="array">
                 <item name="tradetrackerGenerateFeed" xsi:type="object">TradeTracker\Connect\Console\Command\GenerateFeed</item>
+                <item name="tradetrackerProcessTransactionQueue" xsi:type="object">TradeTracker\Connect\Console\Command\ProcessTransactionQueue</item>
             </argument>
         </arguments>
     </type>
@@ -71,6 +72,12 @@
         <arguments>
             <argument name="configRepository" xsi:type="object">TradeTracker\Connect\Api\Config\RepositoryInterface\Proxy</argument>
             <argument name="feedRepository" xsi:type="object">TradeTracker\Connect\Api\Feed\RepositoryInterface\Proxy</argument>
+        </arguments>
+    </type>
+    <type name="TradeTracker\Connect\Console\Command\ProcessTransactionQueue">
+        <arguments>
+            <argument name="configRepository" xsi:type="object">TradeTracker\Connect\Api\Config\RepositoryInterface\Proxy</argument>
+            <argument name="processQueue" xsi:type="object">TradeTracker\Connect\Service\Transaction\ProcessQueue\Proxy</argument>
         </arguments>
     </type>
 

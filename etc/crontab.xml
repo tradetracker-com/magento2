@@ -13,5 +13,8 @@
         <job instance="TradeTracker\Connect\Model\Cron\SyncTransactions" method="execute" name="tradetracker_sync_transactions">
             <schedule>0 0 * * *</schedule>
         </job>
+        <job instance="TradeTracker\Connect\Model\Cron\ProcessTransactionQueue" method="execute" name="tradetracker_process_transaction_queue">
+            <schedule>*/5 * * * *</schedule>
+        </job>
     </group>
 </config>

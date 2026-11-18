@@ -19,4 +19,27 @@
                 nullable="true"
                 comment="TradeTracker Status"/>
     </table>
+    <table name="tradetracker_transaction_queue" resource="default" engine="innodb" comment="TradeTracker transaction assessments waiting to be sent">
+        <column xsi:type="int" name="entity_id" unsigned="true" nullable="false" identity="true" comment="Entity ID"/>
+        <column xsi:type="int" name="order_id" unsigned="true" nullable="false" comment="Order ID"/>
+        <column xsi:type="varchar" name="increment_id" length="50" nullable="false" comment="Order Increment ID"/>
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" default="0" comment="Store ID"/>
+        <column xsi:type="varchar" name="action" length="20" nullable="false" comment="Assessment: accepted or rejected"/>
+        <column xsi:type="varchar" name="reason" length="50" nullable="true" comment="Rejection reason"/>
+        <column xsi:type="decimal" name="amount" scale="4" precision="20" nullable="true" comment="Accepted amount"/>
+        <column xsi:type="varchar" name="status" length="20" nullable="false" default="pending" comment="pending, done or failed"/>
+        <column xsi:type="smallint" name="attempts" unsigned="true" nullable="false" default="0" comment="Attempts"/>
+        <column xsi:type="text" name="message" nullable="true" comment="Last result"/>
+        <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP" comment="Created At"/>
+        <column xsi:type="timestamp" name="processed_at" nullable="true" comment="Processed At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="entity_id"/>
+        </constraint>
+        <index referenceId="TRADETRACKER_TRANSACTION_QUEUE_STATUS" indexType="btree">
+            <column name="status"/>
+        </index>
+        <index referenceId="TRADETRACKER_TRANSACTION_QUEUE_ORDER_ID" indexType="btree">
+            <column name="order_id"/>
+        </index>
+    </table>
 </schema>
