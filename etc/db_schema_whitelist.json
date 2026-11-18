@@ -8,5 +8,28 @@
         "column": {
             "tt_status": true
         }
+    },
+    "tradetracker_transaction_queue": {
+        "column": {
+            "entity_id": true,
+            "order_id": true,
+            "increment_id": true,
+            "store_id": true,
+            "action": true,
+            "reason": true,
+            "amount": true,
+            "status": true,
+            "attempts": true,
+            "message": true,
+            "created_at": true,
+            "processed_at": true
+        },
+        "index": {
+            "TRADETRACKER_TRANSACTION_QUEUE_STATUS": true,
+            "TRADETRACKER_TRANSACTION_QUEUE_ORDER_ID": true
+        },
+        "constraint": {
+            "PRIMARY": true
+        }
     }
 }

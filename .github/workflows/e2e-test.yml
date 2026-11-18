@@ -6,6 +6,7 @@ on:
     paths-ignore:
       - '**/*.md'
       - 'docs/**'
+      - '.github/**'
   workflow_dispatch:
 
 # A superseded run would otherwise keep a runner for its full hour while the push that replaced it
@@ -56,7 +57,7 @@ jobs:
           - PHP_VERSION: php85-fpm
             MAGENTO_VERSION: 2.4.9
     # Pinned on purpose: ubuntu-latest moved to a release Playwright has no Chromium build for.
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.E2E_RUNNER || 'ubuntu-24.04' }}
     # A full suite takes about an hour on a GitHub runner; at 45 the job was cancelled mid-suite and
     # printed no summary at all.
     timeout-minutes: 90

@@ -19,6 +19,22 @@ class PixelRepository extends ConfigRepository implements PixelInterface
     /**
      * @inheritDoc
      */
+    public function isPixelEnabled(?int $storeId = null): bool
+    {
+        return $this->isSetFlag(self::XML_PATH_PIXEL_ENABLE, $storeId);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function isOrderTabEnabled(?int $storeId = null): bool
+    {
+        return $this->isSetFlag(self::XML_PATH_ORDER_TAB, $storeId);
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function getCampaignId(?int $storeId = null): string
     {
         return $this->getStoreValue(self::XML_PATH_CAMPAIGN_ID, $storeId);

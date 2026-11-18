@@ -24,6 +24,13 @@ class AdminResourceTest extends TestCase
     private const CONFIG = 'TradeTracker_Connect::config';
 
     /**
+     * The resource of Magento_Sales the order-page tab borrows: whoever may view an order may see
+     * its TradeTracker transaction. Declaring a resource of our own there would hide the tab from
+     * every custom role until an admin edits the role.
+     */
+    private const SALES_VIEW = 'Magento_Sales::actions_view';
+
+    /**
      * Every admin controller below Controller/Adminhtml and the resource it must declare. A module
      * with its own grid adds its view/process resources here; the config endpoints stay on CONFIG.
      */
@@ -35,7 +42,7 @@ class AdminResourceTest extends TestCase
         'Feed\Preview' => self::CONFIG,
         'Feed\Progress' => self::CONFIG,
         'Log\Stream' => self::CONFIG,
-        'Transaction\Status' => self::CONFIG,
+        'Transaction\Tab' => self::SALES_VIEW,
         'VersionCheck\Changelog' => self::CONFIG,
         'VersionCheck\Index' => self::CONFIG,
     ];
@@ -48,7 +55,7 @@ class AdminResourceTest extends TestCase
         $xml = simplexml_load_file(dirname(__DIR__, 3) . '/etc/acl.xml');
         self::assertNotFalse($xml);
 
-        $ids = [];
+        $ids = [self::SALES_VIEW];
         foreach ($xml->xpath('//resource') as $resource) {
             $ids[] = (string)$resource['id'];
         }

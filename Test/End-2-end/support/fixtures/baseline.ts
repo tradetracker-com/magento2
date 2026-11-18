@@ -20,11 +20,11 @@ import TradeTrackerApi from 'Services/TradeTrackerApi';
 export const SECTIONS = ['tradetracker_general', 'tradetracker_feed'];
 
 /** Every console command the module registers. */
-export const CLI_COMMANDS = ['tradetracker:feed:create'];
+export const CLI_COMMANDS = ['tradetracker:feed:create', 'tradetracker:transaction:process-queue'];
 
 /**
  * Arguments a command cannot run without, by command name. The feed command takes an optional
- * store id and generates every enabled store view without one, so nothing is needed here.
+ * store id and generates every enabled store view without one; the queue command takes none.
  */
 export const CLI_ARGUMENTS: Record<string, string> = {};
 

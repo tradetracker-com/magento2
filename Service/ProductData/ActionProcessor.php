@@ -14,15 +14,9 @@ use Magento\Framework\Filter\FilterManager;
  */
 class ActionProcessor
 {
-    /**
-     * @var FilterManager
-     */
-    private $filterManager;
-
     public function __construct(
-        FilterManager $filterManager
+        private readonly FilterManager $filterManager
     ) {
-        $this->filterManager = $filterManager;
     }
 
     /**

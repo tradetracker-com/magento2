@@ -22,6 +22,7 @@ class ChildSelectionTest extends TestCase
     private const STRAP = 37;
     private const GROUPED = 50;
     private const BUNDLE = 49;
+    private const CONFIGURABLE = 62;
 
     public function testAChildStaysWhenOneOfItsParentTypesAsksForSimples(): void
     {
@@ -75,6 +76,43 @@ class ChildSelectionTest extends TestCase
         );
 
         self::assertSame(['parents' => [], 'children' => []], $result);
+    }
+
+    /**
+     * A variant of a configurable that is also packed into a bundle: "Only Linked Simple Products"
+     * on the configurable must keep it in the feed, whatever the bundle setting says.
+     */
+    public function testAVariantInABundleStaysWhenTheConfigurableAsksForSimples(): void
+    {
+        $result = (new ChildSelection())->resolve(
+            [self::STRAP => [self::BUNDLE => 'bundle', self::CONFIGURABLE => 'configurable']],
+            ['configurable' => ['use' => 'simple'], 'bundle' => ['use' => 'parent']],
+            [self::STRAP, self::BUNDLE, self::CONFIGURABLE]
+        );
+
+        self::assertSame([self::CONFIGURABLE], $result['parents']);
+        self::assertSame([], $result['children']);
+    }
+
+    public function testParentsAreOrderedConfigurableGroupedBundle(): void
+    {
+        $ordered = (new ChildSelection())->orderParents([
+            self::STRAP => [self::BUNDLE => 'bundle', self::GROUPED => 'grouped', self::CONFIGURABLE => 'configurable'],
+            38 => [self::BUNDLE => 'bundle'],
+        ]);
+
+        self::assertSame([self::CONFIGURABLE, self::GROUPED, self::BUNDLE], array_keys($ordered[self::STRAP]));
+        self::assertSame(self::CONFIGURABLE, key($ordered[self::STRAP]));
+        self::assertSame([self::BUNDLE => 'bundle'], $ordered[38]);
+    }
+
+    public function testAnUnknownParentTypeSortsLastAndEqualTypesKeepTheirOrder(): void
+    {
+        $ordered = (new ChildSelection())->orderParents([
+            self::STRAP => [7 => 'giftcard', 51 => 'grouped', self::GROUPED => 'grouped'],
+        ]);
+
+        self::assertSame([51, self::GROUPED, 7], array_keys($ordered[self::STRAP]));
     }
 
     /**

@@ -26,5 +26,12 @@
                 <field id="enable_multi_country">1</field>
             </depends>
         </field>
+        <field id="api_timeout" canRestore="1" translate="label comment" type="text" sortOrder="30" showInDefault="1"
+               showInWebsite="0" showInStore="0">
+            <label>API Timeout</label>
+            <comment>Seconds to wait for an answer from the TradeTracker API: the credentials check, the conversion tab, the transaction queue and the nightly status sync. A request that takes longer is cancelled and reported instead of holding up the admin. Default 10.</comment>
+            <validate>validate-digits validate-greater-than-zero</validate>
+            <config_path>tradetracker/advanced/api_timeout</config_path>
+        </field>
     </group>
 </include>

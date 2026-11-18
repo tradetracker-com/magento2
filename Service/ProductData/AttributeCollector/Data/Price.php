@@ -68,6 +68,8 @@ class Price
     private ?string $configurablePriceType = null;
 
     private ?Collection $products = null;
+    /** @var array<int, float> configurable entity id => cheapest final price among its buyable variants */
+    private array $cheapestVariantPrices = [];
 
     public function __construct(
         private readonly CatalogPrice $commonPriceModel,
@@ -97,6 +99,7 @@ class Price
         $this->websiteId = (int)$store->getWebsiteId();
         $this->taxClasses = [];
         $this->products = $this->getProductData($productIds, (int)$store->getId());
+        $this->cheapestVariantPrices = $this->loadCheapestVariantPrices($productIds);
         $this->groupedPriceType = $groupedPriceType;
         $this->bundlePriceType = $bundlePriceType;
         $this->configurablePriceType = $configurablePriceType;
@@ -270,9 +273,75 @@ class Price
             return;
         }
 
-        if ($this->minPrice && $this->minPrice < $this->finalPrice) {
-            $this->finalPrice = $this->minPrice;
+        // Without an explicit choice the parent takes the price a customer can actually pay for
+        // the cheapest variant, which is what the store page shows and what Magento's own price
+        // model resolves. Neither index column answers that on its own. min_price can sit below
+        // every variant: with a catalog price rule on a configurable, a 35.00 product indexes as
+        // final 28.00 and min 21.00 while all variants cost 28.00. final_price can sit above
+        // them: with the discount on the variants, the same product indexes as final 35.00 while
+        // the cheapest variant costs 28.00. Both cases published a price nothing sells for.
+        $variantPrice = $this->getCheapestVariantPrice($product);
+        if ($variantPrice !== null) {
+            $this->finalPrice = $variantPrice;
         }
+    }
+
+    /**
+     * Cheapest final price among the variants a customer can buy, or null when a configurable has
+     * no salable variant at all.
+     *
+     * @param Product $product
+     * @return float|null
+     */
+    private function getCheapestVariantPrice(Product $product): ?float
+    {
+        return $this->cheapestVariantPrices[(int)$product->getId()] ?? null;
+    }
+
+    /**
+     * One query per batch for the cheapest buyable variant of every configurable in it. The price
+     * index already holds each variant's final price with catalog rules and special prices applied
+     * for the website; the stock status keeps the variants nobody can buy out. Loading every
+     * variant per parent did the same in PHP and cost about 7 ms per configurable.
+     *
+     * @param int[] $productIds
+     * @return array<int, float> configurable entity id => price
+     */
+    private function loadCheapestVariantPrices(array $productIds): array
+    {
+        if (empty($productIds) || $this->products === null) {
+            return [];
+        }
+
+        $connection = $this->products->getConnection();
+        $linkField = $this->products->getProductEntityMetadata()->getLinkField();
+        $select = $connection->select()
+            ->from(['cpr' => $this->products->getTable('catalog_product_relation')], [])
+            ->join(
+                ['parent' => $this->products->getTable('catalog_product_entity')],
+                'parent.' . $linkField . ' = cpr.parent_id AND parent.type_id = \'configurable\'',
+                ['parent_id' => 'parent.entity_id']
+            )
+            ->join(
+                ['price_index' => $this->products->getTable('catalog_product_index_price')],
+                'price_index.entity_id = cpr.child_id AND price_index.website_id = ' . (int)$this->websiteId
+                . ' AND price_index.customer_group_id = 0',
+                ['final_price' => new \Zend_Db_Expr('MIN(price_index.final_price)')]
+            )
+            ->join(
+                ['stock' => $this->products->getTable('cataloginventory_stock_status')],
+                'stock.product_id = cpr.child_id AND stock.stock_status = 1',
+                []
+            )
+            ->where('parent.entity_id IN (?)', $productIds)
+            ->group('parent.entity_id');
+
+        $prices = [];
+        foreach ($connection->fetchPairs($select) as $parentId => $price) {
+            $prices[(int)$parentId] = (float)$price;
+        }
+
+        return $prices;
     }
 
     /**

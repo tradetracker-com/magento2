@@ -12,6 +12,7 @@ use Magento\Framework\Controller\Result\Json;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Magento\Store\Model\StoreManagerInterface;
 use TradeTracker\Connect\Api\Config\RepositoryInterface as ConfigRepository;
+use TradeTracker\Connect\Exception\ApiException;
 use TradeTracker\Connect\Service\Api\Adapter;
 
 /**
@@ -80,11 +81,11 @@ class Check extends Action
             'locale' => 'en_GB',
             'demo' => false
         ];
-        $result = $this->adapter->execute($data);
-        if ($result['success']) {
+        try {
+            $this->adapter->authenticate($data);
             $result = 'Success!';
-        } else {
-            $result = $result['error'];
+        } catch (ApiException $exception) {
+            $result = $exception->getMessage();
         }
         $resultJson = $this->resultJsonFactory->create();
         return $resultJson->setData(['result' => $result]);

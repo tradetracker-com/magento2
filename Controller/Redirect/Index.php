@@ -103,7 +103,7 @@ class Index extends Action
         $materialID = $trackingParam[1] ?? '';
         $affiliateID = $trackingParam[2] ?? '';
         $reference = $trackingParam[3] ?? '';
-        $redirectURL = $this->request->getParam('r');
+        $redirectURL = (string)$this->request->getParam('r');
         $time = $this->date->scopeTimeStamp();
         $yearInSeconds = 31536000;
 

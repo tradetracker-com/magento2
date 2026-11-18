@@ -98,17 +98,13 @@ form[action*="tradetracker_"] {
         flex-wrap: wrap;
         align-items: center;
         gap: 8px;
+
+        // The modal containers are markup, not layout. The modal widget lifts them out of the form
+        // when it initialises; until then a full-width sibling pushes every button onto its own
+        // row. Scoped to children of the wrapper, so the rule stops applying once they are moved.
+        > [id$="-modal"] {
+            display: none;
+        }
     }
 }
 
-// Order view button
-#sales_order_view_tabs_tradetracker_order_log_content #change_transaction_status {
-    background-color: #eb5202;
-    border-color: #eb5202;
-    color: #fff;
-    padding: 5px 25px 5px 25px;
-    display: inline-block;
-    border-radius: 4px;
-    pointer-events: auto;
-    cursor: pointer;
-}

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions name="Fixture" targetNamespace="urn:fixture"
+             xmlns="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             xmlns:tns="urn:fixture">
+    <message name="authenticateRequest"><part name="customerID" type="xsd:int"/><part name="passphrase" type="xsd:string"/></message>
+    <message name="authenticateResponse"/>
+    <message name="pingRequest"/>
+    <message name="pingResponse"><part name="return" type="xsd:string"/></message>
+    <portType name="FixturePort">
+        <operation name="authenticate"><input message="tns:authenticateRequest"/><output message="tns:authenticateResponse"/></operation>
+        <operation name="ping"><input message="tns:pingRequest"/><output message="tns:pingResponse"/></operation>
+    </portType>
+    <binding name="FixtureBinding" type="tns:FixturePort">
+        <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="authenticate">
+            <soap:operation soapAction="urn:fixture#authenticate"/>
+            <input><soap:body use="literal" namespace="urn:fixture"/></input>
+            <output><soap:body use="literal" namespace="urn:fixture"/></output>
+        </operation>
+        <operation name="ping">
+            <soap:operation soapAction="urn:fixture#ping"/>
+            <input><soap:body use="literal" namespace="urn:fixture"/></input>
+            <output><soap:body use="literal" namespace="urn:fixture"/></output>
+        </operation>
+    </binding>
+    <service name="Fixture">
+        <port name="FixturePort" binding="tns:FixtureBinding"><soap:address location="http://fixture.test/soap"/></port>
+    </service>
+</definitions>
